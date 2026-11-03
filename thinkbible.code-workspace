@@ -1,0 +1,13 @@
+{
+  "folders": [{ "path": ".", "name": "thinkbible (backend, pipeline, infra)" }],
+  "settings": {
+    "files.exclude": { "ios": true, "**/.build": true, "**/DerivedData": true },
+    "search.exclude": { "ios": true, "**/.venv": true, "content/sources": true },
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "python.testing.pytestEnabled": true,
+    "[python]": { "editor.defaultFormatter": "charliermarsh.ruff", "editor.formatOnSave": true },
+    "[terraform]": { "editor.defaultFormatter": "hashicorp.terraform", "editor.formatOnSave": true },
+    "yaml.schemas": { "https://spec.openapis.org/oas/3.1/schema/2022-10-07": "api/openapi.yaml" },
+    "json.schemas": [{ "fileMatch": ["content/packs/**/*.json"], "url": "./content/schema/section.schema.json" }]
+  }
+}

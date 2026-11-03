@@ -218,3 +218,47 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ---- ThinkBible monorepo additions ----
+# macOS
+.DS_Store
+
+# Secrets (never commit)
+.env.*
+!.env.example
+*.pem
+*.p8
+*.p12
+*.mobileprovision
+
+# Terraform: state and local provider caches
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+!*.example.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.tfstate.lock.info
+
+# Xcode / Swift
+ios/**/xcuserdata/
+ios/**/DerivedData/
+**/.build/
+**/.swiftpm/
+*.xcuserstate
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Claude Code: keep shared skills and settings, ignore per-user local settings
+.claude/settings.local.json
+
+# Pipeline scratch output (reviewed packs live in content/packs/)
+pipeline/.work/
+pipeline/out/
