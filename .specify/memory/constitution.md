@@ -1,50 +1,187 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# ThinkBible Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Scripture Is Never Paywalled
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+- Bible text, Read mode and navigation of every published book MUST remain free, with no
+  sign-in, no trial and no count limit.
+- Only the study experience (live comparison beyond the free allowance, later-read levels,
+  premium series) MAY be paid.
+- Reflections a user already saved MUST stay viewable after their free allowance runs out
+  or their subscription lapses.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+Rationale: the most common complaint about competing apps is a paywall around the text.
+Trust depends on the Bible itself being freely readable.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. Closed-World Content Sourcing (NON-NEGOTIABLE)
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+- All Scripture and commentary text MUST come from the frozen, checksummed snapshots in
+  `content/sources/`. No app, Lambda, pipeline job or agent fetches Bible or commentary
+  text from the web at runtime.
+- Model calls MUST receive only the excerpts for the section being processed and MUST NOT
+  be given browsing, search or other retrieval tools.
+- Adding or updating a source is a deliberate, reviewed change: a new snapshot, its
+  checksums and retrieval date, committed together. Agents MUST NOT add or refresh sources
+  on their own initiative.
+- Every content pack MUST record the source names, snapshot dates and checksums it was
+  built from.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+Rationale: fewer, fixed sources mean fewer chances for wrong or slanted content, and every
+idea can be traced to a known text.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. Batch Generates, Live Only Compares
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+- Every question, key idea, context note and "views differ" note MUST be generated in the
+  batch pipeline, pass review, and ship in a content pack.
+- The live model MUST only compare a user's answer with that section's stored key ideas
+  and return the fields defined in `api/openapi.yaml` (covered idea IDs, a highlight phrase
+  quoted from the user's answer, a short note, a contradicts-text flag). It MUST NOT
+  generate questions, interpretations, verses or facts.
+- The live model MUST receive the answer, the question, the stored key ideas and context,
+  and never raw commentary text.
+- The live note MUST pass code checks (length limit, only commentator names attached to
+  matched ideas); on failure a template note is used.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+Rationale: the product's promise is "grounded, not invented". Keeping generation in a
+reviewed batch path is what makes that promise checkable.
+
+### IV. Every Idea Is Attributed
+
+- Every key idea shown in the app MUST carry at least one named commentator source taken
+  from the content pack.
+- Citations on the comparison card MUST be assembled by app code from pack data, never
+  taken from model output.
+- Content that cannot be stored or summarised under its license (for example Enduring
+  Word) is link-out only.
+
+Rationale: users must be able to see who said what; an invented citation would break trust.
+
+### V. Offline-First Study
+
+- Reading, Read mode and the comparison card MUST work offline from cached content packs.
+- When the live comparison is unavailable (offline, error, timeout, daily cap), the app MUST
+  immediately show the stored key ideas as "Here's what commentators noticed", save the
+  answer, and fill in the personal result later when possible.
+- A failed or unavailable live check MUST NOT consume a free reflection or a re-check.
+
+Rationale: a study habit cannot depend on signal; the factual content is already on the phone.
+
+### VI. Reflections Belong to the User
+
+- Answer text MUST live only on the device and in the user's own iCloud.
+- The backend MAY hold answer text in memory only for the duration of a compare call. It
+  MUST NOT log, persist, or send it anywhere except the comparison model. Logs, traces,
+  metrics and error reports MUST be scrubbed of answer text. Result caching MUST be keyed
+  by a hash of the answer, never the answer itself.
+- No user accounts. Entitlements use StoreKit and per-device App Attest only.
+- The app MUST tell users, before their first submission, that answers are processed by a
+  third-party AI model. Reflection data is never sold or shared.
+
+Rationale: reflections on faith are personal. The safest data is data the server never keeps.
+
+### VII. One Content Contract, Permanent IDs
+
+- `content/schema/section.schema.json` is the single contract for packs. A change MUST
+  update the schema first, then `shared/` models, pipeline output and Swift `ContentKit`
+  models in the same change, with contract tests on both sides.
+- Question and key idea IDs are permanent and never reused. Retired questions stay in packs,
+  marked retired. Pack updates are additive and versioned; nothing a user has answered is
+  ever deleted.
+- Saved reflections MUST snapshot the question and key ideas exactly as shown, so they stay
+  complete whatever later packs change.
+- No pack is published without passing automatic checks, model review and a human approval
+  gate.
+
+Rationale: users' saved reflections must never break, and three codebases read the same data.
+
+### VIII. Guide, Never Judge
+
+- The app and every prompt MUST lead with what the person noticed, never call an answer
+  "wrong", never preach, and keep personal notes under 60 words in plain, warm language.
+- Where commentators or traditions disagree, content MUST present the main views neutrally.
+  The launch commentary set (Reformed and Wesleyan, Protestant) MUST be disclosed plainly.
+- Answers that suggest distress or crisis MUST receive a caring response with support
+  resources instead of a comparison.
+
+Rationale: users must not feel graded on their faith; the app has no authority to rule
+between traditions.
+
+### IX. Bounded Live Cost
+
+- Every live AI call MUST be bounded: minimum answer length before Submit, a per-question
+  re-check limit, no call for an unchanged answer (server cache), a per-device daily cap
+  enforced server-side with App Attest, and the free allowance enforced server-side.
+- Over any limit, the app falls back to stored key ideas at zero AI cost.
+- AI spend and abusive devices MUST be alarmed.
+
+Rationale: a subscriber must cost cents a month to serve, even under misuse.
+
+### X. Accessible and Token-Driven UI
+
+- Every screen MUST support Dynamic Type, VoiceOver labels on every card and icon-only
+  button, and 44pt minimum touch targets.
+- Colors MUST come from DesignSystem tokens (light and dark). Prices MUST come from StoreKit.
+  No hard-coded colors or prices in app code.
+- `docs/design/DESIGN.md` and its mockups are the UI source of truth. UI specs MUST link the
+  relevant section and mockup.
+
+Rationale: a reading app is used by people of every age and eyesight; tokens keep dark mode
+and future theming correct by construction.
+
+## Technology & Platform Constraints
+
+- **iOS app:** Swift 6 (strict concurrency), SwiftUI with Observation, SwiftData with CloudKit,
+  StoreKit 2, Swift Testing. iPhone, iOS 17 minimum. Local Swift packages: DesignSystem,
+  ContentKit, ReflectionKit, APIClient.
+- **Backend:** Python 3.12 AWS Lambdas (`compare`, `authorizer`) behind API Gateway, AWS Lambda
+  Powertools for logging, validation and tracing, Amazon Bedrock (Haiku-class model) for
+  comparison, DynamoDB for operational data only (caps, cache, pipeline state, anonymous
+  question stats). `api/openapi.yaml` is the only live API contract.
+- **Pipeline:** Python 3.12 batch jobs, one book per run, Step Functions Standard, Bedrock
+  (Sonnet-class model, batch inference where possible). Prompts are versioned files in
+  `pipeline/prompts/`; outputs are keyed by book, section and prompt version, so re-runs are
+  idempotent.
+- **Content delivery:** versioned packs in S3 behind CloudFront; one study file per book shared
+  by all translations, plus one verse-text file per translation.
+- **Infrastructure:** Terraform only (modules `api`, `pipeline`, `storage`, `cdn`; envs `dev`,
+  `prod`), least-privilege IAM per function. No console-only resources.
+- **Python tooling:** uv workspace, ruff, mypy `--strict`, pytest.
+- **Secrets:** never in the repo. No `.env` files, Terraform state or signing keys committed.
+
+## Development Workflow & Quality Gates
+
+- **Spec-driven:** each feature goes through Spec Kit:
+  `/speckit-specify` → `/speckit-clarify` → `/speckit-plan` → `/speckit-tasks` →
+  `/speckit-implement`. Each feature is built on its own `NNN-short-name` branch.
+- **Constitution Check:** every plan MUST state how it satisfies each relevant principle.
+  Any violation needs a justification in the plan's Complexity Tracking table, or a
+  constitution amendment.
+- **Testing:**
+  - Contract tests MUST cover the pack schema (pipeline output and app decoding) and the
+    compare API (backend and APIClient).
+  - Business rules MUST have unit tests: free count, re-check limits, level selection,
+    caching, fallbacks.
+  - Prompt changes MUST be evaluated against a fixed set of sample sections before a new
+    prompt version is used for publishing.
+- **Gates before merge:** `make lint` and `make test` pass. `make ios-test` passes for app
+  changes. Schema changes include updated models on all three sides.
+- **Commits:** small, with a scope prefix (`ios:`, `backend:`, `pipeline:`, `infra:`,
+  `content:`, `docs:`).
+- **Content review:** the launch book gets a full human read-through. Later books get model
+  review plus human spot checks of flagged items.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- This constitution supersedes other practices. Area `CLAUDE.md` files and specs MUST NOT
+  contradict it; where they do, the constitution wins until it is amended.
+- Amendments are made with `/speckit-constitution`, in their own commit
+  (`docs: amend constitution to vX.Y.Z`), with a Sync Impact Report and updates to any
+  dependent templates or docs.
+- Versioning follows semver: MAJOR removes or redefines a principle, MINOR adds a principle
+  or materially expands guidance, PATCH clarifies wording.
+- Reviews of every plan and PR verify compliance. `/speckit-analyze` is run before
+  implementing any feature that touches content, privacy or payments.
+- Runtime guidance for agents lives in the root `CLAUDE.md` and per-area `CLAUDE.md` files.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-03
