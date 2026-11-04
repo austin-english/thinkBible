@@ -151,9 +151,14 @@ later, from the extraction result (FR-005).
 
 **Decision**:
 - **Client**: Amazon Bedrock through the official Anthropic Python SDK
-  (`anthropic[bedrock]`, `AnthropicBedrockMantle(aws_region=...)`), as the constitution requires.
-  Model IDs are config values, by default `anthropic.claude-sonnet-5-5` and
-  `anthropic.claude-haiku-5-5`, so a cross-region inference profile can be swapped in.
+  (`anthropic[bedrock]`, `AnthropicBedrockMantle(aws_region="us-west-2")`), as the constitution
+  requires.
+  - Model IDs are config values. The defaults are the US cross-region inference profiles
+    `us.anthropic.claude-sonnet-5-5`, `us.anthropic.claude-haiku-5-5` and
+    `us.anthropic.claude-opus-5-5` (fallback), confirmed available on 2026-11-04.
+  - The organization's region policy allows Bedrock invoke in every region and everything else
+    only in us-west-2 (docs/aws-setup.md → Regions). So all ThinkBible resources live in
+    us-west-2, and CloudFront and its ACM certificate in us-east-1.
 - **Models by stage**:
 
   | Stage | Model | Reason |

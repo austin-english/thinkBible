@@ -21,6 +21,25 @@ claude mcp add --transport stdio xcode -- xcrun mcpbridge
 - **App:** follow `ios/README.md` once to create the Xcode project in `ios/`, then work in Xcode.
 - **Claude Code:** run it from the repo root so it sees every `CLAUDE.md`.
 
+## AWS
+
+Two accounts: **ThinkBible** (everything the app runs on) and the **Management Account** (billing
+and sign-in settings). Setup details, remaining steps and troubleshooting are in
+[`docs/aws-setup.md`](docs/aws-setup.md).
+
+```bash
+aws sso login --profile admin-thinkbible   # browser approval; lasts up to 8 hours
+export AWS_PROFILE=admin-thinkbible        # used by the pipeline, Terraform and the AWS CLI
+aws sts get-caller-identity                # should show assumed-role/AWSReservedSSO_AdministratorAccess_…
+```
+
+- Console: settings.aws.com (or the bookmarked access portal) → ThinkBible → AdministratorAccess.
+- Root is for emergencies only. Never create access keys: the CLI uses short-lived SSO
+  credentials.
+- Regions: ThinkBible's resources run in **us-west-2** (Oregon). The login, CloudFront and its
+  certificate use **us-east-1**. An organization policy blocks other uses, so see
+  `docs/aws-setup.md` → Regions.
+
 ## Spec Kit
 
 Spec Kit is already initialised (Claude integration plus the git extension), and its
