@@ -1,7 +1,7 @@
 # ThinkBible specs
 
 Spec Kit feature specs, in build order. The constitution lives at
-[`.specify/memory/constitution.md`](../.specify/memory/constitution.md) (v1.0.0).
+[`.specify/memory/constitution.md`](../.specify/memory/constitution.md) (v1.0.1).
 
 | # | Feature | Status | Open clarifications |
 |---|---|---|---|
@@ -45,28 +45,31 @@ Or set `SPECIFY_FEATURE_DIRECTORY=specs/002-reader-read-mode` for one session.
 New features after these use `/speckit-specify <description>`. Its git hook creates the branch and
 picks the next number.
 
+## Decisions
+
+Confirmed by the product owner on 2026-11-04 and applied to `docs/brief.md`, `DESIGN.md`, the
+constitution and these specs:
+
+- **Free tier:** 3 reflections in total per device. After that, the reader must subscribe.
+- **Follow-up questions:** when a reader re-reads a section, they get its next, harder question
+  from the reviewed pool. The live model never writes questions.
+- **Pack shape:** follows DESIGN.md ("Data the UI reads"). Questions have `level`, verse scope,
+  `targets`, `isAlternate` and `status`, and keep `type` as pipeline metadata. Key ideas have
+  `title`, `body` and verse scope. The brief's example section now uses this shape.
+
 ## Doc discrepancies to fix
 
 These were found while drafting. The specs follow the resolution shown here, so update the source
 docs to match:
 
-1. **Free tier.** The brief and the paywall spec say 3 free reflections in total.
-   `docs/design/DESIGN.md` (Submit, edit and cost rules: "free tier is 1 reflection a day") and the
-   brief's data model (Entitlement: "daily free reflection used") are stale. The specs use 3 in
-   total.
-2. **Live follow-up questions.** Brief principle 3 says the live model "writes follow-up questions".
-   That conflicts with "no live question generation". The constitution forbids it.
-3. **Pack shape.** The brief's example section JSON (question `type`, idea as one `idea` string)
-   predates DESIGN.md, which has `level`, `title`/`body`, verse scope and `isAlternate`. Spec 001
-   follows DESIGN.md and keeps `type`. Reconcile the brief's example when the schema lands.
-4. **"Try a different question".** It is still in the brief's MVP table but was replaced by levels
+1. **"Try a different question".** It is still in the brief's MVP table but was replaced by levels
    and "Not a helpful question?". The specs drop it.
-5. **Translations in MVP.** The brief's MVP summary says "one translation", but the MVP table and
+2. **Translations in MVP.** The brief's MVP summary says "one translation", but the MVP table and
    DESIGN.md include the BSB / KJV switch. The specs include both.
-6. **Verse notes.** Pipeline step 6 generates them, but DESIGN.md defers them to V2. The pack
+3. **Verse notes.** Pipeline step 6 generates them, but DESIGN.md defers them to V2. The pack
    format allows them, and the MVP doesn't generate or show them.
-7. **"Compare is the only live API".** Analytics (spec 007) may need a second endpoint. See its
+4. **"Compare is the only live API".** Analytics (spec 007) may need a second endpoint. See its
    clarification.
-8. **Files referenced but not yet created:** `api/openapi.yaml`, `content/schema/section.schema.json`,
+5. **Files referenced but not yet created:** `api/openapi.yaml`, `content/schema/section.schema.json`,
    the per-area `CLAUDE.md` files, `ios/README.md`, `.github/workflows/`. Specs 001 and 003 produce
    the first two during `/speckit-plan`.

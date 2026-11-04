@@ -34,5 +34,5 @@
 - Platform and contract names required by the constitution (iOS, App Store, iCloud, App Attest,
   the pack schema, `api/openapi.yaml`) are treated as constraints, not implementation choices.
 - App Store and StoreKit terms are unavoidable for in-app subscriptions.
-- Resolves a doc conflict: the free tier is 3 reflections in total, not 1 per day.
+- Free tier confirmed: 3 reflections in total, then subscribe.
 - Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`.

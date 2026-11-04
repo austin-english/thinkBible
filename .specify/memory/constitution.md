@@ -38,6 +38,8 @@ idea can be traced to a known text.
   and return the fields defined in `api/openapi.yaml` (covered idea IDs, a highlight phrase
   quoted from the user's answer, a short note, a contradicts-text flag). It MUST NOT
   generate questions, interpretations, verses or facts.
+- Follow-up questions are the section's next-level questions from the reviewed pool, served
+  when the reader re-reads that section. They are never generated or adapted live.
 - The live model MUST receive the answer, the question, the stored key ideas and context,
   and never raw commentary text.
 - The live note MUST pass code checks (length limit, only commentator names attached to
@@ -184,4 +186,4 @@ and future theming correct by construction.
   implementing any feature that touches content, privacy or payments.
 - Runtime guidance for agents lives in the root `CLAUDE.md` and per-area `CLAUDE.md` files.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-03
+**Version**: 1.0.1 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-04

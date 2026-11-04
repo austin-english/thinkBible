@@ -155,7 +155,8 @@ completion footer, and that later visits show the folded reflection with no new 
 - **FR-009**: Retired questions MUST never be served as new questions. Reflections that used them
   stay complete from their snapshot.
 - **FR-010**: Level progress MUST sync with the reader's other progress (spec 005).
-- **FR-011**: No question is generated live. Every question served comes from the pack.
+- **FR-011**: No question is generated live. These later-read questions are the app's follow-up
+  questions, and every question served comes from the pack.
 
 ### Key Entities
 

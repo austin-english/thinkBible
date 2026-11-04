@@ -234,8 +234,8 @@ default mode, dark appearance, and a scheduled reminder notification.
 
 ## Assumptions
 
-- The free tier is 3 reflections in total, per the brief and the paywall spec. DESIGN.md's line
-  "free tier is 1 reflection a day" is stale. A/B testing 3 against 5 is later work.
+- The free tier is 3 reflections in total per device, after which the reader must subscribe
+  (confirmed 2026-11-04). A/B testing 3 against 5 is later work.
 - Prices ($3.99 monthly, $29.99 yearly) and the 7-day trial are App Store Connect configuration and
   can change without an app update.
 - Privacy policy and Terms are hosted on thinkbible.app.

@@ -134,20 +134,25 @@ All the study content is produced ahead of time, one book at a time, reviewed, a
 
 **Example stored section:**
 
+Shape follows `docs/design/DESIGN.md` ("Data the UI reads"); `content/schema/section.schema.json` is the binding contract.
+
 ```json
 {
-  "section": "Mark 1:1-8",
-  "title": "John the Baptist prepares the way",
-  "questions": [
-    { "id": "mk1-1-q1", "type": "meaning", "text": "Why do you think John says he isn't worthy to untie the straps of Jesus's sandals?", "textByTranslation": { "kjv": "Why do you think John says he isn't worthy to unloose Jesus's shoes?" }, "targets": ["k1", "k2"] },
-    { "id": "mk1-1-q2", "type": "noticing", "text": "What is John's role, according to this passage?", "targets": ["k3"] },
-    { "id": "mk1-1-q3", "type": "application", "text": "Where might humility like John's matter in your own life this week?", "targets": ["k1"] }
-  ],
+  "id": "mk-1-1",
+  "ref": "Mark 1:1-8",
+  "title": "The Mission of John the Baptist",
+  "noPrompt": false,
   "keyIdeas": [
-    { "id": "k1", "idea": "Untying sandals was a servant's lowliest task; John shows deep humility", "sources": ["Matthew Henry", "JFB", "Clarke"], "agreed": true },
-    { "id": "k2", "idea": "John's humility points to Jesus's far greater authority", "sources": ["JFB"] },
-    { "id": "k3", "idea": "John is the messenger Isaiah foretold, preparing the way", "sources": ["Matthew Henry"] },
-    { "id": "k4", "idea": "John baptizes with water; the one coming will baptize with the Holy Spirit", "sources": ["Matthew Henry"] }
+    { "id": "mk-1-1-k1", "title": "Untying sandals was a slave's task", "body": "John places himself below even the lowest servant's job.", "sources": ["Matthew Henry", "JFB", "Clarke"], "agreed": true, "verseStart": 7, "verseEnd": 7 },
+    { "id": "mk-1-1-k2", "title": "Jesus is the greater one", "body": "John's message points away from himself to the One coming after him.", "sources": ["Matthew Henry", "JFB"], "agreed": true, "verseStart": 7, "verseEnd": 7 },
+    { "id": "mk-1-1-k3", "title": "Water and the Spirit", "body": "John can wash the outside. Only Jesus can give the Holy Spirit.", "sources": ["JFB", "Clarke"], "agreed": true, "verseStart": 7, "verseEnd": 8 },
+    { "id": "mk-1-1-k4", "title": "Where the prophets left off", "body": "John is the messenger Isaiah promised, so the good news picks up where the prophets left off.", "sources": ["Matthew Henry", "JFB"], "agreed": true, "verseStart": 1, "verseEnd": 8 }
+  ],
+  "questions": [
+    { "id": "mk-1-1-q1", "level": 1, "type": "meaning", "verseStart": 7, "verseEnd": 7, "text": "Why do you think John says he isn't worthy to untie the straps of Jesus's sandals?", "textByTranslation": { "kjv": "Why do you think John says he isn't worthy to unloose Jesus's shoes?" }, "targets": ["mk-1-1-k1", "mk-1-1-k2"], "isAlternate": false, "status": "active", "addedIn": "mark-1.0.0" },
+    { "id": "mk-1-1-q2", "level": 1, "type": "noticing", "verseStart": 7, "verseEnd": 7, "text": "How does John describe the One who is coming after him?", "targets": ["mk-1-1-k2"], "isAlternate": true, "status": "active", "addedIn": "mark-1.0.0" },
+    { "id": "mk-1-1-q3", "level": 2, "type": "meaning", "verseStart": 1, "verseEnd": 8, "text": "Mark starts his gospel with John in the wilderness, not with Jesus's birth. Why do you think he begins here?", "targets": ["mk-1-1-k4"], "isAlternate": false, "status": "active", "addedIn": "mark-1.0.0" },
+    { "id": "mk-1-1-q4", "level": 3, "type": "application", "verseStart": 7, "verseEnd": 8, "text": "John baptizes with water, but says Jesus will baptize with the Holy Spirit. What difference is he pointing to?", "textByTranslation": { "kjv": "John baptizes with water, but says Jesus will baptize with the Holy Ghost. What difference is he pointing to?" }, "targets": ["mk-1-1-k3"], "isAlternate": false, "status": "active", "addedIn": "mark-1.0.0" }
   ],
   "context": "Mark opens without a birth story; John is introduced as the messenger Isaiah foretold.",
   "viewsDiffer": null,
@@ -270,15 +275,15 @@ Published study content (questions, key ideas, context) lives in versioned conte
 | Entity | Key fields | Lives in |
 | --- | --- | --- |
 | ContentPack | book, packVersion, sections\[\] (study content shared by both translations), plus one verse-text file per translation, source provenance | S3 + CloudFront; cached on device |
-| Section | id, reference (shared verse range), title, questions\[\], keyIdeas\[\], context, viewsDiffer, verseNotes\[\], noPrompt flag | Inside the content pack |
-| Question | id (permanent, never reused), type (noticing, meaning, application, seasonal), text, optional per-translation wording, target key idea IDs, series, status (active or retired), added in pack version | Inside the content pack |
-| KeyIdea | id, idea, sources\[\], agreed (shared by 2+ commentators) | Inside the content pack |
+| Section | id, ref (shared verse range), title, questions\[\], keyIdeas\[\], context, viewsDiffer, verseNotes\[\] (V2), noPrompt flag | Inside the content pack |
+| Question | id (permanent, never reused), level (1–3), type (noticing, meaning, application, seasonal), verseStart, verseEnd, text, optional per-translation wording, target key idea IDs, isAlternate, series, status (active or retired), added in pack version | Inside the content pack |
+| KeyIdea | id, title, body, sources\[\], agreed (shared by 2+ commentators), verseStart, verseEnd | Inside the content pack |
 | Reflection | section ID, question ID, answer text, covered idea IDs, note, highlight, created, synced status, plus a snapshot of what was shown: question text, key ideas, translation, pack version | SwiftData + iCloud |
 | Progress | book, last section, sections read, sections reflected, streak | SwiftData + iCloud |
 | QuestionHistory | question IDs answered or skipped | SwiftData + iCloud |
 | PipelineState | book, section, prompt version, stage (generated, checked, flagged, approved, published) | DynamoDB |
 | QuestionStats | question ID, times shown, answered, skipped, not helpful (anonymous counts) | DynamoDB |
-| Entitlement | daily free reflection used, subscription status | StoreKit 2 + backend check |
+| Entitlement | free reflections used (3 in total per device, then subscribe), subscription status | StoreKit 2 + backend check |
 
 **Why answers never disappear:**
 
@@ -409,7 +414,7 @@ Same stack as the grocery app: Swift app, Python backend and pipeline, Terraform
 
 1. Swift 6, SwiftUI + Observation, SwiftData with CloudKit, Swift Testing.
 2. Scripture text is never paywalled.
-3. The live model only compares answers with stored key ideas and writes follow-up questions; it never generates interpretation on its own.
+3. The live model only compares answers with stored key ideas; it never generates questions or interpretation on its own. Follow-up questions are the harder, pre-generated questions served when the reader re-reads a section (one level up per later read).
 4. Every key idea shown has a named commentator source from the content pack.
 5. The comparison card always works offline from the content pack.
 6. Reflections stay on the device and in iCloud; the backend never stores answer text.

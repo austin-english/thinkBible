@@ -327,8 +327,9 @@ retired, and no ID was reused.
 - MVP runs can happen on the owner's machine against the dev environment, using on-demand model
   calls while prompts are tuned. Cloud orchestration per book and batch inference follow when
   later books are generated. Both use the same stages and outputs.
-- The brief's example JSON (questions with `type`, ideas as one `idea` string) predates the design
-  spec. This spec follows DESIGN.md's richer shape (title + body, verse scope, level, alternate).
+- The pack shape follows DESIGN.md ("Data the UI reads"): key ideas have title, body and verse
+  scope; questions have level, verse scope, targets, alternate role and status, and keep `type` as
+  pipeline metadata (confirmed 2026-11-04; the brief's example section matches).
 - Verse notes are stored in the format but not generated or shown in the MVP (DESIGN.md defers
   them to V2).
 - Seasonal series, question refresh runs and analytics-driven swaps reuse this pipeline but are

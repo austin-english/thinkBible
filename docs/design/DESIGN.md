@@ -203,7 +203,7 @@ Level 1 is often a single verse.
   - An unchanged answer makes no API call.
   - After 2 re-checks the button becomes "Save answer": it keeps the new text and the existing results, with no API call.
 - **Skip** on the first question collapses the section and marks it "Skipped". Its row then reads "Skipped · answer anyway".
-- **Server side:** results are cached by hash(section, question, answer); there's a daily cap per device (about 30); free tier is 1 reflection a day. Over the cap, show the fallback results from the stored key ideas.
+- **Server side:** results are cached by hash(section, question, answer); there's a daily cap per device (about 30) for Premium; the free tier is 3 reflections in total, after which the user must subscribe (see the paywall section). Over the daily cap, show the fallback results from the stored key ideas.
 
 ## Free reflections and the paywall (`Paywall.dc.html`)
 
