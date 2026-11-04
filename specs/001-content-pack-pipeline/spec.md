@@ -152,11 +152,14 @@ exist, then change one byte in a source file and confirm every pipeline stage re
 **Acceptance Scenarios**:
 
 1. **Given** no snapshot, **When** the owner runs the import, **Then** source files for both
-   translations and all three commentaries are written under `content/sources/`, with a manifest of
-   checksums, source URLs, licenses and retrieval date. Requests are made at a polite rate.
-2. **Given** a snapshot, **When** any pipeline stage starts, **Then** it verifies checksums first
+   translations and all three commentaries are stored in the private object store and the local
+   cache. A manifest of checksums, storage keys, source URLs, licenses and retrieval date is
+   committed to the repo. Requests are made at a polite rate.
+2. **Given** a fresh clone with an empty local cache, **When** the owner pulls the snapshot,
+   **Then** every file listed in the manifest is downloaded and passes its checksum.
+3. **Given** a snapshot, **When** any pipeline stage starts, **Then** it verifies checksums first
    and stops with an error on any mismatch.
-3. **Given** any pipeline stage, **When** it runs, **Then** it makes no network request for
+4. **Given** any pipeline stage, **When** it runs, **Then** it makes no network request for
    Scripture or commentary text. Model calls receive only the current section's excerpts and have
    no browsing or search tools.
 
@@ -251,8 +254,10 @@ place and confirm the publish check refuses the version.
 **Sources**
 
 - **FR-001**: The system MUST import the BSB and KJV texts and the Matthew Henry,
-  Jamieson-Fausset-Brown and Adam Clarke commentaries once into `content/sources/`, recording for
-  each: source name, origin URL, license, retrieval date and checksums.
+  Jamieson-Fausset-Brown and Adam Clarke commentaries once. The files are stored write-once in a
+  private object store and cached locally in `content/sources/`. A manifest committed to the
+  repo (`content/sources/manifest.json`) records for each file: source name, origin URL, license,
+  retrieval date, storage key and checksums.
 - **FR-002**: Every pipeline stage MUST verify source checksums before running and MUST stop on any
   mismatch.
 - **FR-003**: No pipeline stage may fetch Scripture or commentary text from the network, and model

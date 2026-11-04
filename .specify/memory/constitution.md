@@ -16,13 +16,15 @@ Trust depends on the Bible itself being freely readable.
 
 ### II. Closed-World Content Sourcing (NON-NEGOTIABLE)
 
-- All Scripture and commentary text MUST come from the frozen, checksummed snapshots in
-  `content/sources/`. No app, Lambda, pipeline job or agent fetches Bible or commentary
-  text from the web at runtime.
+- All Scripture and commentary text MUST come from the frozen source snapshot. The snapshot
+  is stored write-once in a private S3 bucket and cached locally in `content/sources/`. Every
+  file is verified against the checksums in `content/sources/manifest.json`, which is
+  committed to git. No app, Lambda, pipeline job or agent fetches Bible or commentary text
+  from the web at runtime.
 - Model calls MUST receive only the excerpts for the section being processed and MUST NOT
   be given browsing, search or other retrieval tools.
-- Adding or updating a source is a deliberate, reviewed change: a new snapshot, its
-  checksums and retrieval date, committed together. Agents MUST NOT add or refresh sources
+- Adding or updating a source is a deliberate, reviewed change: a new snapshot uploaded
+  under a new snapshot ID, with its checksums and retrieval date committed in the manifest. Agents MUST NOT add or refresh sources
   on their own initiative.
 - Every content pack MUST record the source names, snapshot dates and checksums it was
   built from.
@@ -186,4 +188,4 @@ and future theming correct by construction.
   implementing any feature that touches content, privacy or payments.
 - Runtime guidance for agents lives in the root `CLAUDE.md` and per-area `CLAUDE.md` files.
 
-**Version**: 1.0.1 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-04
+**Version**: 1.0.2 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-04

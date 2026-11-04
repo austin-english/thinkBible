@@ -262,3 +262,10 @@ ios/**/DerivedData/
 # Pipeline scratch output (reviewed packs live in content/packs/)
 pipeline/.work/
 pipeline/out/
+
+# Source snapshot: text lives in S3 (write-once); only the checksum manifest is committed
+content/sources/*
+!content/sources/manifest.json
+
+# Generated review reports (regenerate with `thinkbible-pipeline run --stage report`)
+content/drafts/*/review.html

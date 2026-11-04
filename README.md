@@ -38,7 +38,7 @@ thinkbible/
 ├─ CLAUDE.md, Makefile, pyproject.toml (uv workspace), thinkbible.code-workspace
 ├─ docs/            brief.md, design/ (DESIGN.md + screens/)
 ├─ api/             openapi.yaml (compare endpoint)
-├─ content/         schema/ (pack contract), sources/ (frozen, checksummed), packs/
+├─ content/         schema/ (pack contract), sources/manifest.json (snapshot checksums; text in S3), drafts/
 ├─ shared/          Python pack models (thinkbible_core)
 ├─ backend/         Lambdas: compare, authorizer
 ├─ pipeline/        batch jobs + versioned prompts

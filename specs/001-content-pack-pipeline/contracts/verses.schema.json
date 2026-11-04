@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://thinkbible.app/schema/v1/verses.schema.json",
+  "title": "VerseText",
+  "description": "One translation's text of one book. Published at /v1/books/{book}/{packVersion}/verses/{translation}.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["formatVersion", "book", "translation", "packVersion", "chapters", "omittedVerses"],
+  "properties": {
+    "formatVersion": { "const": 1 },
+    "book": { "$ref": "study-pack.schema.json#/$defs/book" },
+    "translation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "abbreviation"],
+      "properties": {
+        "id": { "$ref": "section.schema.json#/$defs/translationId" },
+        "name": { "type": "string" },
+        "abbreviation": { "type": "string", "maxLength": 8 }
+      }
+    },
+    "packVersion": { "$ref": "section.schema.json#/$defs/packVersion" },
+    "chapters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["number", "verses"],
+        "properties": {
+          "number": { "type": "integer", "minimum": 1 },
+          "verses": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["number", "text"],
+              "properties": {
+                "number": { "$ref": "section.schema.json#/$defs/verse" },
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Plain text of the verse. Poetry verses also carry lines."
+                },
+                "paragraphStart": { "type": "boolean" },
+                "lines": {
+                  "type": "array",
+                  "description": "Poetry lines with indent level (Psalms, quoted prophecy).",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["text", "indent"],
+                    "properties": {
+                      "text": { "type": "string" },
+                      "indent": { "type": "integer", "minimum": 0, "maximum": 4 }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "omittedVerses": {
+      "type": "array",
+      "description": "Verse numbers this translation does not contain (e.g. BSB Mark 7:16). The study pack's manuscript notes explain them.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["chapter", "verse"],
+        "properties": {
+          "chapter": { "type": "integer", "minimum": 1 },
+          "verse": { "$ref": "section.schema.json#/$defs/verse" }
+        }
+      }
+    }
+  }
+}

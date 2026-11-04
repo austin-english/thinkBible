@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://thinkbible.app/schema/v1/study-pack.schema.json",
+  "title": "StudyPack",
+  "description": "One book's published study content, shared by every translation, with provenance. Published at /v1/books/{book}/{packVersion}/study.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "formatVersion",
+    "book",
+    "packVersion",
+    "publishedAt",
+    "translations",
+    "sources",
+    "build",
+    "sections"
+  ],
+  "properties": {
+    "formatVersion": { "const": 1 },
+    "book": { "$ref": "#/$defs/book" },
+    "packVersion": { "$ref": "section.schema.json#/$defs/packVersion" },
+    "publishedAt": { "type": "string", "format": "date-time" },
+    "translations": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Verse-text files published with this pack. The first entry is the default translation.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "abbreviation", "path", "sha256"],
+        "properties": {
+          "id": { "$ref": "section.schema.json#/$defs/translationId" },
+          "name": { "type": "string" },
+          "abbreviation": { "type": "string", "maxLength": 8 },
+          "path": {
+            "type": "string",
+            "description": "Path relative to this file, e.g. verses/bsb.json."
+          },
+          "sha256": { "$ref": "#/$defs/sha256" }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Every source this pack was built from: translations and commentaries.",
+      "items": { "$ref": "#/$defs/source" }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["promptVersions", "questionGuideVersion", "models"],
+      "properties": {
+        "promptVersions": {
+          "type": "object",
+          "description": "Prompt version per stage, e.g. {\"generate\": \"v3\"}.",
+          "additionalProperties": { "type": "string" }
+        },
+        "questionGuideVersion": { "type": "string" },
+        "models": {
+          "type": "object",
+          "description": "Model id per stage.",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "section.schema.json" }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "book": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9A-Z]{3}$",
+          "description": "USFM book code, e.g. MRK."
+        },
+        "name": { "type": "string", "description": "English name, e.g. Mark." }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "shortName",
+        "license",
+        "licenseUrl",
+        "origin",
+        "retrievedAt",
+        "upstreamSha256",
+        "snapshotSha256"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Translation id (bsb, kjv) or commentator id (matthew-henry, ...)."
+        },
+        "kind": { "enum": ["translation", "commentary"] },
+        "name": { "type": "string", "description": "e.g. Matthew Henry's Commentary" },
+        "shortName": { "type": "string", "description": "e.g. Henry, JFB, Clarke, BSB" },
+        "tradition": {
+          "type": "string",
+          "description": "Commentaries only, e.g. Reformed (Presbyterian), Wesleyan (Methodist)."
+        },
+        "license": { "type": "string", "description": "e.g. Public domain (CC0)" },
+        "licenseUrl": { "type": "string", "format": "uri" },
+        "origin": { "type": "string", "description": "e.g. Free Use Bible API (bible.helloao.org)" },
+        "apiVersion": { "type": "string" },
+        "retrievedAt": { "type": "string", "format": "date" },
+        "upstreamSha256": { "$ref": "#/$defs/sha256" },
+        "snapshotSha256": {
+          "$ref": "#/$defs/sha256",
+          "description": "sha256 of the normalised snapshot file for this book."
+        }
+      }
+    }
+  }
+}

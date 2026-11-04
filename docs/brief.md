@@ -95,7 +95,7 @@ Launch with two public-domain translations, the BSB (default) and the KJV, shari
 
 **Where the data comes from, and how it stays fixed:**
 
-- **One source, downloaded once:** the two translations and three commentaries are pulled from the Free Use Bible API a single time by an import script, then frozen as files in `content/sources/` with checksums and the retrieval date. The app and pipeline never call the API live.
+- **One source, downloaded once:** the two translations and three commentaries are pulled from the Free Use Bible API a single time by an import script, then frozen as write-once files in a private S3 bucket. Their checksums and the retrieval date are recorded in `content/sources/manifest.json` in the repo, and the pipeline works from a verified local copy in `content/sources/`. The app and pipeline never call the API live.
 - **Closed world for the models:** every model call receives only the excerpts for one section from that frozen snapshot. Bedrock models have no web access, and the pipeline gives them no browsing or search tools.
 - **No sprawl from coding agents:** the repo's `CLAUDE.md` and the constitution state that pipeline code may read only `content/sources/`; adding or updating a source is a deliberate, reviewed change (new snapshot, new checksums), never something an agent does on its own.
 - **Provenance in every pack:** each content pack records the source names, snapshot date and checksums it was built from.
@@ -138,25 +138,25 @@ Shape follows `docs/design/DESIGN.md` ("Data the UI reads"); `content/schema/sec
 
 ```json
 {
-  "id": "mk-1-1",
+  "id": "mrk-1-1",
   "ref": "Mark 1:1-8",
   "title": "The Mission of John the Baptist",
   "noPrompt": false,
   "keyIdeas": [
-    { "id": "mk-1-1-k1", "title": "Untying sandals was a slave's task", "body": "John places himself below even the lowest servant's job.", "sources": ["Matthew Henry", "JFB", "Clarke"], "agreed": true, "verseStart": 7, "verseEnd": 7 },
-    { "id": "mk-1-1-k2", "title": "Jesus is the greater one", "body": "John's message points away from himself to the One coming after him.", "sources": ["Matthew Henry", "JFB"], "agreed": true, "verseStart": 7, "verseEnd": 7 },
-    { "id": "mk-1-1-k3", "title": "Water and the Spirit", "body": "John can wash the outside. Only Jesus can give the Holy Spirit.", "sources": ["JFB", "Clarke"], "agreed": true, "verseStart": 7, "verseEnd": 8 },
-    { "id": "mk-1-1-k4", "title": "Where the prophets left off", "body": "John is the messenger Isaiah promised, so the good news picks up where the prophets left off.", "sources": ["Matthew Henry", "JFB"], "agreed": true, "verseStart": 1, "verseEnd": 8 }
+    { "id": "mrk-1-1-k1", "title": "Untying sandals was a slave's task", "body": "John places himself below even the lowest servant's job.", "sources": ["Matthew Henry", "JFB", "Clarke"], "agreed": true, "verseStart": 7, "verseEnd": 7 },
+    { "id": "mrk-1-1-k2", "title": "Jesus is the greater one", "body": "John's message points away from himself to the One coming after him.", "sources": ["Matthew Henry", "JFB"], "agreed": true, "verseStart": 7, "verseEnd": 7 },
+    { "id": "mrk-1-1-k3", "title": "Water and the Spirit", "body": "John can wash the outside. Only Jesus can give the Holy Spirit.", "sources": ["JFB", "Clarke"], "agreed": true, "verseStart": 7, "verseEnd": 8 },
+    { "id": "mrk-1-1-k4", "title": "Where the prophets left off", "body": "John is the messenger Isaiah promised, so the good news picks up where the prophets left off.", "sources": ["Matthew Henry", "JFB"], "agreed": true, "verseStart": 1, "verseEnd": 8 }
   ],
   "questions": [
-    { "id": "mk-1-1-q1", "level": 1, "type": "meaning", "verseStart": 7, "verseEnd": 7, "text": "Why do you think John says he isn't worthy to untie the straps of Jesus's sandals?", "textByTranslation": { "kjv": "Why do you think John says he isn't worthy to unloose Jesus's shoes?" }, "targets": ["mk-1-1-k1", "mk-1-1-k2"], "isAlternate": false, "status": "active", "addedIn": "mark-1.0.0" },
-    { "id": "mk-1-1-q2", "level": 1, "type": "noticing", "verseStart": 7, "verseEnd": 7, "text": "How does John describe the One who is coming after him?", "targets": ["mk-1-1-k2"], "isAlternate": true, "status": "active", "addedIn": "mark-1.0.0" },
-    { "id": "mk-1-1-q3", "level": 2, "type": "meaning", "verseStart": 1, "verseEnd": 8, "text": "Mark starts his gospel with John in the wilderness, not with Jesus's birth. Why do you think he begins here?", "targets": ["mk-1-1-k4"], "isAlternate": false, "status": "active", "addedIn": "mark-1.0.0" },
-    { "id": "mk-1-1-q4", "level": 3, "type": "application", "verseStart": 7, "verseEnd": 8, "text": "John baptizes with water, but says Jesus will baptize with the Holy Spirit. What difference is he pointing to?", "textByTranslation": { "kjv": "John baptizes with water, but says Jesus will baptize with the Holy Ghost. What difference is he pointing to?" }, "targets": ["mk-1-1-k3"], "isAlternate": false, "status": "active", "addedIn": "mark-1.0.0" }
+    { "id": "mrk-1-1-q1", "level": 1, "type": "meaning", "verseStart": 7, "verseEnd": 7, "text": "Why do you think John says he isn't worthy to untie the straps of Jesus's sandals?", "textByTranslation": { "kjv": "Why do you think John says he isn't worthy to unloose Jesus's shoes?" }, "targets": ["mrk-1-1-k1", "mrk-1-1-k2"], "isAlternate": false, "status": "active", "addedIn": "1.0.0" },
+    { "id": "mrk-1-1-q2", "level": 1, "type": "noticing", "verseStart": 7, "verseEnd": 7, "text": "How does John describe the One who is coming after him?", "targets": ["mrk-1-1-k2"], "isAlternate": true, "status": "active", "addedIn": "1.0.0" },
+    { "id": "mrk-1-1-q3", "level": 2, "type": "meaning", "verseStart": 1, "verseEnd": 8, "text": "Mark starts his gospel with John in the wilderness, not with Jesus's birth. Why do you think he begins here?", "targets": ["mrk-1-1-k4"], "isAlternate": false, "status": "active", "addedIn": "1.0.0" },
+    { "id": "mrk-1-1-q4", "level": 3, "type": "application", "verseStart": 7, "verseEnd": 8, "text": "John baptizes with water, but says Jesus will baptize with the Holy Spirit. What difference is he pointing to?", "textByTranslation": { "kjv": "John baptizes with water, but says Jesus will baptize with the Holy Ghost. What difference is he pointing to?" }, "targets": ["mrk-1-1-k3"], "isAlternate": false, "status": "active", "addedIn": "1.0.0" }
   ],
   "context": "Mark opens without a birth story; John is introduced as the messenger Isaiah foretold.",
   "viewsDiffer": null,
-  "packVersion": "mark-1.0.0"
+  "packVersion": "1.0.0"
 }
 ```
 
@@ -436,8 +436,8 @@ thinkbible/
 ├─ api/openapi.yaml           # compare endpoint (the only live API)
 ├─ content/
 │  ├─ schema/                 # section pack JSON Schema (shared contract)
-│  ├─ sources/                # frozen public-domain snapshots + checksums
-│  └─ packs/                  # reviewed, versioned packs (published to S3)
+│  ├─ sources/manifest.json   # checksums of the frozen snapshot (text in S3, local cache gitignored)
+│  └─ drafts/                 # reviewed drafts per book (published packs live in S3)
 ├─ shared/                    # Python: pack models used by backend + pipeline
 ├─ backend/                   # Lambdas: compare, authorizer (App Attest)
 ├─ pipeline/                  # batch jobs: import_text, commentary, generate, checks, review, publish

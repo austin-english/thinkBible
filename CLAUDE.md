@@ -20,7 +20,7 @@ Read these before any non-trivial change:
 | `pipeline/` | Python batch jobs that turn frozen sources into reviewed content packs | VS Code |
 | `shared/` | Python package `thinkbible_core`: pack models used by backend + pipeline | VS Code |
 | `infra/` | Terraform: modules `api`, `pipeline`, `storage`, `cdn`; envs `dev`, `prod` | VS Code |
-| `content/` | `schema/` (contract), `sources/` (frozen snapshots + checksums), `packs/` (reviewed output) | VS Code |
+| `content/` | `schema/` (contract), `sources/manifest.json` (checksums of the S3 snapshot; the text itself is a gitignored local cache), `drafts/` (reviewed drafts). Published packs live only in S3 | VS Code |
 | `api/` | OpenAPI spec for the compare endpoint | VS Code |
 | `docs/` | Brief and design handoff | either |
 | `specs/`, `.specify/` | Spec Kit features (created by `specify init`) | either |
@@ -29,7 +29,7 @@ Run Claude Code from the repo root. Each area has its own `CLAUDE.md` with local
 
 ## Rules that apply everywhere
 
-- **Content comes only from the frozen sources in `content/sources/`.** No agent, job or Lambda fetches commentary or Bible text from the web at runtime, and models get no browsing tools.
+- **Content comes only from the frozen source snapshot.** It is stored in a private S3 bucket, cached in `content/sources/` (`thinkbible-pipeline sources pull`), and verified against `content/sources/manifest.json`. No agent, job or Lambda fetches commentary or Bible text from the web at runtime, and models get no browsing tools.
 - **No live question generation.** Every question, key idea and context note is generated in the batch pipeline, reviewed, and shipped in a content pack. The live AI only compares an answer with stored key ideas.
 - **The content contract is `content/schema/section.schema.json`.** Change it first, then update `shared/` models, the pipeline output, and the Swift `ContentKit` models in the same change.
 - **Never log or store answer text on the server.** The backend sees it only for the length of a compare call. Answers live on the device and in the user's iCloud.
@@ -64,4 +64,4 @@ UI specs should link `docs/design/DESIGN.md` and the matching mockup in `docs/de
 ## Git
 
 Use small commits with a scope prefix: `ios:`, `backend:`, `pipeline:`, `infra:`, `content:`, `docs:`.
-Never commit secrets, `.env` files, Terraform state, or `content/sources` files without their checksum entry.
+Never commit secrets, `.env` files, Terraform state, or source text. Only `content/sources/manifest.json` is committed, and only together with the matching snapshot upload (`sources push`).

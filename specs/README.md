@@ -1,7 +1,7 @@
 # ThinkBible specs
 
 Spec Kit feature specs, in build order. The constitution lives at
-[`.specify/memory/constitution.md`](../.specify/memory/constitution.md) (v1.0.1).
+[`.specify/memory/constitution.md`](../.specify/memory/constitution.md) (v1.0.2).
 
 | # | Feature | Status | Open clarifications |
 |---|---|---|---|
