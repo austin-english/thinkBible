@@ -16,6 +16,24 @@ review gate; publish versioned packs the app downloads and caches. Launch book: 
 pipeline, Question freshness, Data model); `content/schema/section.schema.json` (to be created by
 this feature); constitution principles II, III, IV, VII.
 
+## Clarifications
+
+### Session 2026-11-04
+
+- Q: During review, where will you read the generated content, make edits, and approve a book? →
+  A: A generated review report (HTML or Markdown, flagged items first). Edits are made directly in
+  the draft JSON files, and an `approve` command approves the book. Review happens as a git diff.
+- Q: After a question or key idea has been published, can you still edit its text in a later pack
+  version? → A: No (MVP). Published wording is frozen, typos included. A fix retires the item
+  and adds a new one with a new ID that records which item it replaces. Drafts stay freely
+  editable until first publish.
+- Q: Once a book is published, can the verse ranges of its sections change in a later version? →
+  A: No (MVP). A published section's ID and verse range are frozen. Boundaries can change freely
+  during review before first publish.
+- Q: Should a pipeline run protect you from an unexpectedly large model bill, and if so, how? →
+  A: Show an estimate and ask for confirmation before the run, then stop the run if actual spend
+  passes a per-run cap (default about 2× the estimate). The run can be resumed later.
+
 ## User Scenarios & Testing *(mandatory)*
 
 The primary actor is the **content owner** (the developer acting as editor and reviewer). The
@@ -178,8 +196,9 @@ Weak questions are retired, never deleted.
 because saved reflections depend on IDs never changing.
 
 **Independent Test**: Publish Mark v1, run a refresh that retires one question and adds one, and
-publish v1.1. Confirm every v1 question ID is still present in v1.1, the retired one is marked
-retired, and no ID was reused.
+publish v1.1. Confirm every v1 question ID is still present in v1.1 with unchanged text, the
+retired one is marked retired, and no ID was reused. Then edit a published question's text in
+place and confirm the publish check refuses the version.
 
 **Acceptance Scenarios**:
 
@@ -187,8 +206,12 @@ retired, and no ID was reused.
    in the next pack version with status "retired" and the version it was retired in.
 2. **Given** a refresh, **When** new questions are added, **Then** they get new IDs never used
    before in that book, and record the pack version they were added in.
-3. **Given** any new pack version, **When** checks run, **Then** publishing fails if any question
-   or key idea ID from the previous version is missing, changed in meaning, or reused.
+3. **Given** any new pack version, **When** the publish check compares it with the previous
+   published version, **Then** publishing fails if any question or key idea ID is missing, reused,
+   or has different text.
+4. **Given** a typo in a published key idea, **When** the owner fixes it, **Then** the old idea is
+   retired, a new idea with a new ID records that it replaces the old one, any question that
+   targets only the old idea is retired and replaced the same way, and the next version publishes.
 
 ### Edge Cases
 
@@ -196,6 +219,8 @@ retired, and no ID was reused.
   boundaries follow the BSB headings, adjusted to Matthew Henry's divisions. Very short sections
   (fewer than ~3 verses) merge with the next, and long ones (more than ~12 verses) split at a
   natural break.
+- A boundary turns out wrong after a book is published: it stays as published. Fixing it needs a
+  future feature that maps readers' progress from old sections to new ones.
 - A section where commentaries say almost nothing: fewer key ideas and fewer levels. The pipeline
   never invents an idea to fill a level.
 - Commentators disagree on a point: the disagreement goes into a neutral "views differ" note, and
@@ -209,10 +234,15 @@ retired, and no ID was reused.
   message" in the Genesis 5 names): it cannot appear in the pack.
 - A model call fails or returns invalid output: that section retries on its own. After repeated
   failures it is marked failed, and the rest of the book continues.
+- A run hits its spending cap: it stops after the sections in progress finish. Completed sections
+  are kept, and the report shows spend so far and what is left. Resuming asks for confirmation
+  again with a fresh estimate.
 - A key idea quotes translation wording: flagged by checks (ideas must be in neutral modern English).
 - Prompt or model change: only sections affected by the changed prompt version are regenerated,
   as a new version, and they go through review again.
 - A source checksum mismatch: every stage halts, and nothing is generated from altered text.
+- A reader taps "Not a helpful question?": this never changes the pack. The tap is counted for the
+  review queue (spec 007), and only the owner can retire the question in a later version.
 
 ## Requirements *(mandatory)*
 
@@ -232,7 +262,9 @@ retired, and no ID was reused.
 
 - **FR-004**: The system MUST define one shared set of sections per book (verse ranges valid in
   both translations), titled from BSB headings and checked against Matthew Henry's divisions, with
-  merge and split rules for very short or long sections.
+  merge and split rules for very short or long sections. Each section has a permanent ID. Once a
+  book is published, its sections' IDs and verse ranges are frozen. Changing a boundary after
+  publish is out of scope for the MVP.
 - **FR-005**: Whether a section gets questions MUST be decided by its commentary, not by the kind of
   passage. Every section goes through key-idea extraction, including genealogies, lists, census
   and law passages. A section is marked "no prompt" only when no key idea can be targeted by a
@@ -282,11 +314,23 @@ retired, and no ID was reused.
   flag reason per item.
 - **FR-018**: The system MUST track each section's stage (generated, checked, flagged, approved,
   published), keyed by book, section and prompt version, so runs are idempotent and resumable.
-- **FR-019**: The owner MUST be able to review a book with flagged items first, edit or reject
-  items, and approve the book. [NEEDS CLARIFICATION: What is the review surface for MVP? (a) a
-  generated Markdown/HTML report plus edits made directly in the draft JSON and an `approve`
-  command, reviewed as a git diff; (b) a small local web review tool; (c) a hosted review page.]
-- **FR-020**: Human edits MUST be recorded as human changes and preserved by later re-runs.
+- **FR-019**: The pipeline MUST generate a review report per book (HTML or Markdown) listing flagged
+  items first, grouped by section, with the reason for each flag. The owner edits or rejects items
+  directly in the book's draft JSON files and approves the book with an `approve` command. Drafts
+  and approvals are committed to the repo, so each review is visible as a git diff. No separate
+  review application is built for the MVP.
+- **FR-020**: Human edits MUST be recorded as human changes (detected by comparing the draft files
+  with the pipeline's last generated output) and preserved by later re-runs.
+
+**Cost control**
+
+- **FR-027**: Before any run that calls a model, the pipeline MUST show an estimated cost (sections
+  to process × expected cost per section, skipping finished sections) and wait for the owner's
+  confirmation.
+- **FR-028**: During a run, the pipeline MUST track actual model spend and stop the run once it
+  passes a per-run cap (default 2× the estimate, configurable per run). Sections already
+  finished are kept, and the run can be resumed later. The final spend is reported at the end of
+  every run.
 
 **Publishing and versioning**
 
@@ -296,8 +340,14 @@ retired, and no ID was reused.
   a per-book pointer tells the app the latest version.
 - **FR-023**: Every study file MUST record provenance: source names, snapshot dates, checksums,
   prompt versions, question-guide version and pack version.
-- **FR-024**: Pack updates MUST be additive. IDs are never removed, changed or reused. Retired
-  questions stay with status "retired". Publishing MUST fail if this is violated.
+- **FR-024**: Pack updates MUST be additive. IDs are never removed, changed or reused. Once
+  published, the text of a question or key idea is frozen, typos included. A fix retires the item
+  and adds a new item with a new ID that records the ID it replaces. Retired questions and key
+  ideas stay in the pack with status "retired". Retiring a key idea also retires the active
+  questions that target only that idea. Before every publish, a publish check compares the new
+  version with the last published one and MUST fail if any published ID is missing, reused or
+  has different text, or if any published section's verse range has changed. Drafts are freely
+  editable until their first publish.
 - **FR-025**: The pack format MUST be defined by a single schema, which pipeline output, backend
   models and app models are all validated against.
 - **FR-026**: The pack format MUST allow optional per-verse notes (names, places, customs) for a
@@ -311,9 +361,11 @@ retired, and no ID was reused.
   one verse-text file per translation.
 - **Section**: a shared verse range in a book, with ID, reference, title, "no prompt" flag, key
   ideas, questions, context note, views-differ note, manuscript notes and optional verse notes.
-- **Key idea**: a permanent ID, title, body, commentator sources, agreed flag and verse scope.
+- **Key idea**: a permanent ID, title, body, commentator sources, agreed flag, verse scope, status
+  (active or retired), added-in version, retired-in version, and the ID it replaces, if any.
 - **Question**: a permanent ID, type, level, verse scope, targeted key ideas, primary/alternate
-  role, status, per-translation wording, added-in version, retired-in version, optional series.
+  role, status, per-translation wording, added-in version, retired-in version, the ID it replaces
+  (if any), optional series.
 - **Pipeline state**: per book, section and prompt version: stage, grades, flags and human edits.
 - **Question guide / prompt version**: versioned instructions recorded on every output.
 
@@ -334,6 +386,8 @@ retired, and no ID was reused.
   publish gate).
 - **SC-007**: A published Mark pack (study file plus both verse-text files) is under 1 MB in total
   when compressed.
+- **SC-008**: No pipeline run spends more than its cap plus the cost of the sections that were
+  already in progress when the cap was hit.
 
 ## Assumptions
 
