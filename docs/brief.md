@@ -59,7 +59,7 @@ One continuous scroll per chapter, split into passage sections (roughly 5–12 v
 **Layout rules:**
 
 - Very short sections merge with the next.
-- Genealogies, lists and census passages get a short context note instead of a question.
+- A section gets a short context note instead of a question only when the commentaries give nothing to ask about (for example a bare census total). Genealogies, lists and laws still get questions wherever the commentaries discuss them, aimed at those verses.
 - Drafts save automatically while typing.
 
 **Two modes, switchable at any time:**
@@ -129,7 +129,7 @@ All the study content is produced ahead of time, one book at a time, reviewed, a
 
 - **Inputs per section:** the passage in both translations; the ranked key ideas (agreed ideas first); any "views differ" note; a one-line summary of the previous section; existing questions for that section (on refreshes, to avoid repeats); and the question guide.
 - **Question guide:** a file in the repo with the quality rules and 10–20 example questions you write or approve. It sets the app's voice, and its version is recorded with every question.
-- **By kind of passage:** stories ask what happens and why people act as they do; letters follow the argument; poetry asks about images and feelings; prophecy asks who was addressed and their situation; laws and genealogies get a context note instead of a question.
+- **By kind of passage:** stories ask what happens and why people act as they do; letters follow the argument; poetry asks about images and feelings; prophecy asks who was addressed and their situation; laws and genealogies ask about the verses the commentaries single out (for example Enoch in Genesis 5), and get a context note instead only when there is nothing to ask about.
 - **Contested passages:** questions stay open ("What does this passage say about God's choosing?"), and the comparison card shows both readings.
 
 **Example stored section:**

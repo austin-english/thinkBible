@@ -47,9 +47,14 @@ least one of the three commentators.
 3. **Given** a section with N key ideas, **When** questions are written, **Then** the section gets
    Level 1 only (N = 1), Levels 1–2 (N = 2) or Levels 1–3 (N ≥ 3). Each level has one or two
    questions, each targeting at least one key idea, with at most 6 questions per section.
-4. **Given** a genealogy, list or census passage, **When** it is generated, **Then** it is flagged
-   "no prompt" and has a short context note instead of questions.
-5. **Given** generation has already finished for some sections, **When** the owner re-runs the
+4. **Given** a genealogy such as Genesis 5, **When** it is generated, **Then** it goes through
+   key-idea extraction like any other section, and its questions are scoped to the verses the
+   commentaries discuss (for example Enoch in 5:21–24).
+5. **Given** a section where extraction yields no key idea that a question could target and the
+   reader could answer from the passage (for example a bare census total), **When** it is
+   generated, **Then** it is flagged "no prompt", has a short context note instead of questions,
+   and is listed in the review document so the owner can confirm or override the flag.
+6. **Given** generation has already finished for some sections, **When** the owner re-runs the
    same book with the same prompt version, **Then** finished sections are skipped. Only missing or
    failed sections are generated.
 
@@ -195,6 +200,13 @@ retired, and no ID was reused.
   never invents an idea to fill a level.
 - Commentators disagree on a point: the disagreement goes into a neutral "views differ" note, and
   questions on that point stay open.
+- A genealogy with narrative asides (Genesis 5: "and he died", Enoch, Lamech naming Noah): it gets
+  questions on those verses. Only a section with nothing for a question to target is "no prompt".
+- A commentator gives Hebrew name meanings or other facts the English text doesn't show: they MAY
+  become key ideas (in a "views differ" note if contested), but no question may depend on them,
+  because the reader must be able to answer from the passage.
+- A reading that none of the three commentators states, however popular (for example a "hidden
+  message" in the Genesis 5 names): it cannot appear in the pack.
 - A model call fails or returns invalid output: that section retries on its own. After repeated
   failures it is marked failed, and the rest of the book continues.
 - A key idea quotes translation wording: flagged by checks (ideas must be in neutral modern English).
@@ -221,8 +233,12 @@ retired, and no ID was reused.
 - **FR-004**: The system MUST define one shared set of sections per book (verse ranges valid in
   both translations), titled from BSB headings and checked against Matthew Henry's divisions, with
   merge and split rules for very short or long sections.
-- **FR-005**: Sections whose passage is a genealogy, list or census MUST be marked "no prompt" and
-  carry a short context note instead of questions.
+- **FR-005**: Whether a section gets questions MUST be decided by its commentary, not by the kind of
+  passage. Every section goes through key-idea extraction, including genealogies, lists, census
+  and law passages. A section is marked "no prompt" only when no key idea can be targeted by a
+  question the reader could answer from the passage alone. It then carries a short context note
+  instead of questions. The owner MAY override the flag in either direction during review, and
+  the override is recorded as a human change.
 
 **Study content**
 
@@ -242,7 +258,8 @@ retired, and no ID was reused.
 - **FR-010**: Each question MUST target at least one key idea without giving it away, be
   answerable from the passage alone, be open-ended, short, not leading, and free of
   tradition-specific doctrinal assumptions. Its shape follows the passage kind (story, letter,
-  poetry, prophecy).
+  poetry, prophecy). In genealogies, lists and laws, questions are scoped to the verses the
+  commentaries single out.
 - **FR-011**: The level of each question MUST be set by a fixed rule from features the model
   records (verse span, how directly the answer is stated, outside knowledge needed, commentator
   agreement), then adjusted by the level check.

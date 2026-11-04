@@ -264,7 +264,7 @@ Store all settings in `@AppStorage` (they're device preferences). Reflections st
   - Retry automatically once in the background. A failed check never uses up a re-check or a free reflection.
 - **Daily cap reached (429):** fallback results, with the line "You've reached today's limit for personal feedback. Here's what commentators noticed."
 - **Free limit reached (402):** open the paywall sheet, keeping the answer as a draft.
-- **Sections with no question** (genealogies, lists): no study element; show a one-line context note under the verses instead.
+- **Sections with no question** (`noPrompt` in the pack, set only when the commentaries give nothing to ask about, such as a bare census list; genealogies the commentaries discuss still get questions): no study element; show a one-line context note under the verses instead.
 - **Empty Home** (nothing read yet): the Continue card says "Start · Mark 1:1–8". The contents list shows every section as not yet read.
 - **Verse notes** (tap a dotted word for a short note) were in the earlier card design. They're **not in the MVP reader**; they're planned for V2.
 - **Accessibility:**

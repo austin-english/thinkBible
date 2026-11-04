@@ -41,8 +41,9 @@ with their numbers.
    top, **Then** it stays pinned until the next section's header pushes it away.
 3. **Given** the reader reaches the end of a chapter, **When** they keep scrolling, **Then** they
    can continue into the next chapter without going back to Home.
-4. **Given** a section marked "no prompt" (genealogy, list), **When** it is displayed, **Then** a
-   one-line context note appears under its verses.
+4. **Given** a section marked "no prompt" (one where the commentaries give nothing to ask about,
+   such as a bare census list), **When** it is displayed, **Then** a one-line context note appears
+   under its verses.
 
 ---
 
