@@ -38,6 +38,19 @@ Stages run in this order. `all` runs `sections` through `report` and stops at "r
 | `levels` | Questions, passage | level adjustments and flags (FR-011) | Haiku 5.5 |
 | `report` | Drafts | `drafts/{book}/review.html` | none |
 
+## Re-runs and published sections
+
+- **Unchanged inputs**: a stage skips any section whose recorded prompt version and input hash
+  match. That means zero model calls (SC-005).
+- **`--fresh`**: forces regeneration, but **only for sections with nothing published yet**.
+- **Published sections**: after a section has any published item, `generate`, `summaries` and
+  `align` skip it, even with `--fresh` or a new prompt version, and report
+  "skipped: published (use --refresh)".
+- **`--refresh`**: the only way to add to a published section. It adds new questions with new
+  IDs, reuses the stored key ideas, and never changes existing items (FR-024, US6).
+- **Read-only stages**: `check`, `review`, `levels` and `report` always run, because they don't
+  rewrite content.
+
 ## Cost behaviour (FR-027, FR-028)
 
 1. Before any stage that calls a model, the CLI prints:

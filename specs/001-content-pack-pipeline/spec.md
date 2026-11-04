@@ -242,7 +242,10 @@ place and confirm the publish check refuses the version.
   again with a fresh estimate.
 - A key idea quotes translation wording: flagged by checks (ideas must be in neutral modern English).
 - Prompt or model change: only sections affected by the changed prompt version are regenerated,
-  as a new version, and they go through review again.
+  as a new version, and they go through review again. Sections that are already published are
+  never regenerated. They can only gain new questions through an explicit refresh (Story 6).
+- Re-running a book without new sources or prompt changes produces no new questions and makes no
+  model calls. New questions come only from deliberate refresh runs.
 - A source checksum mismatch: every stage halts, and nothing is generated from altered text.
 - A reader taps "Not a helpful question?": this never changes the pack. The tap is counted for the
   review queue (spec 007), and only the owner can retire the question in a later version.
