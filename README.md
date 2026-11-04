@@ -13,9 +13,6 @@ commentators noticed. iPhone app + small live API + batch content pipeline, in o
 # Python (backend, pipeline, shared): needs uv
 make bootstrap && make test
 
-# Spec Kit (once, from the repo root)
-specify init . --integration claude
-
 # Xcode MCP for Claude Code
 claude mcp add --transport stdio xcode -- xcrun mcpbridge
 ```
@@ -23,6 +20,16 @@ claude mcp add --transport stdio xcode -- xcrun mcpbridge
 - **Backend, pipeline, infra:** open `thinkbible.code-workspace` in VS Code (it hides `ios/`).
 - **App:** follow `ios/README.md` once to create the Xcode project in `ios/`, then work in Xcode.
 - **Claude Code:** run it from the repo root so it sees every `CLAUDE.md`.
+
+## Spec Kit
+
+Spec Kit is already initialised (Claude integration plus the git extension), and its
+`/speckit-*` commands are committed in `.claude/skills/`, so there's nothing to install to use
+them. The constitution is `.specify/memory/constitution.md`. Features, their build order and the
+per-feature workflow are in [`specs/README.md`](specs/README.md).
+
+To upgrade Spec Kit later, install its CLI with
+`uv tool install specify-cli --from git+https://github.com/github/spec-kit.git`.
 
 ## Layout
 
@@ -37,5 +44,8 @@ thinkbible/
 ├─ pipeline/        batch jobs + versioned prompts
 ├─ infra/           Terraform modules + envs
 ├─ ios/             Xcode app + Packages/ (DesignSystem, ContentKit, ReflectionKit, APIClient)
+├─ specs/           Spec Kit features (NNN-name/spec.md, plan.md, tasks.md) + README.md
+├─ .specify/        Spec Kit: memory/constitution.md, templates, scripts, git extension
+├─ .claude/skills/  /speckit-* commands for Claude Code
 └─ .github/workflows/
 ```
