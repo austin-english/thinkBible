@@ -1,8 +1,18 @@
 name: python
 
 on:
-  push:
+  # Gate for merging: runs when a PR is opened and on every push to it (open a draft PR for early feedback).
   pull_request:
+  # Confirm main is green after each merge.
+  push:
+    branches: [main]
+  # "Run workflow" button in the Actions tab.
+  workflow_dispatch:
+
+# A newer push to the same PR/branch cancels the outdated run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
