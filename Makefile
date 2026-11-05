@@ -10,7 +10,9 @@ lint:
 	uv run ruff check .
 	uv run ruff format --check .
 	uv run mypy
-	terraform fmt -check -recursive infra
+	@if find infra -name '*.tf' 2>/dev/null | grep -q .; then \
+	  terraform fmt -check -recursive infra; \
+	else echo "terraform fmt: no .tf files yet, skipping"; fi
 
 test:
 	uv run pytest
