@@ -240,8 +240,22 @@ feature adds.
   (Matthew Henry, Jamieson-Fausset-Brown, Adam Clarke, 18th–19th century) on canonical Scripture
   for a Bible-study app. Passages may describe violence, sexuality or judgement as part of the
   biblical text. The job is to restate what the commentators say.
-- [ ] T026 Implement the stage runner in `pipeline/src/thinkbible_pipeline/stages/base.py`:
-  - map an async stage function over sections with `asyncio.Semaphore(concurrency)`;
+- [ ] T026 Implement the stage runner, driven by a `RunRequest` instead of CLI flags, so a later
+  cloud trigger (API Gateway or Step Functions, spec 008) can call the same code with JSON input:
+  - **`pipeline/src/thinkbible_pipeline/requests.py`**:
+    - a frozen Pydantic `RunRequest` with `book`, `stages: list[str]` (`all` expands to the
+      cli.md order), `sections: list[str] | None`, `fresh: bool = False`,
+      `refresh: bool = False`, `cap_usd: float | None` (`None` = 2× the estimate),
+      `auto_approve: bool = False`, `env: str = "dev"`;
+    - `RunRequest.model_validate_json(...)` must accept the same JSON the cloud will send
+      (camelCase aliases: `capUsd`, `autoApprove`);
+    - also `PublishRequest(book, env, dry_run)` and `ApproveRequest(book)`.
+  - **`pipeline/src/thinkbible_pipeline/stages/base.py`** (`run(request: RunRequest, deps) -> RunResult`):
+    - `deps` holds the injected `ModelRunner`, the draft store, settings and an
+      `approve_estimate(estimate, cap) -> bool` callback. Locally that callback is the
+      `Proceed? [y/N]` prompt (or `True` with `auto_approve`); in the cloud it will be a
+      Step Functions wait-for-approval step. The runner itself never reads stdin or argv.
+    - map an async stage function over sections with `asyncio.Semaphore(concurrency)`;
   - input hash = sha256 of canonical JSON of (inputs, prompt version, model ID). Skip a section
     when `stages[stage]` has the same `promptVersion` and `inputHash` and `status == "done"`,
     unless `--fresh`;
@@ -249,17 +263,23 @@ feature adds.
   - check the Budget before starting each section, stop starting new ones once the cap is passed,
     and let in-flight sections finish;
   - append a `RunRecord`;
-  - return exit code 0, 3 (some sections failed) or 4 (cap reached).
+  - return a `RunResult` (sections done, skipped, failed, spend, `stopped_by`). The CLI maps it
+    to exit code 0, 3 (some sections failed) or 4 (cap reached).
 - [ ] T027 Create the CLI skeleton in `pipeline/src/thinkbible_pipeline/cli.py`:
-  - a Typer app with commands `import`, `sources push`, `sources pull`, `verify`, `run`,
-    `status`, `approve`, `publish`, `eval`;
+  - a **thin** Typer app with commands `import`, `sources push`, `sources pull`, `verify`, `run`,
+    `status`, `approve`, `publish`, `eval`. Each command only parses flags into a request object
+    (`RunRequest`, `PublishRequest`, `ApproveRequest`), calls the shared function, and maps the
+    result to an exit code. No pipeline logic lives in `cli.py`;
   - book argument resolution via `thinkbible_core.ids`;
   - an `ExitCode` enum with 0–5 exactly as in contracts/cli.md;
   - unimplemented commands exit 1 with "not implemented yet".
 - [ ] T028 [P] Write the framework tests in `pipeline/tests/unit/`:
   - `test_budget.py`: estimate from history versus defaults; the cap stops new sections;
-  - `test_stage_runner.py`: skip on the same hash; `--fresh` re-runs; one failure doesn't stop
-    others; exit codes 3 and 4;
+  - `test_stage_runner.py`: skip on the same hash; `fresh` re-runs; one failure doesn't stop
+    others; results that map to exit codes 3 and 4; a rejected estimate makes zero model calls;
+  - `test_requests.py`: `RunRequest` parses both CLI-style values and cloud-style JSON
+    (`{"book":"mark","stages":["all"],"capUsd":20,"autoApprove":true}`), expands `all`, and
+    rejects unknown stages and books;
   - `test_no_tools.py`: the BedrockRunner request builder never includes `tools`;
   - `test_network_guard.py`: an AST scan of `pipeline/src` shows that only
     `sources/importer.py` imports `urllib`, `http.client`, `httpx`, `requests` or `socket`.

@@ -9,6 +9,18 @@ Every command:
   needed cache file is missing, the command says to run `sources pull`;
 - exits non-zero on failure.
 
+The CLI is a thin front door. Each command parses its flags into a request object (`RunRequest`,
+`PublishRequest`, `ApproveRequest` in `thinkbible_pipeline/requests.py`) and calls shared code. A
+future cloud trigger (API Gateway or Step Functions) sends the same request as JSON:
+
+| CLI | JSON request |
+|---|---|
+| `run --book mark --stage all` | `{"book": "mark", "stages": ["all"]}` |
+| `--sections mrk-1-1,mrk-1-9` | `"sections": ["mrk-1-1", "mrk-1-9"]` |
+| `--fresh` / `--refresh` | `"fresh": true` / `"refresh": true` |
+| `--cap 20` | `"capUsd": 20` |
+| `--yes` (skip the confirmation prompt) | `"autoApprove": true`. Otherwise the cloud workflow pauses for approval after the estimate |
+
 ## Commands
 
 | Command | Purpose | Network | Model calls |
