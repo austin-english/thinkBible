@@ -149,6 +149,9 @@ regions:
 | CLI says the token or session expired | `aws sso login --profile admin-thinkbible` |
 | `aws configure sso` says "No AWS accounts are available" | The permission set isn't assigned to ThinkBible: Management Account → IAM Identity Center → AWS accounts → ThinkBible → assign `AdministratorAccess` |
 | IAM Identity Center says "not enabled" | Wrong region. Switch to **us-east-1**. Don't click Enable in a member account |
+| Bedrock: "Your account is currently being verified" | New-account verification. Wait up to 2 hours, then email aws-verification@amazon.com if it persists |
+| Bedrock: "`<model>` is not available for this account" | Check `aws bedrock get-foundation-model-availability --model-id <model>`. If `agreementAvailability` isn't `AVAILABLE`, accept the offer (`list-foundation-model-agreement-offers`, then `create-foundation-model-agreement`). If it is, the account's token limits are 0: request increases in **Service Quotas → Amazon Bedrock** (Sonnet 5.5 `L-94A31E46`, Haiku 5.5 `L-47520EB7`, Opus 5.5 `L-A4430697`, all "Cross-region model inference tokens per minute") |
+| Bedrock: "Too many tokens per day" on the first call | Same cause: the new account's daily or per-minute token limits are 0. Request increases as above |
 | "explicit deny in a service control policy" | Wrong region for that service (see **Regions**). Resources go in **us-west-2**, and CloudFront and its certificate in us-east-1 |
 | `create-bucket` says "OperationAborted / conflicting conditional operation" | A bucket with that name was just deleted, and AWS can take minutes to an hour to free the name. Retry later |
 | Everyday login is broken | Sign in as root (console.aws.amazon.com → Root user) and fix it from the Management Account |

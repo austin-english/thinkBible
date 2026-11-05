@@ -1,0 +1,22 @@
+name: python
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+      # No AWS credentials and no model calls in CI.
+      - run: make bootstrap
+      - run: make lint
+      - run: make test

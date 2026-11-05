@@ -1,4 +1,6 @@
-.PHONY: bootstrap lint test ios-test pipeline tf-fmt
+.PHONY: bootstrap lint test ios-test pipeline publish sources-pull tf-fmt
+
+PIPELINE = uv run --package thinkbible-pipeline thinkbible-pipeline
 
 bootstrap:
 	uv sync --all-packages
@@ -20,8 +22,18 @@ ios-test:
 BOOK ?= mark
 STAGE ?= all
 ENV ?= dev
+
+# Run pipeline stages locally (see specs/001-content-pack-pipeline/contracts/cli.md).
 pipeline:
-	uv run --package thinkbible-pipeline python -m thinkbible_pipeline.cli --book $(BOOK) --stage $(STAGE) --env $(ENV)
+	$(PIPELINE) run --book $(BOOK) --stage $(STAGE)
+
+# Publish an approved book to an environment (dev or prod).
+publish:
+	$(PIPELINE) publish --book $(BOOK) --env $(ENV)
+
+# Download the frozen source snapshot from S3 into content/sources/ and verify it.
+sources-pull:
+	$(PIPELINE) sources pull
 
 tf-fmt:
 	terraform fmt -recursive infra

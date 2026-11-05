@@ -329,9 +329,10 @@ risk.
     $0.005, summaries and align $0.002.
 - **Spend tracking**:
   - Each response's `usage` is multiplied by per-model prices in `pipeline/config/pricing.toml`.
-  - Bedrock prices must be filled in from the AWS pricing page. Anthropic list prices are the
-    placeholder: Sonnet 5.5 at $2 / $10, Haiku 5.5 at $0.10 / $0.50 per million tokens, with
-    cache reads at 10%.
+  - The accepted Bedrock offer for Sonnet 5.5 (checked 2026-11-04) is $2 input / $10 output per
+    million tokens, cache reads $0.10 (5% of input), cache writes $2.50 (5-minute) or $4.00
+    (1-hour). Haiku 5.5 is $0.10 / $0.50, with the same cache ratios. Re-check with
+    `aws bedrock list-foundation-model-agreement-offers --model-id <id>`.
 - **Cap and stop**:
   - The cap defaults to 2× the estimate and can be changed with `--cap`.
   - When spend passes the cap, no new sections start. Sections in flight finish, and the run

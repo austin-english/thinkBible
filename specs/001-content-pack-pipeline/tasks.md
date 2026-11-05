@@ -31,18 +31,18 @@ practice"). After that, stories follow priority order.
 **Purpose**: Make the uv workspace, lint, tests and CI work with the two Python packages this
 feature adds.
 
-- [ ] T001 Update `pyproject.toml` (root):
+- [X] T001 Update `pyproject.toml` (root):
   - set `[tool.uv.workspace] members = ["shared", "pipeline"]`, removing `backend` until spec 003;
   - set `[tool.mypy] packages = ["thinkbible_core", "thinkbible_pipeline"]` and add
     `mypy_path = "shared/src:pipeline/src"`;
   - set `[tool.pytest.ini_options] testpaths = ["shared/tests", "pipeline/tests"]`;
   - add `boto3-stubs[s3,cloudfront]>=1.35` to the dev group.
-- [ ] T002 [P] Create `shared/pyproject.toml`:
+- [X] T002 [P] Create `shared/pyproject.toml`:
   - package `thinkbible-core`, `requires-python = ">=3.12"`, hatchling build, src layout;
   - deps `pydantic>=2.9`, `jsonschema>=4.23`, `referencing>=0.35`;
   - create `shared/src/thinkbible_core/__init__.py`, `shared/src/thinkbible_core/py.typed` and
     `shared/tests/__init__.py`.
-- [ ] T003 [P] Create `pipeline/pyproject.toml`:
+- [X] T003 [P] Create `pipeline/pyproject.toml`:
   - package `thinkbible-pipeline`, src layout;
   - deps `thinkbible-core` (workspace), `anthropic[bedrock]`, `boto3>=1.35`, `typer>=0.12`,
     `jinja2>=3.1`, `pydantic>=2.9`;
@@ -50,19 +50,19 @@ feature adds.
   - create `pipeline/src/thinkbible_pipeline/__init__.py`, `py.typed`, `__main__.py` (calls
     `app()`), `pipeline/tests/unit/__init__.py`, `pipeline/tests/integration/__init__.py` and
     `pipeline/tests/fixtures/`.
-- [ ] T004 Update the `Makefile`:
+- [X] T004 Update the `Makefile`:
   - `pipeline:` → `uv run --package thinkbible-pipeline thinkbible-pipeline run --book $(BOOK) --stage $(STAGE)`;
   - add `publish:` → `… thinkbible-pipeline publish --book $(BOOK) --env $(ENV)`;
   - add `sources-pull:` → `… thinkbible-pipeline sources pull`;
   - keep `ENV ?= dev`.
-- [ ] T005 [P] Create `.pre-commit-config.yaml` with:
+- [X] T005 [P] Create `.pre-commit-config.yaml` with:
   - ruff (lint and format) and check-json;
   - a local hook that fails if any staged path matches `content/sources/` other than
     `content/sources/manifest.json` (CLAUDE.md: never commit source text).
-- [ ] T006 [P] Create `.github/workflows/python.yml`. On push and PR, it runs:
+- [X] T006 [P] Create `.github/workflows/python.yml`. On push and PR, it runs:
   `astral-sh/setup-uv`, `hashicorp/setup-terraform`, `make bootstrap`, `make lint`, `make test`.
   No AWS credentials and no model calls in CI.
-- [ ] T007 [P] Create `pipeline/CLAUDE.md` with these area rules:
+- [X] T007 [P] Create `pipeline/CLAUDE.md` with these area rules:
   - only `src/thinkbible_pipeline/sources/importer.py` may fetch text from the network;
   - never pass `tools` to a model call;
   - prompts are versioned files: add `vN+1.md`, never edit a used version;
@@ -72,7 +72,7 @@ feature adds.
 
   Also create `shared/CLAUDE.md`: schema first (`content/schema/`), then models, then fixtures, in
   the same change.
-- [ ] T008 Install Terraform if it's missing (`brew install hashicorp/tap/terraform`). Then run
+- [X] T008 Install Terraform if it's missing (`brew install hashicorp/tap/terraform`). Then run
   `make bootstrap && make lint && make test` and confirm all three pass on the empty packages.
 
 **Checkpoint**: The workspace syncs, lint and test pass, and CI is green.
@@ -177,10 +177,13 @@ feature adds.
     - `concurrency = 10`, `excerpt_cap_tokens = 8000`, `review_flag_threshold = 2`;
     - default cost per section from R15: generate 0.06, review 0.02, levels 0.005,
       summaries 0.002, align 0.002.
-  - **`pipeline/config/pricing.toml`**: $/MTok input, output, cache-read and cache-write for each
-    model ID. Use Anthropic list prices as placeholders (Sonnet 5.5 2/10, Haiku 5.5 0.10/0.50,
-    Opus 5.5 4/20, cache read 10% of input, cache write 125%) and add the comment "replace with
-    Bedrock prices".
+  - **`pipeline/config/pricing.toml`**: $/MTok input, output, cache-read, cache-write (5-minute)
+    and cache-write (1-hour) for each model ID.
+    - Sonnet 5.5 uses the accepted Bedrock offer prices (checked 2026-11-04): input 2, output 10,
+      cache read 0.10, cache write 2.50, cache write 1h 4.00.
+    - Haiku 5.5 is 0.10/0.50 and Opus 5.5 is 4/20, with cache read 5% and cache write 125% of
+      input.
+    - Add a comment: "re-check with `aws bedrock list-foundation-model-agreement-offers`".
   - **`pipeline/config/envs/dev.toml`**: `sources_bucket = "thinkbible-sources-522779858032"`,
     `packs_bucket = "thinkbible-packs-dev-522779858032"`, `distribution_id = ""`,
     `cdn_base_url = ""`.

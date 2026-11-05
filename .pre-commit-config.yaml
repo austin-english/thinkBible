@@ -1,0 +1,26 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-json
+      - id: check-yaml
+
+  - repo: local
+    hooks:
+      # Ruff runs from the uv environment so its version matches `make lint`.
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+      # CLAUDE.md: never commit source text. Only the checksum manifest belongs in git.
+      - id: no-source-text
+        name: no source text in content/sources (manifest.json only)
+        entry: "Source text must not be committed. Only content/sources/manifest.json is tracked; the snapshot lives in S3."
+        language: fail
+        files: ^content/sources/(?!manifest\.json$)

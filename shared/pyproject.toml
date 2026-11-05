@@ -1,0 +1,17 @@
+[project]
+name = "thinkbible-core"
+version = "0.1.0"
+description = "ThinkBible content pack models, ID and reference helpers, and schema validation"
+requires-python = ">=3.12"
+dependencies = [
+  "pydantic>=2.9",
+  "jsonschema>=4.23",
+  "referencing>=0.35",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/thinkbible_core"]
