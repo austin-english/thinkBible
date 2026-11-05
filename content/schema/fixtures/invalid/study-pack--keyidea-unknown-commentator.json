@@ -1,0 +1,385 @@
+{
+  "formatVersion": 1,
+  "book": {
+    "id": "MRK",
+    "name": "Mark"
+  },
+  "packVersion": "1.1.0",
+  "publishedAt": "2026-11-05T12:00:00Z",
+  "translations": [
+    {
+      "id": "bsb",
+      "name": "Berean Standard Bible",
+      "abbreviation": "BSB",
+      "path": "verses/bsb.json",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+      "id": "kjv",
+      "name": "King James Version",
+      "abbreviation": "KJV",
+      "path": "verses/kjv.json",
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    }
+  ],
+  "sources": [
+    {
+      "id": "bsb",
+      "kind": "translation",
+      "name": "Berean Standard Bible",
+      "shortName": "BSB",
+      "license": "Public domain (CC0)",
+      "licenseUrl": "https://berean.bible/",
+      "origin": "Free Use Bible API (bible.helloao.org)",
+      "apiVersion": "V1.16.0",
+      "retrievedAt": "2026-11-05",
+      "upstreamSha256": "788081b7dabf8ec026509b367254d8f2ba112314f2e8eaaeec8d96fa23a00fc9",
+      "snapshotSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+      "id": "kjv",
+      "kind": "translation",
+      "name": "King James Version",
+      "shortName": "KJV",
+      "license": "Public domain in the US",
+      "licenseUrl": "https://ebible.org/Scriptures/details.php?id=eng-kjv2006",
+      "origin": "Free Use Bible API (bible.helloao.org)",
+      "apiVersion": "V1.16.0",
+      "retrievedAt": "2026-11-05",
+      "upstreamSha256": "053f30b1a3d642ce1693243ccb31261cc44f285a0c05175f473be8005d0b2874",
+      "snapshotSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+      "id": "matthew-henry",
+      "kind": "commentary",
+      "name": "Matthew Henry's Commentary",
+      "shortName": "Henry",
+      "tradition": "Reformed (Presbyterian)",
+      "license": "Public domain",
+      "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Free Use Bible API (bible.helloao.org)",
+      "apiVersion": "V1.16.0",
+      "retrievedAt": "2026-11-05",
+      "upstreamSha256": "dd7ed69db2c66469328b6b397f352ad9b8de7b693e33fd848ef2cfb57a97f967",
+      "snapshotSha256": "5555555555555555555555555555555555555555555555555555555555555555"
+    },
+    {
+      "id": "jamieson-fausset-brown",
+      "kind": "commentary",
+      "name": "Jamieson-Fausset-Brown Bible Commentary",
+      "shortName": "JFB",
+      "tradition": "Reformed-leaning",
+      "license": "Public domain",
+      "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Free Use Bible API (bible.helloao.org)",
+      "apiVersion": "V1.16.0",
+      "retrievedAt": "2026-11-05",
+      "upstreamSha256": "78842acc823df6b2808ce8adbd6c42af6599fe207b21ece904493336a30deefc",
+      "snapshotSha256": "6666666666666666666666666666666666666666666666666666666666666666"
+    },
+    {
+      "id": "adam-clarke",
+      "kind": "commentary",
+      "name": "Adam Clarke's Commentary",
+      "shortName": "Clarke",
+      "tradition": "Wesleyan (Methodist)",
+      "license": "Public domain",
+      "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "origin": "Free Use Bible API (bible.helloao.org)",
+      "apiVersion": "V1.16.0",
+      "retrievedAt": "2026-11-05",
+      "upstreamSha256": "0cd0549b622faf5a6eac5e393967efeb3363c3ff2ead88335536f28ef317233b",
+      "snapshotSha256": "7777777777777777777777777777777777777777777777777777777777777777"
+    }
+  ],
+  "build": {
+    "promptVersions": {
+      "summaries": "v1",
+      "extract": "v1",
+      "questions": "v1",
+      "align": "v1",
+      "review": "v1",
+      "levels": "v1"
+    },
+    "questionGuideVersion": "v1",
+    "models": {
+      "generate": "us.anthropic.claude-sonnet-5-5",
+      "review": "us.anthropic.claude-sonnet-5-5",
+      "summaries": "us.anthropic.claude-haiku-5-5",
+      "align": "us.anthropic.claude-haiku-5-5",
+      "levels": "us.anthropic.claude-haiku-5-5"
+    }
+  },
+  "sections": [
+    {
+      "id": "mrk-1-1",
+      "ref": "Mark 1:1-8",
+      "chapter": 1,
+      "verseStart": 1,
+      "verseEnd": 8,
+      "title": "The Mission of John the Baptist",
+      "noPrompt": false,
+      "context": "Mark opens without a birth story. John is introduced as the messenger the prophets foretold ({{ref:1:2-3}}).",
+      "viewsDiffer": null,
+      "manuscriptNotes": [],
+      "keyIdeas": [
+        {
+          "id": "mrk-1-1-k1",
+          "title": "Untying sandals was a slave's task",
+          "body": "John places himself below even the lowest servant's job.",
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown",
+            "adam-clarke"
+          ],
+          "agreed": true,
+          "verseStart": 7,
+          "verseEnd": 7,
+          "status": "active",
+          "addedIn": "1.0.0"
+        },
+        {
+          "id": "mrk-1-1-k2",
+          "title": "Jesus is the greater one",
+          "body": "John's message points away from himself to the One coming after him.",
+          "sources": [
+            "matthew-henry",
+            "john-gill"
+          ],
+          "agreed": true,
+          "verseStart": 7,
+          "verseEnd": 7,
+          "status": "active",
+          "addedIn": "1.0.0"
+        },
+        {
+          "id": "mrk-1-1-k3",
+          "title": "Water and the Spirit",
+          "body": "John can wash the outside. Only Jesus can give the Holy Spirit.",
+          "sources": [
+            "jamieson-fausset-brown",
+            "adam-clarke"
+          ],
+          "agreed": true,
+          "verseStart": 7,
+          "verseEnd": 8,
+          "status": "active",
+          "addedIn": "1.0.0"
+        },
+        {
+          "id": "mrk-1-1-k4",
+          "title": "Where the prophets left off",
+          "body": "John is the messenger Isaiah promised, so the good news picks up where the prophets left off.",
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown"
+          ],
+          "agreed": true,
+          "verseStart": 1,
+          "verseEnd": 8,
+          "status": "active",
+          "addedIn": "1.0.0"
+        }
+      ],
+      "questions": [
+        {
+          "id": "mrk-1-1-q1",
+          "level": 1,
+          "type": "meaning",
+          "verseStart": 7,
+          "verseEnd": 7,
+          "text": "Why do you think John says he isn't worthy to untie the straps of Jesus's sandals?",
+          "textByTranslation": {
+            "kjv": "Why do you think John says he isn't worthy to unloose Jesus's shoes?"
+          },
+          "targets": [
+            "mrk-1-1-k1",
+            "mrk-1-1-k2"
+          ],
+          "isAlternate": false,
+          "status": "active",
+          "addedIn": "1.0.0"
+        },
+        {
+          "id": "mrk-1-1-q2",
+          "level": 1,
+          "type": "noticing",
+          "verseStart": 7,
+          "verseEnd": 7,
+          "text": "How does John describe the One who is coming after him?",
+          "targets": [
+            "mrk-1-1-k2"
+          ],
+          "isAlternate": true,
+          "status": "active",
+          "addedIn": "1.0.0"
+        },
+        {
+          "id": "mrk-1-1-q3",
+          "level": 2,
+          "type": "meaning",
+          "verseStart": 1,
+          "verseEnd": 8,
+          "text": "Mark starts his gospel with John in the wilderness, not with Jesus's birth. Why do you think he begins here?",
+          "targets": [
+            "mrk-1-1-k4"
+          ],
+          "isAlternate": false,
+          "status": "active",
+          "addedIn": "1.0.0"
+        },
+        {
+          "id": "mrk-1-1-q4",
+          "level": 3,
+          "type": "application",
+          "verseStart": 7,
+          "verseEnd": 8,
+          "text": "John baptizes with water, but says Jesus will baptize with the Holy Spirit. What difference is he pointing to?",
+          "textByTranslation": {
+            "kjv": "John baptizes with water, but says Jesus will baptize with the Holy Ghost. What difference is he pointing to?"
+          },
+          "targets": [
+            "mrk-1-1-k3"
+          ],
+          "isAlternate": false,
+          "status": "active",
+          "addedIn": "1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "mrk-1-9",
+      "ref": "Mark 1:9-11",
+      "chapter": 1,
+      "verseStart": 9,
+      "verseEnd": 11,
+      "title": "The Baptism of Jesus",
+      "noPrompt": false,
+      "context": "Jesus comes from Nazareth to be baptized by John, and the Father speaks from heaven.",
+      "viewsDiffer": "Commentators differ on why Jesus was baptized: some stress that he identified with the people he came to save, others that he fulfilled what God required.",
+      "manuscriptNotes": [],
+      "keyIdeas": [
+        {
+          "id": "mrk-1-9-k1",
+          "title": "Approval before any work",
+          "body": "The Father's love rests on who Jesus is, before his ministry begins.",
+          "sources": [
+            "matthew-henry"
+          ],
+          "agreed": false,
+          "verseStart": 11,
+          "verseEnd": 11,
+          "status": "active",
+          "addedIn": "1.0.0"
+        },
+        {
+          "id": "mrk-1-9-k2",
+          "title": "Father, Son and Spirit all appear",
+          "body": "The Son is baptized, the Spirit descends, the Father speaks.",
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown"
+          ],
+          "agreed": true,
+          "verseStart": 9,
+          "verseEnd": 11,
+          "status": "active",
+          "addedIn": "1.0.0"
+        },
+        {
+          "id": "mrk-1-9-k3",
+          "title": "Heaven torn open",
+          "body": "Mark's word pictures the sky being ripped open, as God breaks in.",
+          "sources": [
+            "jamieson-fausset-brown"
+          ],
+          "agreed": false,
+          "verseStart": 10,
+          "verseEnd": 10,
+          "status": "active",
+          "addedIn": "1.0.0"
+        }
+      ],
+      "questions": [
+        {
+          "id": "mrk-1-9-q1",
+          "level": 1,
+          "type": "meaning",
+          "verseStart": 11,
+          "verseEnd": 11,
+          "text": "God says he is pleased with Jesus before Jesus has done any public ministry. Why do you think that matters?",
+          "textByTranslation": {
+            "kjv": "God says he is well pleased with Jesus before Jesus has done any public ministry. Why do you think that matters?"
+          },
+          "targets": [
+            "mrk-1-9-k1"
+          ],
+          "isAlternate": false,
+          "status": "active",
+          "addedIn": "1.0.0"
+        },
+        {
+          "id": "mrk-1-9-q2",
+          "level": 1,
+          "type": "noticing",
+          "verseStart": 10,
+          "verseEnd": 11,
+          "text": "What three things happen as Jesus comes up out of the water?",
+          "targets": [
+            "mrk-1-9-k2"
+          ],
+          "isAlternate": true,
+          "status": "active",
+          "addedIn": "1.0.0"
+        },
+        {
+          "id": "mrk-1-9-q3",
+          "level": 2,
+          "type": "meaning",
+          "verseStart": 10,
+          "verseEnd": 10,
+          "text": "Mark says the heavens were breaking open. Why might he use such a strong picture?",
+          "textByTranslation": {
+            "kjv": "Mark says the heavens were opened as Jesus came up. What do you think that picture is telling us?"
+          },
+          "targets": [
+            "mrk-1-9-k3"
+          ],
+          "isAlternate": false,
+          "status": "active",
+          "addedIn": "1.1.0",
+          "replaces": "mrk-1-9-q5"
+        },
+        {
+          "id": "mrk-1-9-q4",
+          "level": 3,
+          "type": "meaning",
+          "verseStart": 9,
+          "verseEnd": 11,
+          "text": "The Son, the Spirit and the Father all appear in this scene. What does that tell you about who Jesus is?",
+          "targets": [
+            "mrk-1-9-k2"
+          ],
+          "isAlternate": false,
+          "status": "active",
+          "addedIn": "1.0.0"
+        },
+        {
+          "id": "mrk-1-9-q5",
+          "level": 2,
+          "type": "noticing",
+          "verseStart": 10,
+          "verseEnd": 10,
+          "text": "What did Jesus see when he came up out of the water?",
+          "targets": [
+            "mrk-1-9-k3"
+          ],
+          "isAlternate": false,
+          "status": "retired",
+          "addedIn": "1.0.0",
+          "retiredIn": "1.1.0"
+        }
+      ]
+    }
+  ]
+}

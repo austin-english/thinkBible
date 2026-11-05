@@ -87,10 +87,10 @@ feature adds.
 
 ### Contract (schema first)
 
-- [ ] T009 Copy `specs/001-content-pack-pipeline/contracts/{section,study-pack,verses,index}.schema.json`
+- [X] T009 Copy `specs/001-content-pack-pipeline/contracts/{section,study-pack,verses,index}.schema.json`
   unchanged into `content/schema/`. These become the binding contract; the copies in contracts/
   are now only references.
-- [ ] T010 [P] Create the fixtures, one file per case:
+- [X] T010 [P] Create the fixtures, one file per case:
   - **Valid**, in `content/schema/fixtures/valid/`:
     - `study-pack-mark-sample.json`: Mark 1:1–8 from docs/brief.md, plus Mark 1:9–11 from
       `docs/design/screens/FeedHybrid.dc.html`. Use IDs `mrk-1-1`, `mrk-1-1-k1` and so on,
@@ -108,7 +108,7 @@ feature adds.
 
 ### Shared models (`thinkbible_core`)
 
-- [ ] T011 [P] Implement `shared/src/thinkbible_core/models/section.py`: Pydantic v2 models
+- [X] T011 [P] Implement `shared/src/thinkbible_core/models/section.py`: Pydantic v2 models
   `KeyIdea`, `Question`, `ManuscriptNote`, `VerseNote`, `Section`. Use camelCase aliases,
   `extra="forbid"`, and these constraints verbatim from data-model.md:
   - **KeyIdea**:
@@ -126,25 +126,25 @@ feature adds.
   - **Section**:
     - `title` "≤ 80 chars", `context` "≤ 280 chars", `viewsDiffer` "≤ 400 chars or null";
     - ID patterns `^[0-9a-z]{3}-[0-9]{1,3}-[0-9]{1,3}$`, `…-k[0-9]{1,3}$`, `…-q[0-9]{1,3}$`.
-- [ ] T012 [P] Implement the remaining models, matching the contract schemas field for field:
+- [X] T012 [P] Implement the remaining models, matching the contract schemas field for field:
   - `shared/src/thinkbible_core/models/pack.py`: `StudyPack`, `Book`, `TranslationRef`, `Source`,
     `Build`;
   - `shared/src/thinkbible_core/models/verses.py`: `VerseText`;
   - `shared/src/thinkbible_core/models/index.py`: `PackIndex`.
-- [ ] T013 [P] Implement `shared/src/thinkbible_core/ids.py`:
+- [X] T013 [P] Implement `shared/src/thinkbible_core/ids.py`:
   - a USFM table for all 66 books (code, English name, lowercase code);
   - name aliases (`mark` → `MRK`, `matthew` → `MAT`, …);
   - ID builders and parsers: `section_id("MRK", 1, 1) == "mrk-1-1"`, `key_idea_id(sec, n)`,
     `question_id(sec, n)`, and `parse_item_id`.
-- [ ] T014 [P] Implement `shared/src/thinkbible_core/refs.py`:
+- [X] T014 [P] Implement `shared/src/thinkbible_core/refs.py`:
   - find, parse and validate `{{ref:C:V}}` and `{{ref:C:V-V}}` placeholders (R13);
   - `unresolved(text, verse_sets_by_translation)` returns placeholders missing from any
     translation.
-- [ ] T015 Implement `shared/src/thinkbible_core/schema.py`:
+- [X] T015 Implement `shared/src/thinkbible_core/schema.py`:
   - load `content/schema/*.schema.json` into a `referencing.Registry` keyed by `$id`;
   - `validate(doc, kind)` returns a list of error messages, for `kind` in
     `section|study-pack|verses|index`.
-- [ ] T016 Implement `shared/src/thinkbible_core/rules.py`. `cross_field_violations(pack)` returns
+- [X] T016 Implement `shared/src/thinkbible_core/rules.py`. `cross_field_violations(pack)` returns
   violations of data-model.md "Cross-field rules" 1–9:
   1. ranges contiguous, non-overlapping, covering every verse in either translation;
   2. item ranges inside their section;
@@ -156,13 +156,13 @@ feature adds.
   7. `noPrompt` ⇒ no active questions, else an active L1;
   8. placeholders resolve;
   9. retiring an idea retires the questions that target only it.
-- [ ] T017 [P] Write the contract tests in `shared/tests/test_contract.py`:
+- [X] T017 [P] Write the contract tests in `shared/tests/test_contract.py`:
   - every `fixtures/valid/*.json` validates against its JSON Schema **and** parses with the
     models;
   - every `fixtures/invalid/*.json` fails both;
   - `model_dump(by_alias=True, exclude_none=True)` of each valid fixture validates against the
     schema.
-- [ ] T018 [P] Write unit tests for `ids.py`, `refs.py` and each rule in `rules.py` in
+- [X] T018 [P] Write unit tests for `ids.py`, `refs.py` and each rule in `rules.py` in
   `shared/tests/test_ids_refs_rules.py`.
 
 ### Pipeline framework (`thinkbible_pipeline`)

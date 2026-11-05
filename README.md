@@ -5,6 +5,7 @@ commentators noticed. iPhone app + small live API + batch content pipeline, in o
 
 - Product and architecture: [`docs/brief.md`](docs/brief.md)
 - UI spec and mockups: [`docs/design/DESIGN.md`](docs/design/DESIGN.md)
+- How content is made and used (pipeline → packs → app, with diagrams): [`docs/content-flow.md`](docs/content-flow.md)
 - Agent rules: [`CLAUDE.md`](CLAUDE.md) (plus one per area)
 
 ## Getting started
