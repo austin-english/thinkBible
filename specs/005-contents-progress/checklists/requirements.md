@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Contents, Saved Reflections and Progress
+# Specification Quality Checklist: Section Status, Saved Passages and Progress
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-11-03

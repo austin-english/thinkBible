@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Subscription, Paywall and Settings
+# Specification Quality Checklist: Subscription, Paywall and You & Settings
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-11-03

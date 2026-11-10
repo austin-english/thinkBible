@@ -4,7 +4,7 @@ Read a section of the Bible, answer one question in your own words, then see wha
 commentators noticed. iPhone app + small live API + batch content pipeline, in one repo.
 
 - Product and architecture: [`docs/brief.md`](docs/brief.md)
-- UI spec and mockups: [`docs/design/DESIGN.md`](docs/design/DESIGN.md)
+- UI spec and screens: [`docs/design/README.md`](docs/design/README.md) (book feel) and [`docs/design/DESIGN.md`](docs/design/DESIGN.md) (paywall, fallbacks, copy)
 - How content is made and used (pipeline → packs → app, with diagrams): [`docs/content-flow.md`](docs/content-flow.md)
 - Agent rules: [`CLAUDE.md`](CLAUDE.md) (plus one per area)
 
@@ -56,7 +56,7 @@ To upgrade Spec Kit later, install its CLI with
 ```
 thinkbible/
 ├─ CLAUDE.md, Makefile, pyproject.toml (uv workspace), thinkbible.code-workspace
-├─ docs/            brief.md, design/ (DESIGN.md + screens/)
+├─ docs/            brief.md, design/ (README.md, DESIGN.md + screens/)
 ├─ api/             openapi.yaml (compare endpoint)
 ├─ content/         schema/ (pack contract), sources/manifest.json (snapshot checksums; text in S3), drafts/
 ├─ shared/          Python pack models (thinkbible_core)

@@ -1,13 +1,31 @@
+<!--
+Sync Impact Report (remove before committing)
+- Version change: 1.0.2 → 1.1.0 (MINOR: materially changed guidance for the book-feel redesign)
+- Modified principles:
+  - I. Scripture Is Never Paywalled: "Read mode" → plain reading with questions off;
+    "later-read levels" → unlocked Level 2–3 questions
+  - III. Batch Generates, Live Only Compares: follow-up questions unlock on the device 24 hours after the
+    previous level is answered, instead of being served on a re-read
+  - V. Offline-First Study: "Read mode" removed (Read mode no longer exists)
+  - X. Accessible and Token-Driven UI: UI source of truth is docs/design/README.md (book feel)
+    plus docs/design/DESIGN.md, with screens in docs/design/screens/
+- Added sections: none
+- Removed sections: none
+- Dependent docs: specs 002–007, specs/README.md, CLAUDE.md, README.md and docs/brief.md were
+  already updated for the redesign (2026-11-10). Templates read the constitution at runtime.
+- Deferred: small UI details (… menu, book-feel dark mode, text-size steps) are iterative and
+  settled in the UI specs, not here.
+-->
 # ThinkBible Constitution
 
 ## Core Principles
 
 ### I. Scripture Is Never Paywalled
 
-- Bible text, Read mode and navigation of every published book MUST remain free, with no
-  sign-in, no trial and no count limit.
-- Only the study experience (live comparison beyond the free allowance, later-read levels,
-  premium series) MAY be paid.
+- Bible text, plain reading (questions off) and navigation of every published book MUST remain
+  free, with no sign-in, no trial and no count limit.
+- Only the study experience (live comparison beyond the free allowance, unlocked Level 2–3
+  questions, premium series) MAY be paid.
 - Reflections a user already saved MUST stay viewable after their free allowance runs out
   or their subscription lapses.
 
@@ -40,8 +58,10 @@ idea can be traced to a known text.
   and return the fields defined in `api/openapi.yaml` (covered idea IDs, a highlight phrase
   quoted from the user's answer, a short note, a contradicts-text flag). It MUST NOT
   generate questions, interpretations, verses or facts.
-- Follow-up questions are the section's next-level questions from the reviewed pool, served
-  when the reader re-reads that section. They are never generated or adapted live.
+- Follow-up questions are the section's next-level questions from the reviewed pool, already in
+  the content pack. The app unlocks the next level on the device 24 hours after the previous
+  level is answered; reopening or re-reading a section never advances it. They are never
+  generated or adapted live.
 - The live model MUST receive the answer, the question, the stored key ideas and context,
   and never raw commentary text.
 - The live note MUST pass code checks (length limit, only commentator names attached to
@@ -63,7 +83,7 @@ Rationale: users must be able to see who said what; an invented citation would b
 
 ### V. Offline-First Study
 
-- Reading, Read mode and the comparison card MUST work offline from cached content packs.
+- Reading, navigation and the comparison card MUST work offline from cached content packs.
 - When the live comparison is unavailable (offline, error, timeout, daily cap), the app MUST
   immediately show the stored key ideas as "Here's what commentators noticed", save the
   answer, and fill in the personal result later when possible.
@@ -127,8 +147,9 @@ Rationale: a subscriber must cost cents a month to serve, even under misuse.
   button, and 44pt minimum touch targets.
 - Colors MUST come from DesignSystem tokens (light and dark). Prices MUST come from StoreKit.
   No hard-coded colors or prices in app code.
-- `docs/design/DESIGN.md` and its mockups are the UI source of truth. UI specs MUST link the
-  relevant section and mockup.
+- `docs/design/README.md` (the "book feel" design) and `docs/design/DESIGN.md` (paywall,
+  fallback rules, copy), with the screens in `docs/design/screens/`, are the UI source of truth.
+  UI specs MUST link the relevant section and screen.
 
 Rationale: a reading app is used by people of every age and eyesight; tokens keep dark mode
 and future theming correct by construction.
@@ -188,4 +209,4 @@ and future theming correct by construction.
   implementing any feature that touches content, privacy or payments.
 - Runtime guidance for agents lives in the root `CLAUDE.md` and per-area `CLAUDE.md` files.
 
-**Version**: 1.0.2 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-04
+**Version**: 1.1.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-10

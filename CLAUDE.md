@@ -7,7 +7,8 @@ ThinkBible is an iPhone app for reading the Bible one section at a time.
 
 Read these before any non-trivial change:
 - `docs/brief.md`: product and architecture brief (exported; the online doc is the source of truth).
-- `docs/design/DESIGN.md`: UI spec, design tokens (light and dark), states, copy, and how it maps to SwiftUI.
+- `docs/design/README.md`: the "book feel" UI spec (feed, chapter panel, unlocks, You & settings), tokens and progress model, with screens in `docs/design/screens/`.
+- `docs/design/DESIGN.md`: the UI rules the book-feel design kept: paywall, fallback and offline states, question scope, cost limits, copy.
 - `api/openapi.yaml`: the only live API (compare).
 - `content/schema/section.schema.json`: the content pack contract shared by the pipeline, backend and app.
 
@@ -59,7 +60,7 @@ Suggested feature order (from the brief):
 7. subscription, paywall and Settings
 8. feedback and question analytics
 
-UI specs should link `docs/design/DESIGN.md` and the matching mockup in `docs/design/screens/`.
+UI specs should link `docs/design/README.md` (or `DESIGN.md` for the paywall and fallback rules) and the matching screen in `docs/design/screens/`.
 
 ## Git
 

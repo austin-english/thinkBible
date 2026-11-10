@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Reflection, Comparison and Live Compare API
+# Specification Quality Checklist: Question Footer, Reply Thread and Live Compare API
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-11-03

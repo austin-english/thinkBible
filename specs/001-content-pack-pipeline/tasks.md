@@ -462,7 +462,8 @@ every key idea names a commentator. Then, with Bedrock, Mark 1–16 is fully dra
     away), shape by passage kind (in genealogies, lists and laws, ask about the verses the
     commentaries single out), and the recorded features.
 - [ ] T050 [US1] Write `pipeline/prompts/question-guide/v1.md`: the brief's quality rules plus 15
-  example questions, taken from the Mark 1 mockup questions in `FeedHybrid.dc.html`. Start the
+  example questions, taken from the Mark 1 mockup questions (`docs/design/screens/*.png`, and the
+  older `FeedHybrid.dc.html`: `git show c85bd1e:docs/design/screens/FeedHybrid.dc.html`). Start the
   file with "DRAFT: the owner must approve these examples before the first publish".
 - [ ] T051 [P] [US1] Implement `pipeline/src/thinkbible_pipeline/drafts/ids.py`: per-section `k`
   and `q` counters in `book.json` `idCounters`, which only ever increase (R13).
