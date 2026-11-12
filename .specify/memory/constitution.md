@@ -1,21 +1,3 @@
-<!--
-Sync Impact Report (remove before committing)
-- Version change: 1.0.2 → 1.1.0 (MINOR: materially changed guidance for the book-feel redesign)
-- Modified principles:
-  - I. Scripture Is Never Paywalled: "Read mode" → plain reading with questions off;
-    "later-read levels" → unlocked Level 2–3 questions
-  - III. Batch Generates, Live Only Compares: follow-up questions unlock on the device 24 hours after the
-    previous level is answered, instead of being served on a re-read
-  - V. Offline-First Study: "Read mode" removed (Read mode no longer exists)
-  - X. Accessible and Token-Driven UI: UI source of truth is docs/design/README.md (book feel)
-    plus docs/design/DESIGN.md, with screens in docs/design/screens/
-- Added sections: none
-- Removed sections: none
-- Dependent docs: specs 002–007, specs/README.md, CLAUDE.md, README.md and docs/brief.md were
-  already updated for the redesign (2026-11-10). Templates read the constitution at runtime.
-- Deferred: small UI details (… menu, book-feel dark mode, text-size steps) are iterative and
-  settled in the UI specs, not here.
--->
 # ThinkBible Constitution
 
 ## Core Principles
@@ -53,7 +35,8 @@ idea can be traced to a known text.
 ### III. Batch Generates, Live Only Compares
 
 - Every question, key idea, context note and "views differ" note MUST be generated in the
-  batch pipeline, pass review, and ship in a content pack.
+  batch pipeline, pass the automatic quality gate (rule checks, the evidence check and a
+  calibrated model grader), and ship in a content pack.
 - The live model MUST only compare a user's answer with that section's stored key ideas
   and return the fields defined in `api/openapi.yaml` (covered idea IDs, a highlight phrase
   quoted from the user's answer, a short note, a contradicts-text flag). It MUST NOT
@@ -109,13 +92,14 @@ Rationale: reflections on faith are personal. The safest data is data the server
 - `content/schema/section.schema.json` is the single contract for packs. A change MUST
   update the schema first, then `shared/` models, pipeline output and Swift `ContentKit`
   models in the same change, with contract tests on both sides.
-- Question and key idea IDs are permanent and never reused. Retired questions stay in packs,
-  marked retired. Pack updates are additive and versioned; nothing a user has answered is
-  ever deleted.
+- Question and key idea IDs are permanent and never reused, in any environment. Retired
+  questions stay in packs, marked retired. Production pack updates are additive and
+  versioned; nothing a user has answered is ever deleted. Dev is a staging environment and
+  MAY be republished from scratch.
 - Saved reflections MUST snapshot the question and key ideas exactly as shown, so they stay
   complete whatever later packs change.
-- No pack is published without passing automatic checks, model review and a human approval
-  gate.
+- No pack reaches production without passing the automatic quality gate and the owner's
+  explicit promotion from dev, made after reading that content in the app.
 
 Rationale: users' saved reflections must never break, and three codebases read the same data.
 
@@ -189,12 +173,16 @@ and future theming correct by construction.
     caching, fallbacks.
   - Prompt changes MUST be evaluated against a fixed set of sample sections before a new
     prompt version is used for publishing.
+  - The model grader in the quality gate MUST be calibrated against the owner's own grades
+    (at least 85% agreement on at least 30 items) before its scores gate a production
+    promotion, and recalibrated whenever its prompt or model changes.
 - **Gates before merge:** `make lint` and `make test` pass. `make ios-test` passes for app
   changes. Schema changes include updated models on all three sides.
 - **Commits:** small, with a scope prefix (`ios:`, `backend:`, `pipeline:`, `infra:`,
   `content:`, `docs:`).
-- **Content review:** the launch book gets a full human read-through. Later books get model
-  review plus human spot checks of flagged items.
+- **Content review:** every book passes the automatic quality gate and is published to dev.
+  The owner reads it in the app and promotes it to production. After launch, reader feedback
+  ("not helpful" flags, problem reports) drives retire-and-replace in later versions.
 
 ## Governance
 
@@ -209,4 +197,4 @@ and future theming correct by construction.
   implementing any feature that touches content, privacy or payments.
 - Runtime guidance for agents lives in the root `CLAUDE.md` and per-area `CLAUDE.md` files.
 
-**Version**: 1.1.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-10
+**Version**: 1.2.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-10
