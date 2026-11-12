@@ -1,7 +1,7 @@
 # ThinkBible specs
 
 Spec Kit feature specs, in build order. The constitution lives at
-[`.specify/memory/constitution.md`](../.specify/memory/constitution.md) (v1.1.0).
+[`.specify/memory/constitution.md`](../.specify/memory/constitution.md) (v1.2.0).
 
 | # | Feature | Status | Open clarifications |
 |---|---|---|---|
@@ -57,6 +57,18 @@ constitution and these specs:
 - **Pack shape:** follows DESIGN.md ("Data the UI reads"). Questions have `level`, verse scope,
   `targets`, `isAlternate` and `status`, and keep `type` as pipeline metadata. Key ideas have
   `title`, `body` and verse scope. The brief's example section now uses this shape.
+
+### Spec 001: cloud runs and an automatic quality gate (2026-11-10)
+
+- **Runs execute in AWS**: Step Functions with one Lambda per section per stage, drafts in S3, a
+  DynamoDB spend ledger. The CLI estimates, confirms and starts runs; `--local` runs a few
+  sections in-process for prompt tuning.
+- **No manual review of generated JSON.** Rule checks, the evidence check, an Opus 5.5 grader and
+  a level check drop weak items and write a read-only scorecard. The grader is calibrated once
+  against the owner's grades (≥ 85% agreement on ≥ 30 items).
+- **Dev, then production.** A run whose gate passes publishes to dev; the owner reads it in the
+  app and runs `promote`. Frozen text and the additive publish check apply to production only.
+- Constitution amended to v1.2.0 for this.
 
 ### Book-feel redesign (2026-11-10)
 

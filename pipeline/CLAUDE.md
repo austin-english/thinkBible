@@ -11,10 +11,13 @@ The batch content pipeline (spec 001). The root `CLAUDE.md` and the constitution
   (`tests/unit/test_no_tools.py` enforces this).
 - **Prompts are versioned files** in `prompts/{stage}/vN.md`. Never edit a version that has been
   used for a run. Add `vN+1.md` instead.
-- **Drafts in `content/drafts/` belong to the owner.** The pipeline writes machine output to
-  `.generated/` and merges it. It never overwrites human edits.
-- **Published content is frozen.** Never change the text of a published question or key idea.
-  Retire and replace it instead (FR-024).
+- **Drafts are pipeline state in S3, not hand-edited** (2026-11-10). Quality comes from the
+  automatic gate (checks, evidence check, the calibrated Opus grader, level check), which drops
+  weak items and records why in the scorecard. To change content, add a prompt version and
+  regenerate; after a production promotion, retire and replace.
+- **Production content is frozen.** Never change the text of a promoted question or key idea.
+  Retire and replace it instead (FR-024). Dev may be republished from scratch; IDs are never
+  reused anywhere.
 - **No source text in git.** Only `content/sources/manifest.json` is committed.
 - Every model-calling run shows an estimate and respects the spend cap. Tests use `FakeRunner` and
   never call models.

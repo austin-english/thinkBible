@@ -4,13 +4,16 @@
 
 **Created**: 2026-11-03
 
-**Status**: Draft
+**Status**: Draft (revised 2026-11-10: cloud runs; automatic quality gate instead of manual
+review; dev → production promotion)
 
 **Input**: User description: "Content pack format and pipeline (brief spec 2): freeze the BSB, KJV
 and three public-domain commentaries as checksummed sources; turn them, one book at a time, into
 reviewed, versioned study content (sections, key ideas, leveled question pools, context and
 views-differ notes, translation variants); run automatic checks and model review; stop at a human
 review gate; publish versioned packs the app downloads and caches. Launch book: Mark."
+(2026-11-10: the human review gate became an automatic quality gate, publishing to dev, and an
+owner promotion to production after reading the book in the app. See Clarifications.)
 
 **References**: [docs/brief.md](../../docs/brief.md) (Content sources and licensing, Content
 pipeline, Question freshness, Data model); `content/schema/section.schema.json` (to be created by
@@ -23,8 +26,9 @@ this feature); constitution principles II, III, IV, VII.
 - Q: During review, where will you read the generated content, make edits, and approve a book? →
   A: A generated review report (HTML or Markdown, flagged items first). Edits are made directly in
   the draft JSON files, and an `approve` command approves the book. Review happens as a git diff.
+  **Superseded 2026-11-10** (below).
 - Q: After a question or key idea has been published, can you still edit its text in a later pack
-  version? → A: No (MVP). Published wording is frozen, typos included. A fix retires the item
+  version? → A: No (MVP). (2026-11-10: "published" means published to production.) Published wording is frozen, typos included. A fix retires the item
   and adds a new one with a new ID that records which item it replaces. Drafts stay freely
   editable until first publish.
 - Q: Once a book is published, can the verse ranges of its sections change in a later version? →
@@ -34,24 +38,43 @@ this feature); constitution principles II, III, IV, VII.
   A: Show an estimate and ask for confirmation before the run, then stop the run if actual spend
   passes a per-run cap (default about 2× the estimate). The run can be resumed later.
 
+### Session 2026-11-10
+
+- Q: Where do runs execute? → A: In the cloud: Step Functions with one Lambda per section per
+  stage, drafts in S3, started by the CLI after it shows the estimate. The same stages run on the
+  owner's machine for a few sections at a time (`--local`) while tuning prompts.
+- Q: Does the owner review and edit the generated JSON? → A: No. Item-by-item review is replaced
+  by an automatic quality gate: rule checks, the evidence check, and a model grader that grades
+  every item against a fixed rubric. Failing items are dropped or replaced by their alternate, and
+  each run produces a read-only scorecard. A book that passes the gate is published to dev; the
+  owner reads it in the app and promotes it to production. After launch, reader feedback drives
+  retire-and-replace (constitution v1.2.0).
+- Q: How is the model grader trusted? → A: The owner grades a fixed calibration set (at least 30
+  items) once. The grader must agree with those grades at least 85% of the time before its scores
+  can allow a promotion, and is recalibrated whenever its prompt or model changes.
+- Q: Do the "frozen once published" rules apply to dev? → A: No. Dev is a staging environment and
+  may be republished from scratch. Frozen text, frozen section ranges and the additive publish
+  check apply from the first production publish. IDs are never reused anywhere.
+
 ## User Scenarios & Testing *(mandatory)*
 
-The primary actor is the **content owner** (the developer acting as editor and reviewer). The
-secondary actor is the **app**, which consumes published packs.
+The primary actor is the **content owner** (the developer, who runs the pipeline, calibrates the
+grader, reads each book in the app on dev and promotes it). The secondary actor is the **app**,
+which consumes published packs.
 
 ### User Story 1 - Generate and read a book's study content (Priority: P1)
 
 The content owner runs the pipeline for one book (Mark) against the frozen sources. They get every
 section of that book, each with its verse range, title, 1–5 key ideas attributed to commentators, a
 leveled question pool, a context note and any "views differ" note. They can read it all in a
-readable review document.
+read-only scorecard and content report, and in the app once it is published to dev.
 
 **Why this priority**: This is the brief's "step zero" content spike. If the key ideas aren't sound
 and the questions aren't worth answering, nothing downstream matters. It also produces the first
 real pack for every other feature to build against.
 
-**Independent Test**: Run the generate stage for Mark on a dev machine. Confirm a draft study file
-and a human-readable review document exist for every section, and that every key idea names at
+**Independent Test**: Run the generate stage for Mark in the dev environment. Confirm a draft study
+file exists for every section, the read-only report shows them all, and every key idea names at
 least one of the three commentators.
 
 **Acceptance Scenarios**:
@@ -70,70 +93,86 @@ least one of the three commentators.
    commentaries discuss (for example Enoch in 5:21–24).
 5. **Given** a section where extraction yields no key idea that a question could target and the
    reader could answer from the passage (for example a bare census total), **When** it is
-   generated, **Then** it is flagged "no prompt", has a short context note instead of questions,
-   and is listed in the review document so the owner can confirm or override the flag.
+   generated, **Then** it is marked "no prompt", has a short context note instead of questions,
+   and is listed with its reason in the scorecard.
 6. **Given** generation has already finished for some sections, **When** the owner re-runs the
    same book with the same prompt version, **Then** finished sections are skipped. Only missing or
    failed sections are generated.
 
 ---
 
-### User Story 2 - Automatic checks and model review flag weak content (Priority: P1)
+### User Story 2 - The automatic quality gate keeps weak content out (Priority: P1)
 
-After generation, automatic checks and a second model pass run over the book. The owner gets a
-list of flagged items with reasons, so they spend review time where it matters.
+After generation, rule checks, the evidence check, a model grader and a level check run over the
+book and **act** on what they find: failing items are dropped or replaced by their alternate, a
+section left without usable content is regenerated once and then marked failed, and the run ends
+with a scorecard. Nobody reviews items one by one.
 
-**Why this priority**: The constitution forbids publishing without checks and review. Flagging
-makes human review of ~100 sections take an evening or two instead of a week.
+**Why this priority**: It replaces manual review (constitution v1.2.0). Without it, nothing
+stops a weak or misattributed item from reaching readers.
 
 **Independent Test**: Seed a draft book with known-bad items (a yes/no question, a question that
-repeats a key idea word for word, an idea with no source, a broken verse placeholder). Confirm each
-one is flagged with the right reason and that the book cannot move to "approved" while
-check failures remain.
+repeats a key idea word for word, an idea whose evidence quote isn't in the commentary, a broken
+verse placeholder, an idea the fake grader scores 1). Confirm each is dropped or replaced with the
+right reason in the scorecard, and that a section left with no usable Level 1 question is
+regenerated and then marked failed.
 
 **Acceptance Scenarios**:
 
 1. **Given** a draft book, **When** checks run, **Then** every item is checked against: length
    limits; questions end with "?"; no yes/no questions; no key idea repeated word for word in a
-   question; every key idea has at least one source; every verse placeholder resolves in both
-   translations; every question targets an existing key idea; the output is valid against the
-   pack schema.
-2. **Given** a draft book that passes checks, **When** model review runs, **Then** each question
-   and key idea gets a grade against the question quality rules (open-ended, short, answerable
-   from the passage, not leading, no tradition-specific assumptions). Weak items are flagged with
-   a reason.
+   question; every key idea has at least one source backed by an evidence quote found in that
+   commentator's excerpt; every verse placeholder resolves in both translations; every question
+   targets an existing key idea; the output is valid against the pack schema. Failing items are
+   dropped, with the reason recorded.
+2. **Given** items that pass the checks, **When** the grader runs, **Then** each key idea and
+   question gets a 1–5 grade against a fixed rubric (ideas: say only what the commentators say,
+   neutral, plain English; questions: open-ended, short, answerable from the passage, not leading,
+   no tradition-specific assumptions, aimed at their idea without giving it away). Items at or
+   below the threshold are dropped, and a dropped primary question is replaced by its alternate.
 3. **Given** a question's level assigned by rule, **When** the level check answers it as a
-   typical reader with only the passage, **Then** a Level 3 it answers easily is moved down and a
-   Level 1 it struggles with is flagged.
-4. **Given** a book with flagged items, **When** the owner opens the review document, **Then**
-   flagged items appear first, grouped by section, with the reason for each flag.
+   typical reader with only the passage, **Then** a Level 3 it answers easily is moved down, and a
+   Level 1 it can't answer is dropped (or replaced by its alternate).
+4. **Given** a section left without a key idea, or a prompted section left without an active
+   Level 1 question, **When** the gate finishes, **Then** the section is regenerated once, and if
+   it still fails it is marked failed and listed in the scorecard.
+5. **Given** a finished run, **When** the owner opens the scorecard, **Then** it shows the book's
+   pass rates (ideas, questions), every dropped item with its reason, failed sections, the
+   grader's calibration agreement, and the run's cost, followed by all content for reading.
 
 ---
 
-### User Story 3 - Human review gate and publishing (Priority: P1)
+### User Story 3 - Publish to dev, read in the app, promote to production (Priority: P1)
 
-The owner reviews the book, edits or rejects items, approves it, and publishes it as a versioned
-pack. The app can then download it. Nothing reaches the app without this approval.
+A run whose gate passes ends by publishing the book to dev. The owner reads it in the app and, if
+it reads well, promotes that exact pack version to production. Nothing reaches production
+without that promotion.
 
-**Why this priority**: Publishing is how content reaches users. The human gate is
-constitutionally required.
+**Why this priority**: Publishing is how content reaches users, and reading in the app is the
+owner's check before readers see it (constitution VII).
 
-**Independent Test**: Approve a reviewed Mark draft and publish it to the dev environment. Confirm
-the study file and both verse-text files are retrievable at versioned paths, with provenance, and
-that an unapproved book cannot be published.
+**Independent Test**: Run Mark with a passing gate and confirm it is published to dev at a
+versioned path with provenance. Promote it and confirm production serves the identical files.
+Confirm promotion is refused when the gate failed, the scores are under the thresholds, or the
+grader's calibration is missing or stale.
 
 **Acceptance Scenarios**:
 
-1. **Given** a book in "ready for review", **When** the owner tries to publish it without
-   approving, **Then** publishing is refused.
-2. **Given** the owner edits a question's wording during review, **When** the book is approved,
-   **Then** the edited wording is what gets published, and the edit is recorded as a human change.
-3. **Given** an approved book, **When** it is published, **Then** one study file (shared by both
-   translations) and one verse-text file per translation are available at a path that includes
-   the pack version. The study file records the source names, snapshot dates, checksums,
-   prompt versions and question-guide version it was built from.
+1. **Given** a run whose gate passes (no failed sections), **When** it finishes, **Then** one study
+   file (shared by both translations) and one verse-text file per translation are published to dev
+   at a path that includes the pack version, and dev's index points at it. The study file records
+   the source names, snapshot dates, checksums, prompt versions, question-guide version and the
+   gate's scores it was built from.
+2. **Given** a run with failed sections, **When** it finishes, **Then** nothing is published, and
+   the scorecard says which sections failed and why.
+3. **Given** a book on dev, **When** the owner promotes it, **Then** the exact dev files (same
+   bytes and checksums) are published to production, after the production publish check (Story 6)
+   passes. Promotion is refused if the pass rates are below the configured thresholds or the
+   grader's calibration is below 85% or older than its current prompt and model.
 4. **Given** a published pack, **When** a newer version is published, **Then** the older version
    stays available, and the app can find the latest version for each book.
+5. **Given** a book on dev that has not been promoted, **When** it is regenerated and republished,
+   **Then** dev may replace it entirely; IDs are still never reused.
 
 ---
 
@@ -184,8 +223,8 @@ gets a KJV variant, and that Mark 16:9–20 (bracketed in BSB) gets a manuscript
    runs, **Then** a KJV wording variant is added and the default text is unchanged.
 2. **Given** a verse present in one translation and missing or bracketed in the other, **When**
    alignment runs, **Then** a short neutral manuscript note is attached to that section.
-3. **Given** alignment output, **When** human review runs, **Then** every variant and manuscript
-   note is listed for review.
+3. **Given** alignment output, **When** the quality gate runs, **Then** every variant and
+   manuscript note is checked and graded like other items and listed in the scorecard.
 
 ---
 
@@ -198,8 +237,8 @@ Weak questions are retired, never deleted.
 **Why this priority**: Not needed for launch, but the pack format must support it from day one,
 because saved reflections depend on IDs never changing.
 
-**Independent Test**: Publish Mark v1, run a refresh that retires one question and adds one, and
-publish v1.1. Confirm every v1 question ID is still present in v1.1 with unchanged text, the
+**Independent Test**: Promote Mark v1 to production, run a refresh that retires one question and
+adds one, and promote v1.1. Confirm every v1 question ID is still present in v1.1 with unchanged text, the
 retired one is marked retired, and no ID was reused. Then edit a published question's text in
 place and confirm the publish check refuses the version.
 
@@ -209,8 +248,8 @@ place and confirm the publish check refuses the version.
    in the next pack version with status "retired" and the version it was retired in.
 2. **Given** a refresh, **When** new questions are added, **Then** they get new IDs never used
    before in that book, and record the pack version they were added in.
-3. **Given** any new pack version, **When** the publish check compares it with the previous
-   published version, **Then** publishing fails if any question or key idea ID is missing, reused,
+3. **Given** any new production pack version, **When** the publish check compares it with the
+   previous production version, **Then** publishing fails if any question or key idea ID is missing, reused,
    or has different text.
 4. **Given** a typo in a published key idea, **When** the owner fixes it, **Then** the old idea is
    retired, a new idea with a new ID records that it replaces the old one, any question that
@@ -242,11 +281,15 @@ place and confirm the publish check refuses the version.
   again with a fresh estimate.
 - A key idea quotes translation wording: flagged by checks (ideas must be in neutral modern English).
 - Prompt or model change: only sections affected by the changed prompt version are regenerated,
-  as a new version, and they go through review again. Sections that are already published are
+  as a new version, and they go through the quality gate again. Sections that are already published are
   never regenerated. They can only gain new questions through an explicit refresh (Story 6).
 - Re-running a book without new sources or prompt changes produces no new questions and makes no
   model calls. New questions come only from deliberate refresh runs.
 - A source checksum mismatch: every stage halts, and nothing is generated from altered text.
+- The grader disagrees with the owner on the calibration set (under 85%): promotion is blocked
+  until the rubric or grader prompt is fixed (a new prompt version) and the calibration is re-run.
+- The grader drops most of a section's questions: its alternates fill in; if none are left, the
+  section is regenerated once, then failed. The pipeline never ships a section it can't fill.
 - A reader taps "Not a helpful question?": this never changes the pack. The tap is counted for the
   review queue (spec 007), and only the owner can retire the question in a later version.
 
@@ -277,8 +320,7 @@ place and confirm the publish check refuses the version.
   passage. Every section goes through key-idea extraction, including genealogies, lists, census
   and law passages. A section is marked "no prompt" only when no key idea can be targeted by a
   question the reader could answer from the passage alone. It then carries a short context note
-  instead of questions. The owner MAY override the flag in either direction during review, and
-  the override is recorded as a human change.
+  instead of questions. The reason is recorded and shown in the scorecard.
 
 **Study content**
 
@@ -311,24 +353,31 @@ place and confirm the publish check refuses the version.
   section's commentary excerpts, a one-line summary of the previous section, and, on refreshes,
   the existing questions.
 
-**Alignment, checks and review**
+**Alignment and the quality gate**
 
 - **FR-015**: The system MUST run the translation alignment step (Story 5) once per book, adding
   per-translation wording variants and manuscript notes. The expensive generation steps MUST NOT
   run per translation.
-- **FR-016**: The system MUST run the automatic checks listed in Story 2, scenario 1, and block
-  approval while any check fails.
-- **FR-017**: The system MUST run a model review pass and a level check, and record a grade and any
-  flag reason per item.
-- **FR-018**: The system MUST track each section's stage (generated, checked, flagged, approved,
-  published), keyed by book, section and prompt version, so runs are idempotent and resumable.
-- **FR-019**: The pipeline MUST generate a review report per book (HTML or Markdown) listing flagged
-  items first, grouped by section, with the reason for each flag. The owner edits or rejects items
-  directly in the book's draft JSON files and approves the book with an `approve` command. Drafts
-  and approvals are committed to the repo, so each review is visible as a git diff. No separate
-  review application is built for the MVP.
-- **FR-020**: Human edits MUST be recorded as human changes (detected by comparing the draft files
-  with the pipeline's last generated output) and preserved by later re-runs.
+- **FR-016**: The system MUST run the automatic checks listed in Story 2, scenario 1, including the
+  evidence check, and drop every item that fails them, recording the reason.
+- **FR-017**: The system MUST grade every remaining key idea and question with a model grader
+  (a stronger model than the generator) against the fixed rubric in Story 2, scenario 2, and run
+  the level check. Items at or below the configured threshold are dropped or replaced by their
+  alternate; levels are adjusted; grades and reasons are recorded per item.
+- **FR-018**: The system MUST track each section's stage (generated, checked, graded, failed,
+  published to dev, promoted), keyed by book, section and prompt version, so runs are idempotent
+  and resumable. A failed section is regenerated once before it is marked failed.
+- **FR-019**: Every run MUST produce a read-only scorecard per book: pass rates for key ideas and
+  questions, every dropped item with its reason, failed sections, "no prompt" sections with their
+  reasons, the grader's calibration agreement, and the run's cost, followed by all content for
+  reading. There is no manual editing workflow for drafts in the MVP.
+- **FR-020**: The grader MUST be calibrated before its scores can allow a promotion: the owner grades
+  a fixed calibration set of at least 30 items once, and the grader must agree on at least 85% of
+  them. The agreement and the grader's prompt and model versions are recorded, and a change to
+  either requires recalibration.
+- **FR-029**: Prompt changes MUST be evaluated before use on a book bound for production: an `eval`
+  command runs the current and candidate prompt versions on a fixed sample of 15–25 sections and
+  grades both with the gate's rubric. A candidate is adopted only if it scores at least as well.
 
 **Cost control**
 
@@ -342,20 +391,24 @@ place and confirm the publish check refuses the version.
 
 **Publishing and versioning**
 
-- **FR-021**: Publishing MUST be a separate, owner-triggered step that requires an approved book.
+- **FR-021**: A run whose gate passes MUST end by publishing the book to dev. Publishing to
+  production MUST be a separate, owner-triggered promotion that copies an exact dev pack version,
+  and requires a passed gate, pass rates at or above the configured thresholds, and a current
+  grader calibration (FR-020).
 - **FR-022**: A published pack MUST consist of one study file per book (shared by all translations)
   and one verse-text file per translation, at versioned paths. Older versions stay available, and
   a per-book pointer tells the app the latest version.
 - **FR-023**: Every study file MUST record provenance: source names, snapshot dates, checksums,
   prompt versions, question-guide version and pack version.
-- **FR-024**: Pack updates MUST be additive. IDs are never removed, changed or reused. Once
+- **FR-024**: Production pack updates MUST be additive. IDs are never removed, changed or reused. Once
   published, the text of a question or key idea is frozen, typos included. A fix retires the item
   and adds a new item with a new ID that records the ID it replaces. Retired questions and key
   ideas stay in the pack with status "retired". Retiring a key idea also retires the active
-  questions that target only that idea. Before every publish, a publish check compares the new
-  version with the last published one and MUST fail if any published ID is missing, reused or
-  has different text, or if any published section's verse range has changed. Drafts are freely
-  editable until their first publish.
+  questions that target only that idea. Before every promotion, a publish check compares the new
+  version with the last production version and MUST fail if any published ID is missing, reused
+  or has different text, or if any published section's verse range has changed. Content is freely
+  regenerated, and dev freely republished, until a book's first production publish. IDs are
+  never reused, in dev or production.
 - **FR-025**: The pack format MUST be defined by a single schema, which pipeline output, backend
   models and app models are all validated against.
 - **FR-026**: The pack format MUST allow optional per-verse notes (names, places, customs) for a
@@ -374,7 +427,12 @@ place and confirm the publish check refuses the version.
 - **Question**: a permanent ID, type, level, verse scope, targeted key ideas, primary/alternate
   role, status, per-translation wording, added-in version, retired-in version, the ID it replaces
   (if any), optional series.
-- **Pipeline state**: per book, section and prompt version: stage, grades, flags and human edits.
+- **Pipeline state**: per book, section and prompt version: stage, gate results (checks, grades,
+  dropped items with reasons) and cost.
+- **Scorecard**: per run and book: pass rates, dropped items, failed sections, calibration
+  agreement, cost.
+- **Calibration set**: a fixed set of at least 30 items with the owner's grades, and the grader's
+  agreement with them per grader prompt and model version.
 - **Question guide / prompt version**: versioned instructions recorded on every output.
 
 ## Success Criteria *(mandatory)*
@@ -385,10 +443,10 @@ place and confirm the publish check refuses the version.
   have at least one Level 1 question and at least one key idea with a named source.
 - **SC-002**: Generating Mark (~100 sections) end to end takes under 30 minutes on demand and costs
   under $15 in model usage.
-- **SC-003**: The owner can complete the flagged-item review of Mark in two evenings or less, and a
-  full read-through of the launch book in under a week.
-- **SC-004**: In the content spike, the owner judges at least 90% of Mark's key ideas sound and at
-  least 80% of questions worth answering before edits.
+- **SC-003**: Promoting Mark needs no item-by-item review: the owner's work is the one-time grader
+  calibration (about 30 items) and reading the book in the app on dev.
+- **SC-004**: In the content spike, the calibrated grader passes at least 90% of Mark's key ideas
+  and at least 80% of its questions before any item is dropped, and the owner's in-app read agrees.
 - **SC-005**: Re-running a finished book with an unchanged prompt version makes zero model calls.
 - **SC-006**: Zero published packs violate ID permanence or lack provenance (enforced by the
   publish gate).
@@ -396,6 +454,8 @@ place and confirm the publish check refuses the version.
   when compressed.
 - **SC-008**: No pipeline run spends more than its cap plus the cost of the sections that were
   already in progress when the cap was hit.
+- **SC-009**: The grader agrees with the owner on at least 85% of the calibration set before any
+  promotion to production.
 
 ## Assumptions
 
@@ -403,9 +463,10 @@ place and confirm the publish check refuses the version.
   treated as decided for this spec).
 - The Free Use Bible API provides the BSB, KJV and the three commentaries under the licenses noted
   in the brief. Spot verification against a printed or CCEL edition happens for Mark.
-- MVP runs can happen on the owner's machine against the dev environment, using on-demand model
-  calls while prompts are tuned. Cloud orchestration per book and batch inference follow when
-  later books are generated. Both use the same stages and outputs.
+- Runs execute in the cloud (Step Functions and Lambda in the dev environment), using on-demand
+  model calls while prompts are tuned (revised 2026-11-10). The same stages can run on the owner's
+  machine for a few sections at a time. Bedrock batch inference follows when later books are
+  generated. All of these use the same stages and outputs.
 - The pack shape follows DESIGN.md ("Data the UI reads"): key ideas have title, body and verse
   scope; questions have level, verse scope, targets, alternate role and status, and keep `type` as
   pipeline metadata (confirmed 2026-11-04; the brief's example section matches).
@@ -413,3 +474,9 @@ place and confirm the publish check refuses the version.
   them to V2).
 - Seasonal series, question refresh runs and analytics-driven swaps reuse this pipeline but are
   specified later (spec 007 and V2).
+- There is no manual review or editing of generated JSON in the MVP (2026-11-10). Quality comes
+  from the automatic gate, the owner's in-app read before promotion, and reader feedback after
+  launch (spec 007).
+- The grader is Claude Opus 5.5, so a stronger model grades the generator's (Sonnet 5.5) output.
+  The gate's thresholds (drop at a grade of 2 or less; promotion at 90% of ideas and 80% of
+  questions passing) are settings, tuned during the Mark spike.
