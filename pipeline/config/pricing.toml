@@ -1,0 +1,27 @@
+# USD per million tokens on Amazon Bedrock, keyed by the bare model ID (any `us.`/`global.` and
+# `anthropic.` prefixes are stripped before lookup).
+#
+# Sonnet 5.5: the accepted Bedrock offer (checked 2026-11-04). Haiku 5.5 and Opus 5.5: cache read
+# is 5% of input, 5-minute cache write 125%, 1-hour cache write 200%.
+# Re-check with `aws bedrock list-foundation-model-agreement-offers --model-id <id>`.
+
+[models.claude-sonnet-5-5]
+input = 2.00
+output = 10.00
+cache_read = 0.10
+cache_write_5m = 2.50
+cache_write_1h = 4.00
+
+[models.claude-haiku-5-5]
+input = 0.10
+output = 0.50
+cache_read = 0.005
+cache_write_5m = 0.125
+cache_write_1h = 0.20
+
+[models.claude-opus-5-5]
+input = 4.00
+output = 20.00
+cache_read = 0.20
+cache_write_5m = 5.00
+cache_write_1h = 8.00

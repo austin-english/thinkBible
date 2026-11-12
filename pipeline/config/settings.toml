@@ -1,0 +1,49 @@
+# Pipeline settings (research R6, R7, R15). Model IDs are Claude in Amazon Bedrock IDs for the
+# Mantle client (`anthropic.` prefix), confirmed ACTIVE in us-west-2 on 2026-11-10.
+
+region = "us-west-2"
+concurrency = 10
+excerpt_cap_tokens = 8000
+review_flag_threshold = 2
+# Non-streaming requests: keep max_tokens at about 16k so responses finish inside SDK timeouts.
+max_tokens = 16000
+# Structured output that fails validation is retried this many times, then the section fails.
+invalid_output_retries = 2
+# Client-side refusal fallback (Bedrock has no server-side `fallbacks`): one retry on this model.
+refusal_fallback_model = "anthropic.claude-opus-5-5"
+
+[prompts]
+shared_context = "v1"
+question_guide = "v1"
+
+# Per stage: model, effort (output_config.effort; thinking is adaptive and always on for these
+# models), prompt version, and the default cost per section used before runs.json has history.
+[stages.summaries]
+model = "anthropic.claude-haiku-5-5"
+effort = "low"
+prompt = "v1"
+default_cost_usd = 0.002
+
+[stages.generate]
+model = "anthropic.claude-sonnet-5-5"
+effort = "medium"
+prompt = "v1"
+default_cost_usd = 0.06
+
+[stages.align]
+model = "anthropic.claude-haiku-5-5"
+effort = "low"
+prompt = "v1"
+default_cost_usd = 0.002
+
+[stages.review]
+model = "anthropic.claude-sonnet-5-5"
+effort = "medium"
+prompt = "v1"
+default_cost_usd = 0.02
+
+[stages.levels]
+model = "anthropic.claude-haiku-5-5"
+effort = "low"
+prompt = "v1"
+default_cost_usd = 0.005

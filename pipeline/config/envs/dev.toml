@@ -1,0 +1,6 @@
+# Dev environment (us-west-2, account 522779858032). CloudFront values are filled in after
+# `terraform apply` in infra/envs/dev.
+sources_bucket = "thinkbible-sources-522779858032"
+packs_bucket = "thinkbible-packs-dev-522779858032"
+distribution_id = ""
+cdn_base_url = ""
