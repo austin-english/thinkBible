@@ -45,12 +45,13 @@ data "aws_iam_policy_document" "lambda" {
   statement {
     sid     = "Bedrock"
     actions = concat(["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"], var.extra_bedrock_actions)
-    # Cross-region inference can run in any region, so foundation models use a region wildcard.
+    # Models are listed as in settings.toml (often a `us.` inference profile). Cross-region
+    # inference needs the profile and the foundation model it routes to, in any US region.
     resources = flatten([
-      for m in var.bedrock_models : [
-        "arn:aws:bedrock:*::foundation-model/${m}",
-        "arn:aws:bedrock:*:${local.account_id}:inference-profile/us.${m}",
-        "arn:aws:bedrock:*:${local.account_id}:inference-profile/global.${m}",
+      for base in [for m in var.bedrock_models : replace(m, "/^(us|global)\\./", "")] : [
+        "arn:aws:bedrock:*::foundation-model/${base}",
+        "arn:aws:bedrock:*:${local.account_id}:inference-profile/us.${base}",
+        "arn:aws:bedrock:*:${local.account_id}:inference-profile/global.${base}",
       ]
     ])
   }

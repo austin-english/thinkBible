@@ -12,7 +12,7 @@ from moto import mock_aws
 from pydantic import BaseModel
 
 from thinkbible_pipeline import app
-from thinkbible_pipeline.config import load_env
+from thinkbible_pipeline.config import load_env, load_settings
 from thinkbible_pipeline.drafts.models import SectionDraft, SectionMapEntry
 from thinkbible_pipeline.drafts.store import DraftStore
 from thinkbible_pipeline.exitcodes import ExitCode
@@ -96,7 +96,8 @@ def test_estimates_then_starts_an_execution(aws: tuple[Any, str]) -> None:
     payload = json.loads(desc["input"])
     assert payload["runId"] == started.run_id
     assert payload["request"]["stages"] == ["summaries"]
-    assert payload["capUsd"] == pytest.approx(2 * 0.002)  # 2x the default estimate
+    default = load_settings().stage("summaries").default_cost_usd
+    assert payload["capUsd"] == pytest.approx(2 * default)  # 2x the default estimate
     assert "us-west-2.console.aws.amazon.com/states" in started.message
 
 

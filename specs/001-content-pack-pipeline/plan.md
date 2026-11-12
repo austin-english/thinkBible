@@ -36,7 +36,7 @@ on:
 
 **Primary Dependencies**:
 - `pydantic` v2 (models and structured outputs)
-- `anthropic[bedrock]` (`AnthropicBedrockMantle`)
+- `anthropic[bedrock]` (`AsyncAnthropicBedrock`, the `bedrock-runtime` endpoint; research R6)
 - `boto3` (S3, CloudFront, DynamoDB, Step Functions)
 - `typer` (CLI)
 - `jinja2` (scorecard report)

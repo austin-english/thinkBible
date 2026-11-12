@@ -150,35 +150,44 @@ later, from the extraction result (FR-005).
 ## R6. Model access and request design
 
 **Decision**:
-- **Client**: Amazon Bedrock through the official Anthropic Python SDK
-  (`anthropic[bedrock]`, `AnthropicBedrockMantle(aws_region="us-west-2")`), as the constitution
-  requires.
-  - Model IDs are config values. The Mantle client takes Claude-in-Bedrock IDs with the
-    `anthropic.` prefix: `anthropic.claude-sonnet-5-5`, `anthropic.claude-haiku-5-5` and
-    `anthropic.claude-opus-5-5` (fallback). The `us.anthropic.…` cross-region inference profiles
-    are the legacy `bedrock-runtime` InvokeModel/Converse IDs and are not used.
-  - 2026-11-10: all three are listed ACTIVE and AUTHORIZED in us-west-2, but invocation still
-    fails (Mantle: 404 "does not exist"; `bedrock-runtime` Converse: "not available for this
-    account"). Re-run the smoke check once account access is enabled.
+- **Client** (revised 2026-11-12): Amazon Bedrock's **`bedrock-runtime`** endpoint through the
+  official Anthropic Python SDK (`anthropic[bedrock]`, `AsyncAnthropicBedrock`), as the
+  constitution requires. `settings.toml` `endpoint` can switch to `bedrock-mantle`
+  (`AsyncAnthropicBedrockMantle`), but:
+  - AWS recommends `bedrock-runtime` for new applications; Mantle is for features only it has
+    (server-side tools, background inference, Projects), which the pipeline doesn't use. Both run
+    on the same inference engine at the same per-token price (AWS "Endpoints supported by Amazon
+    Bedrock").
+  - This account can't use Mantle: every Mantle call was refused or "does not exist", for 5.5 and
+    for Haiku 4.5. Mantle doesn't support cross-region inference profiles, and every Claude quota
+    on this account is a cross-region one, which is the likely reason.
+  - Model IDs are config values: the US cross-region inference profiles, e.g.
+    `us.anthropic.claude-sonnet-4-6`.
+- **Model access** (2026-11-12): the Claude 5.5 models are blocked for this account (quota 0;
+  AWS declined the increase citing "account history, and usage patterns", which "is subject to
+  change automatically as time passes"). Until then the stages run on **Claude 4.x**, which the
+  account can use: a live smoke test of all three models through `BedrockRunner` passed on
+  2026-11-12. Moving to 5.5 later is a `settings.toml` change plus the Terraform model list.
   - The organization's region policy allows Bedrock invoke in every region and everything else
     only in us-west-2 (docs/aws-setup.md → Regions). So all ThinkBible resources live in
     us-west-2, and CloudFront and its ACM certificate in us-east-1.
-- **Models by stage**:
+- **Models by stage** (target 5.5; running on 4.x until access opens):
 
-  | Stage | Model | Reason |
-  |---|---|---|
-  | `summaries` (one-line passage summary) | Haiku 5.5 | Cheap, and parallel, since it reads only the passage |
-  | `generate` (key ideas, context, views differ, then questions) | Sonnet 5.5 | Quality-critical |
-  | `align` (wording variants, manuscript notes) | Haiku 5.5 | The brief's "small model call" |
-  | `review` (the quality gate's grader, R16) | Opus 5.5 | A stronger model than the generator grades its output (revised 2026-11-10) |
-  | `levels` (typical-reader check) | Haiku 5.5 | Stands in for a typical reader |
+  | Stage | Model (target) | Now | Reason |
+  |---|---|---|---|
+  | `summaries` (one-line passage summary) | Haiku 5.5 | Haiku 4.5 | Cheap, and parallel, since it reads only the passage |
+  | `generate` (key ideas, context, views differ, then questions) | Sonnet 5.5 | Sonnet 4.6 | Quality-critical |
+  | `align` (wording variants, manuscript notes) | Haiku 5.5 | Haiku 4.5 | The brief's "small model call" |
+  | `review` (the quality gate's grader, R16) | Opus 5.5 | Opus 4.6 | A stronger model than the generator grades its output (revised 2026-11-10) |
+  | `levels` (typical-reader check) | Haiku 5.5 | Haiku 4.5 | Stands in for a typical reader |
 
 - **Structured outputs**: each call uses `client.messages.parse(...)` with a Pydantic output model
   (supported on Bedrock). Invalid output is retried up to 2 times, then the section is marked
   failed.
-- **Thinking and effort**: Sonnet 5.5 runs with adaptive thinking, which is on by default. Effort
-  is set per stage in config, starting at `medium` for `generate` and `review` and `low` for the
-  Haiku stages. Tune during the Mark spike, since thinking tokens dominate cost.
+- **Thinking and effort**: set per stage in config (`thinking`, `effort`), starting at `medium`
+  effort for `generate` and `review`. The 5.5 models always think adaptively; Sonnet and Opus 4.6
+  need `thinking = "adaptive"` set explicitly; Haiku 4.5 rejects an effort setting, so its stages
+  send neither. Tune during the Mark spike, since thinking tokens dominate cost.
 - **Prompt caching**: the system prompt and question guide are a stable prefix with a
   `cache_control` breakpoint. Per-section content comes after it.
 - **Context in every system prompt**: each stage's system prompt opens by stating the task. The
@@ -191,7 +200,7 @@ later, from the extraction result (FR-005).
 - **No tools, ever**: requests never include `tools`. A unit test asserts this for every stage
   (constitution II).
 - **Refusals**: Bedrock has no server-side `fallbacks`, so the SDK's client-side
-  `BetaRefusalFallbackMiddleware` retries a refused request once on `anthropic.claude-opus-5-5`. If that is
+  `BetaRefusalFallbackMiddleware` retries a refused request once on the fallback model (Opus). If that is
   also refused, the section is marked failed and flagged with the refusal category. This exists
   because Old Testament passages with violence could trip safety classifiers. Remove it if you'd
   rather review those sections by hand.
@@ -480,6 +489,8 @@ the book in the app.
   from the sources bucket and check each against the bundled manifest (FR-002).
 - **IAM** (least privilege): Bedrock invoke on the three Claude 5.5 models only, read on the
   sources bucket, read/write on the drafts bucket, read/write on the ledger table, CloudWatch
-  Logs. The exact IAM action for the Bedrock Mantle endpoint is confirmed during deploy.
+  Logs. On `bedrock-runtime` that is `bedrock:InvokeModel` on each inference profile and the
+  foundation models it routes to; Mantle would need `bedrock-mantle:CreateInference` instead (AWS
+  endpoints page), available through the module's `extra_bedrock_actions`.
 - **Timeouts**: `run_section` 900 s (model calls use shorter SDK timeouts so a hung call fails
   cleanly), the others 60–300 s.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import tomllib
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -13,6 +14,8 @@ from thinkbible_pipeline.paths import repo_paths
 
 Effort = Literal["low", "medium", "high", "xhigh", "max"]
 EFFORTS: tuple[Effort, ...] = ("low", "medium", "high", "xhigh", "max")
+Thinking = Literal["adaptive", "none"]
+Endpoint = Literal["runtime", "mantle"]
 
 
 class ConfigError(ValueError):
@@ -22,9 +25,10 @@ class ConfigError(ValueError):
 @dataclass(frozen=True)
 class StageSettings:
     model: str
-    effort: Effort
     prompt: str
     default_cost_usd: float
+    thinking: Thinking = "none"
+    effort: Effort | None = None  # None: send no effort (models such as Haiku 4.5 reject it)
 
 
 @dataclass(frozen=True)
@@ -44,6 +48,7 @@ class Settings:
     refusal_fallback_model: str
     prompts: PromptSettings
     stages: Mapping[str, StageSettings]
+    endpoint: Endpoint = "runtime"  # bedrock-runtime, or bedrock-mantle
 
     def stage(self, name: str) -> StageSettings:
         try:
@@ -63,13 +68,20 @@ class ModelPrice:
     cache_write_1h: float
 
 
+_VERSION_SUFFIX = re.compile(r"(-\d{8})?(-v\d+(:\d+)?)?$")
+
+
 def bare_model_id(model: str) -> str:
-    """Strip region and provider prefixes: ``us.anthropic.claude-x`` → ``claude-x``."""
+    """The model's price key: strip region and provider prefixes and Bedrock's version suffix.
+
+    ``us.anthropic.claude-haiku-4-5-20251001-v1:0`` → ``claude-haiku-4-5``;
+    ``anthropic.claude-opus-4-6-v1`` → ``claude-opus-4-6``; ``claude-sonnet-5-5`` unchanged.
+    """
     for prefix in ("us.", "eu.", "apac.", "global."):
         if model.startswith(prefix):
             model = model[len(prefix) :]
             break
-    return model.removeprefix("anthropic.")
+    return _VERSION_SUFFIX.sub("", model.removeprefix("anthropic."))
 
 
 @dataclass(frozen=True)
@@ -113,14 +125,22 @@ def load_settings(config_dir: Path | None = None) -> Settings:
     raw = _read(_config_dir(config_dir) / "settings.toml")
     stages: dict[str, StageSettings] = {}
     for name, s in raw.get("stages", {}).items():
-        if s["effort"] not in EFFORTS:
+        effort = s.get("effort")
+        if effort is not None and effort not in EFFORTS:
             raise ConfigError(f"stages.{name}.effort must be one of {EFFORTS}")
+        thinking = s.get("thinking", "none")
+        if thinking not in ("adaptive", "none"):
+            raise ConfigError(f"stages.{name}.thinking must be adaptive or none")
         stages[name] = StageSettings(
             model=str(s["model"]),
-            effort=cast(Effort, s["effort"]),
             prompt=str(s["prompt"]),
             default_cost_usd=float(s["default_cost_usd"]),
+            thinking=cast(Thinking, thinking),
+            effort=cast(Effort, effort) if effort is not None else None,
         )
+    endpoint = raw.get("endpoint", "runtime")
+    if endpoint not in ("runtime", "mantle"):
+        raise ConfigError("endpoint must be runtime or mantle")
     prompts = raw["prompts"]
     return Settings(
         region=str(raw["region"]),
@@ -130,6 +150,7 @@ def load_settings(config_dir: Path | None = None) -> Settings:
         max_tokens=int(raw["max_tokens"]),
         invalid_output_retries=int(raw["invalid_output_retries"]),
         refusal_fallback_model=str(raw["refusal_fallback_model"]),
+        endpoint=cast(Endpoint, endpoint),
         prompts=PromptSettings(
             shared_context=str(prompts["shared_context"]),
             question_guide=str(prompts["question_guide"]),

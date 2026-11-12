@@ -34,16 +34,24 @@ def _run(stage: str, done: int, spent: float) -> RunRecord:
     )
 
 
-def test_settings_use_bedrock_mantle_ids() -> None:
-    for name in ("summaries", "generate", "align", "review", "levels"):
-        assert SETTINGS.stage(name).model.startswith("anthropic.claude-")
-    assert SETTINGS.refusal_fallback_model == "anthropic.claude-opus-5-5"
+def test_settings_models_endpoint_and_prices() -> None:
+    assert SETTINGS.endpoint == "runtime"  # bedrock-runtime (research R6)
+    models = {SETTINGS.stage(n).model for n in SETTINGS.stages} | {SETTINGS.refusal_fallback_model}
+    for model in models:
+        assert model.startswith(("us.anthropic.claude-", "anthropic.claude-")), model
+        PRICING.for_model(model)  # every configured model has a price
+    # The grader is a stronger model than the generator (research R16).
+    assert "opus" in SETTINGS.stage("review").model
+    assert "sonnet" in SETTINGS.stage("generate").model
 
 
 def test_bare_model_id() -> None:
     assert bare_model_id("us.anthropic.claude-sonnet-5-5") == "claude-sonnet-5-5"
     assert bare_model_id("anthropic.claude-haiku-5-5") == "claude-haiku-5-5"
     assert bare_model_id("claude-opus-5-5") == "claude-opus-5-5"
+    assert bare_model_id("us.anthropic.claude-haiku-4-5-20251001-v1:0") == "claude-haiku-4-5"
+    assert bare_model_id("anthropic.claude-opus-4-6-v1") == "claude-opus-4-6"
+    assert bare_model_id("us.anthropic.claude-sonnet-4-6") == "claude-sonnet-4-6"
 
 
 def test_price_sonnet() -> None:
@@ -68,7 +76,8 @@ def test_price_unknown_model_raises() -> None:
 
 
 def test_estimate_defaults_without_history() -> None:
-    assert estimate("generate", 10, [], SETTINGS) == pytest.approx(0.6)
+    default = SETTINGS.stage("generate").default_cost_usd
+    assert estimate("generate", 10, [], SETTINGS) == pytest.approx(10 * default)
 
 
 def test_estimate_uses_median_of_history() -> None:

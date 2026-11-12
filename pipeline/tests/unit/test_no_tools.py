@@ -66,7 +66,15 @@ def test_request_for_every_stage_has_no_tools(stage: str) -> None:
         assert key not in params
     cfg = SETTINGS.stage(stage)
     assert params["model"] == cfg.model
-    assert params["output_config"] == {"effort": cfg.effort}
+    # Thinking and effort are sent only when the stage's model takes them (settings.toml).
+    if cfg.effort is None:
+        assert "output_config" not in params
+    else:
+        assert params["output_config"] == {"effort": cfg.effort}
+    if cfg.thinking == "adaptive":
+        assert params["thinking"] == {"type": "adaptive"}
+    else:
+        assert "thinking" not in params
     # The stable prefix is cached; the per-section text is the user turn.
     assert params["system"][-1]["cache_control"] == {"type": "ephemeral"}
     assert "cache_control" not in params["system"][0]
@@ -123,3 +131,14 @@ def test_invalid_output_gives_up_after_retries() -> None:
             )
         )
     assert len(client.calls) == SETTINGS.invalid_output_retries + 1
+
+
+def test_client_follows_the_endpoint_setting() -> None:
+    import dataclasses
+
+    from anthropic import AsyncAnthropicBedrock, AsyncAnthropicBedrockMantle
+
+    runtime = BedrockRunner(SETTINGS)
+    assert type(runtime._client) is AsyncAnthropicBedrock
+    mantle = BedrockRunner(dataclasses.replace(SETTINGS, endpoint="mantle"))
+    assert type(mantle._client) is AsyncAnthropicBedrockMantle

@@ -25,12 +25,12 @@ variable "max_concurrency" {
 }
 
 variable "bedrock_models" {
-  description = "Claude in Amazon Bedrock model IDs the pipeline may invoke (pipeline/config/settings.toml)."
+  description = "Bedrock model or inference-profile IDs the pipeline may invoke, exactly as in pipeline/config/settings.toml."
   type        = list(string)
 }
 
 variable "extra_bedrock_actions" {
-  description = "Extra IAM actions if the Bedrock Mantle endpoint needs more than bedrock:InvokeModel* (research R19: confirm on first deploy)."
+  description = "Extra IAM actions, e.g. bedrock-mantle:CreateInference if settings.toml switches to the Mantle endpoint (research R19)."
   type        = list(string)
   default     = []
 }

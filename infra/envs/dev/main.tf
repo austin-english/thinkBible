@@ -26,9 +26,10 @@ module "pipeline" {
 
   # Keep in step with pipeline/config/settings.toml (checked by tests/unit/test_infra_sync.py).
   max_concurrency = 10
+  # Claude 4.x until the 5.5 models open up for this account (settings.toml has the details).
   bedrock_models = [
-    "anthropic.claude-haiku-5-5",
-    "anthropic.claude-sonnet-5-5",
-    "anthropic.claude-opus-5-5",
+    "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "us.anthropic.claude-sonnet-4-6",
+    "us.anthropic.claude-opus-4-6-v1",
   ]
 }

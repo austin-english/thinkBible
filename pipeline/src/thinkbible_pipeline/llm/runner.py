@@ -1,7 +1,8 @@
 """Model calls behind one interface (research R6).
 
-``BedrockRunner`` calls Claude in Amazon Bedrock through the Anthropic SDK's Mantle client with
-structured output. ``FakeRunner`` replays recorded outputs for tests; tests never call models.
+``BedrockRunner`` calls Claude in Amazon Bedrock through the Anthropic SDK (the ``bedrock-runtime``
+endpoint by default, ``bedrock-mantle`` if settings say so) with structured output.
+``FakeRunner`` replays recorded outputs for tests; tests never call models.
 """
 
 from __future__ import annotations
@@ -13,7 +14,11 @@ from pathlib import Path
 from typing import Any, Protocol, TypeVar
 
 import anthropic
-from anthropic import AsyncAnthropicBedrockMantle, BetaRefusalFallbackMiddleware
+from anthropic import (
+    AsyncAnthropicBedrock,
+    AsyncAnthropicBedrockMantle,
+    BetaRefusalFallbackMiddleware,
+)
 from anthropic.types.beta import BetaTextBlockParam, BetaUsage
 from pydantic import BaseModel, ValidationError
 
@@ -118,14 +123,21 @@ class BedrockRunner:
 
     def __init__(self, settings: Settings, client: Any | None = None) -> None:
         self._settings = settings
+        self._client = client or self._make_client(settings)
+
+    @staticmethod
+    def _make_client(settings: Settings) -> Any:
         # Bedrock has no server-side `fallbacks`: the SDK middleware retries a refused request on
         # the fallback model (research R6). It only handles `client.beta.messages` requests.
-        self._client = client or AsyncAnthropicBedrockMantle(
-            aws_region=settings.region,
-            middleware=[
-                BetaRefusalFallbackMiddleware([{"model": settings.refusal_fallback_model}])
-            ],
+        # `betas=[]` keeps it from sending the fallback-credit beta header, which Bedrock may not
+        # accept for every model; a retry simply pays full price.
+        fallback = BetaRefusalFallbackMiddleware(
+            [{"model": settings.refusal_fallback_model}], betas=[]
         )
+        if settings.endpoint == "mantle":
+            return AsyncAnthropicBedrockMantle(aws_region=settings.region, middleware=[fallback])
+        # bedrock-runtime: AWS's recommended endpoint, and the one this account can use (R6).
+        return AsyncAnthropicBedrock(aws_region=settings.region, middleware=[fallback])
 
     def build_request(
         self, stage: str, system: Sequence[BetaTextBlockParam], user: str
@@ -142,9 +154,13 @@ class BedrockRunner:
             "max_tokens": self._settings.max_tokens,
             "system": blocks,
             "messages": [{"role": "user", "content": user}],
-            # Thinking is adaptive and always on for these models; effort sets its depth.
-            "output_config": {"effort": cfg.effort},
         }
+        # Per model (settings.toml): Claude 4.6 needs adaptive thinking turned on explicitly
+        # (5.5 has it always on); Haiku 4.5 rejects an effort setting, so it gets neither.
+        if cfg.thinking == "adaptive":
+            params["thinking"] = {"type": "adaptive"}
+        if cfg.effort is not None:
+            params["output_config"] = {"effort": cfg.effort}
         assert_no_tools(params)
         return params
 

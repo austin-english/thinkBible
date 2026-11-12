@@ -355,7 +355,7 @@ five handlers.
   - five `aws_lambda_function`s from the bundle (arm64, python3.12, timeouts per R19, env vars),
     with log groups (30-day retention);
   - the state machine `thinkbible-pipeline-dev` (Standard) from the ASL template, with logging;
-  - IAM per R19 (confirm the Bedrock Mantle invoke action while applying);
+  - IAM per R19 (`bedrock:InvokeModel` on the configured inference profiles and their models);
   - outputs `drafts_bucket`, `ledger_table`, `state_machine_arn` for `envs/dev.toml`.
 - [X] T094 Connect the cloud path to the CLI in `pipeline/src/thinkbible_pipeline/cli.py` and
   `app.py`:
