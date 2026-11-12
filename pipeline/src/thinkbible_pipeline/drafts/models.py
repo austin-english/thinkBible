@@ -8,15 +8,15 @@ from pydantic import Field
 
 from thinkbible_pipeline.jsonio import JsonModel
 
+# data-model §2 state machine (revised 2026-11-10: automatic gate, dev → production).
 BookStatus = Literal[
     "sectioned",
     "generating",
     "generated",
-    "checked",
-    "flagged",
-    "ready-for-review",
-    "approved",
-    "published",
+    "gated",
+    "failed",
+    "published-dev",
+    "promoted",
 ]
 
 
@@ -33,7 +33,8 @@ class IdCounter(JsonModel):
 class BookState(JsonModel):
     book: BookRef
     status: BookStatus
-    last_published: str | None = None
+    dev_version: str | None = None  # the version currently on dev
+    last_promoted: str | None = None  # the last version promoted to production
     # Only ever increases (R13): IDs are never reused.
     id_counters: dict[str, IdCounter] = Field(default_factory=dict)
 
@@ -81,22 +82,25 @@ class CheckResult(JsonModel):
     detail: str | None = None
 
 
-class Flag(JsonModel):
+class DroppedItem(JsonModel):
+    """An item the quality gate removed, with why and the item as it was generated (R16)."""
+
     item_id: str
-    source: Literal["check", "review", "levels", "align", "merge", "budget"]
+    stage: Literal["check", "review", "levels", "align"]
     reason: str
-    accepted: bool = False
+    item: dict[str, Any] = Field(default_factory=dict)
+
+
+class LevelChange(JsonModel):
+    question_id: str
+    from_level: int = Field(alias="from")
+    to_level: int = Field(alias="to")
+    reason: str
 
 
 class Grade(JsonModel):
     score: Annotated[int, Field(ge=1, le=5)]
     notes: str | None = None
-
-
-class HumanEdit(JsonModel):
-    item_id: str
-    field: str
-    at: str
 
 
 class StageRecord(JsonModel):
@@ -110,7 +114,7 @@ class StageRecord(JsonModel):
 
 
 class SectionDraft(JsonModel):
-    """Working copy (``sections/{id}.json``) and machine copy (``.generated/{id}.json``).
+    """One section's pipeline state (``sections/{id}.json``). Nobody edits it by hand.
 
     ``section`` holds the publishable Section fields as they're built up stage by stage, so it's a
     plain JSON object here. ``publish`` validates it against the Section contract.
@@ -123,9 +127,10 @@ class SectionDraft(JsonModel):
     no_prompt_reason: str | None = None
     features: dict[str, QuestionFeatures] = Field(default_factory=dict)
     checks: list[CheckResult] = Field(default_factory=list)
-    flags: list[Flag] = Field(default_factory=list)
     grades: dict[str, Grade] = Field(default_factory=dict)
-    human_edits: list[HumanEdit] = Field(default_factory=list)
+    dropped: list[DroppedItem] = Field(default_factory=list)
+    level_changes: list[LevelChange] = Field(default_factory=list)
+    failed: str | None = None  # why the section failed after one regeneration (FR-018)
     stages: dict[str, StageRecord] = Field(default_factory=dict)
 
 
@@ -155,12 +160,5 @@ class RunRecord(JsonModel):
     tokens: TokenCounts
     models: list[str]
     prompt_versions: dict[str, str]
+    code_version: str | None = None  # git HEAD of the bundle (or working tree for --local)
     stopped_by: Literal["cap", "error"] | None = None
-
-
-class Approval(JsonModel):
-    book: str
-    approved_at: str
-    drafts_sha256: str
-    git_head: str
-    accepted_flags: list[str] = Field(default_factory=list)

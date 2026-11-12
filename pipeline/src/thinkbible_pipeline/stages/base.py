@@ -1,7 +1,13 @@
-"""The stage runner: ``run(request, deps) -> RunResult`` (research R7, R8, R15).
+"""The stage runner, split into steps the cloud and local paths share (research R7, R8, R15).
 
-It never reads stdin or argv. Approval of the estimate comes through ``deps.approve_estimate``:
-locally the ``Proceed? [y/N]`` prompt, in the cloud a Step Functions wait-for-approval step.
+- ``estimate_run``: what the whole run will process and cost, for the one approval.
+- ``plan_stage``: which sections of one stage need running (hash and skip).
+- ``run_one_section``: run one stage for one section (cap check, execute, save, add cost).
+- ``finish_stage``: write the stage's run record and stop the run at the cap.
+
+In the cloud each step is a Lambda under Step Functions (``cloud/handlers.py``). ``run()`` is the
+local mode (``run --local`` and tests): the same steps with asyncio. Nothing here reads stdin or
+argv; approval comes through ``deps.approve_estimate``.
 """
 
 from __future__ import annotations
@@ -13,7 +19,9 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from functools import cached_property
-from typing import Any
+from typing import Any, Literal
+
+from pydantic import Field
 
 from thinkbible_pipeline.config import Pricing, Settings
 from thinkbible_pipeline.drafts.models import (
@@ -25,11 +33,14 @@ from thinkbible_pipeline.drafts.models import (
 )
 from thinkbible_pipeline.drafts.store import DraftStore
 from thinkbible_pipeline.exitcodes import ExitCode
-from thinkbible_pipeline.jsonio import compact_canonical, sha256_hex
-from thinkbible_pipeline.llm.budget import Budget, EstimateSummary, estimate, price
+from thinkbible_pipeline.jsonio import JsonModel, compact_canonical, sha256_hex
+from thinkbible_pipeline.ledger import InMemoryLedger, RunStatus, SpendLedger
+from thinkbible_pipeline.llm.budget import EstimateSummary, StageEstimate, estimate, price
 from thinkbible_pipeline.llm.runner import ModelRunner, Usage
 from thinkbible_pipeline.requests import RunRequest
 from thinkbible_pipeline.sources.snapshot import SourceError
+
+# --- stage interfaces ---
 
 
 @dataclass
@@ -43,7 +54,7 @@ class SectionStage(ABC):
     """A stage that runs once per section, keyed by input hash so re-runs are free (SC-005)."""
 
     name: str
-    # Read-only stages without model calls (check, report) always run.
+    # Stages without model calls that must see every section each time (report-like) set this.
     always_run: bool = False
 
     @abstractmethod
@@ -73,6 +84,11 @@ class BookStage(ABC):
     async def run_book(self, request: RunRequest, deps: Deps) -> None: ...
 
 
+Stage = SectionStage | BookStage
+
+# --- dependencies ---
+
+
 def _utcnow() -> datetime:
     return datetime.now(UTC)
 
@@ -84,20 +100,66 @@ class Deps:
     pricing: Pricing
     runner_factory: Callable[[], ModelRunner]
     approve_estimate: Callable[[EstimateSummary], bool]
-    stages: Mapping[str, SectionStage | BookStage]
+    stages: Mapping[str, Stage]
+    ledger: SpendLedger = field(default_factory=InMemoryLedger)
     # Verifies source checksums before any work (FR-002). Raises SourceError on a mismatch.
     preflight: Callable[[], None] = lambda: None
     clock: Callable[[], datetime] = _utcnow
     echo: Callable[[str], None] = lambda _msg: None
+    code_version: str = "unknown"
 
     @cached_property
     def runner(self) -> ModelRunner:
         """Created on first use, so stages without model calls never need AWS credentials."""
         return self.runner_factory()
 
+    def stage(self, name: str) -> Stage:
+        stage = self.stages.get(name)
+        if stage is None:
+            raise UnknownStage(f"stage {name!r} is not implemented yet")
+        return stage
 
-@dataclass
-class StageResult:
+
+class UnknownStage(LookupError):
+    pass
+
+
+class UnknownSections(ValueError):
+    pass
+
+
+# --- step results (JSON models, so they travel through Step Functions payloads) ---
+
+
+class PlanItem(JsonModel):
+    section_id: str
+    input_hash: str
+
+
+class StagePlan(JsonModel):
+    stage: str
+    book_level: bool = False
+    prompt_version: str = ""
+    model: str | None = None
+    items: list[PlanItem] = Field(default_factory=list)
+    skipped: int = 0
+    estimate_usd: float = 0.0
+
+    @property
+    def section_ids(self) -> list[str]:
+        return [i.section_id for i in self.items]
+
+
+class SectionOutcome(JsonModel):
+    section_id: str
+    status: Literal["done", "failed", "not_started"]
+    cost_usd: float = 0.0
+    tokens: TokenCounts = Field(default_factory=TokenCounts)
+    models: list[str] = Field(default_factory=list)
+    error: str | None = None
+
+
+class StageResult(JsonModel):
     stage: str
     done: int = 0
     skipped: int = 0
@@ -105,15 +167,14 @@ class StageResult:
     not_started: int = 0
     spent_usd: float = 0.0
     estimate_usd: float = 0.0
-    cap_usd: float | None = None
-    declined: bool = False
-    stopped_by: str | None = None
-    failures: dict[str, str] = field(default_factory=dict)
+    stopped_by: Literal["cap"] | None = None
+    failures: dict[str, str] = Field(default_factory=dict)
 
 
 @dataclass
 class RunResult:
     stages: list[StageResult] = field(default_factory=list)
+    declined: bool = False
     error: str | None = None
     error_code: ExitCode | None = None
 
@@ -123,12 +184,9 @@ class RunResult:
 
     @property
     def stopped_by(self) -> str | None:
-        for s in self.stages:
-            if s.stopped_by:
-                return s.stopped_by
-            if s.declined:
-                return "declined"
-        return None
+        if self.declined:
+            return "declined"
+        return "cap" if any(s.stopped_by == "cap" for s in self.stages) else None
 
     @property
     def exit_code(self) -> ExitCode:
@@ -141,6 +199,14 @@ class RunResult:
         return ExitCode.OK
 
 
+def exit_code_for(stages: list[StageResult]) -> ExitCode:
+    return RunResult(stages=stages).exit_code
+
+
+def new_run_id(now: datetime) -> str:
+    return f"{now:%Y%m%dT%H%M%SZ}-{uuid.uuid4().hex[:6]}"
+
+
 def input_hash(inputs: Any, prompt_version: str, model: str | None) -> str:
     """sha256 of the canonical JSON of (inputs, prompt version, model ID) (research R8)."""
     return sha256_hex(
@@ -148,158 +214,255 @@ def input_hash(inputs: Any, prompt_version: str, model: str | None) -> str:
     )
 
 
-async def run(request: RunRequest, deps: Deps) -> RunResult:
-    result = RunResult()
-    try:
-        deps.preflight()
-    except SourceError as e:
-        return RunResult(error=str(e), error_code=ExitCode.SOURCE_CHECKSUM)
-
-    for name in request.stages:
-        stage = deps.stages.get(name)
-        if stage is None:
-            result.error = f"stage {name!r} is not implemented yet"
-            result.error_code = ExitCode.USAGE
-            return result
-        if isinstance(stage, BookStage):
-            await stage.run_book(request, deps)
-            result.stages.append(StageResult(stage=name, done=1))
-            continue
-        try:
-            sr = await run_section_stage(stage, request, deps)
-        except UnknownSections as e:
-            result.error = str(e)
-            result.error_code = ExitCode.USAGE
-            return result
-        result.stages.append(sr)
-        if sr.declined or sr.stopped_by == "cap":
-            break
-    return result
+# --- steps ---
 
 
-class UnknownSections(ValueError):
-    pass
+def _section_ids(request: RunRequest, deps: Deps) -> list[str]:
+    all_ids = deps.store.section_ids()
+    if not request.sections:
+        return all_ids
+    unknown = sorted(set(request.sections) - set(all_ids))
+    if unknown:
+        raise UnknownSections(f"sections not in sections.json: {', '.join(unknown)}")
+    wanted = set(request.sections)
+    return [i for i in all_ids if i in wanted]
 
 
-async def run_section_stage(stage: SectionStage, request: RunRequest, deps: Deps) -> StageResult:
-    store = deps.store
-    all_ids = store.section_ids()
-    if request.sections:
-        unknown = sorted(set(request.sections) - set(all_ids))
-        if unknown:
-            raise UnknownSections(f"sections not in sections.json: {', '.join(unknown)}")
-        ids = [i for i in all_ids if i in set(request.sections)]
-    else:
-        ids = all_ids
+def plan_stage(
+    stage: Stage,
+    request: RunRequest,
+    deps: Deps,
+    *,
+    assume_changed: frozenset[str] = frozenset(),
+) -> StagePlan:
+    """Which sections of ``stage`` need running. Read-only, so the CLI can use it to estimate.
 
+    ``assume_changed`` lists sections an earlier stage of the same run will rewrite: when
+    estimating a multi-stage run, those count as "to process" for later stages too.
+    """
+    if isinstance(stage, BookStage):
+        return StagePlan(stage=stage.name, book_level=True)
     pv = stage.prompt_version(deps)
     model = stage.model(deps)
-    out = StageResult(stage=stage.name)
-    started = deps.clock()
-
-    # Decide what to run. A section is skipped when its last successful run used the same
-    # prompt version and inputs (unless --fresh).
-    todo: list[tuple[str, Any, str, SectionDraft]] = []
-    for sid in ids:
-        draft = store.read_draft_or_new(sid)
-        inputs = stage.inputs(sid, draft, deps)
-        h = input_hash(inputs, pv, model)
+    plan = StagePlan(stage=stage.name, prompt_version=pv, model=model)
+    for sid in _section_ids(request, deps):
+        draft = deps.store.read_draft_or_new(sid)
+        h = input_hash(stage.inputs(sid, draft, deps), pv, model)
         rec = draft.stages.get(stage.name)
-        same = (
+        unchanged = (
             rec is not None
             and rec.status == "done"
             and rec.prompt_version == pv
             and rec.input_hash == h
+            and sid not in assume_changed
         )
-        if same and not request.fresh and not stage.always_run:
-            out.skipped += 1
+        if unchanged and not request.fresh and not stage.always_run:
+            plan.skipped += 1
         else:
-            todo.append((sid, inputs, h, draft))
-
-    budget = Budget(None)
-    if model is not None and todo:
-        out.estimate_usd = estimate(stage.name, len(todo), store.read_runs(), deps.settings)
-        cap = request.cap_usd if request.cap_usd is not None else 2 * out.estimate_usd
-        out.cap_usd = cap if cap > 0 else None
-        summary = EstimateSummary(
-            stage=stage.name,
-            to_process=len(todo),
-            skipped=out.skipped,
-            estimate_usd=out.estimate_usd,
-            cap_usd=out.cap_usd or 0.0,
+            plan.items.append(PlanItem(section_id=sid, input_hash=h))
+    if model is not None and plan.items:
+        plan.estimate_usd = estimate(
+            stage.name, len(plan.items), deps.store.read_runs(), deps.settings
         )
-        if not deps.approve_estimate(summary):
-            out.declined = True
-            return out
-        budget = Budget(out.cap_usd)
+    return plan
 
-    tokens = TokenCounts()
-    models_used: set[str] = {model} if model else set()
-    sem = asyncio.Semaphore(max(1, deps.settings.concurrency))
 
-    async def work(sid: str, inputs: Any, h: str, draft: SectionDraft) -> None:
-        async with sem:
-            if not budget.can_start():
-                out.not_started += 1
-                return
-            try:
-                res = await stage.execute(sid, inputs, draft, deps)
-            except Exception as e:  # one failure marks only this section (research R8)
-                fresh = store.read_draft_or_new(sid)
-                fresh.stages[stage.name] = StageRecord(
-                    prompt_version=pv,
-                    model=model,
-                    input_hash=h,
-                    completed_at=deps.clock().isoformat(),
-                    cost_usd=0.0,
-                    status="failed",
-                    error=f"{type(e).__name__}: {e}",
-                )
-                store.write_draft(sid, fresh)
-                out.failed += 1
-                out.failures[sid] = str(e)
-                deps.echo(f"  {sid}: failed: {e}")
-                return
-            cost = sum(price(u, deps.pricing) for u in res.usages)
-            budget.add(cost)
-            out.spent_usd += cost
-            for u in res.usages:
-                tokens.input += u.input_tokens
-                tokens.output += u.output_tokens
-                tokens.cache_read += u.cache_read_tokens
-                tokens.cache_write += u.cache_write_tokens
-                if not u.is_empty:
-                    models_used.add(u.model)
-            draft.stages[stage.name] = StageRecord(
-                prompt_version=pv,
-                model=model,
-                input_hash=h,
-                completed_at=deps.clock().isoformat(),
-                cost_usd=round(cost, 6),
-                status="done",
+def estimate_run(request: RunRequest, deps: Deps) -> tuple[list[StagePlan], EstimateSummary]:
+    """Plan every stage of the run (read-only) and total the estimate (contracts/cli.md)."""
+    plans: list[StagePlan] = []
+    changed: set[str] = set()
+    for name in request.stages:
+        plan = plan_stage(deps.stage(name), request, deps, assume_changed=frozenset(changed))
+        plans.append(plan)
+        if plan.model is not None:
+            changed.update(plan.section_ids)
+    total = sum(p.estimate_usd for p in plans)
+    cap = request.cap_usd if request.cap_usd is not None else 2 * total
+    summary = EstimateSummary(
+        stages=tuple(
+            StageEstimate(
+                stage=p.stage,
+                to_process=len(p.items),
+                skipped=p.skipped,
+                estimate_usd=p.estimate_usd,
+                calls_model=p.model is not None,
             )
-            store.write_draft(sid, draft)
-            out.done += 1
+            for p in plans
+            if not p.book_level
+        ),
+        estimate_usd=total,
+        cap_usd=cap if cap > 0 else None,
+    )
+    return plans, summary
 
-    await asyncio.gather(*(work(*t) for t in todo))
 
-    if out.not_started:
-        out.stopped_by = "cap"
-    store.append_run(
+async def run_one_section(
+    stage: SectionStage,
+    section_id: str,
+    *,
+    run_id: str,
+    deps: Deps,
+    reraise: tuple[type[BaseException], ...] = (),
+) -> SectionOutcome:
+    """Run ``stage`` for one section and save the result. Failures are recorded, not raised,
+    except the exception types in ``reraise`` (the cloud lets throttling escape for a retry)."""
+    if not deps.ledger.can_start(run_id):
+        return SectionOutcome(section_id=section_id, status="not_started")
+    pv = stage.prompt_version(deps)
+    model = stage.model(deps)
+    store = deps.store
+    draft = store.read_draft_or_new(section_id)
+    inputs = stage.inputs(section_id, draft, deps)
+    h = input_hash(inputs, pv, model)
+    try:
+        res = await stage.execute(section_id, inputs, draft, deps)
+    except reraise:
+        raise
+    except Exception as e:  # one failure marks only this section (research R8)
+        fresh = store.read_draft_or_new(section_id)
+        fresh.stages[stage.name] = StageRecord(
+            prompt_version=pv,
+            model=model,
+            input_hash=h,
+            completed_at=deps.clock().isoformat(),
+            cost_usd=0.0,
+            status="failed",
+            error=f"{type(e).__name__}: {e}",
+        )
+        store.write_draft(section_id, fresh)
+        deps.echo(f"  {section_id}: failed: {e}")
+        return SectionOutcome(section_id=section_id, status="failed", error=str(e))
+
+    cost = sum(price(u, deps.pricing) for u in res.usages)
+    tokens = TokenCounts()
+    models: set[str] = set()
+    for u in res.usages:
+        tokens.input += u.input_tokens
+        tokens.output += u.output_tokens
+        tokens.cache_read += u.cache_read_tokens
+        tokens.cache_write += u.cache_write_tokens
+        if not u.is_empty:
+            models.add(u.model)
+    draft.stages[stage.name] = StageRecord(
+        prompt_version=pv,
+        model=model,
+        input_hash=h,
+        completed_at=deps.clock().isoformat(),
+        cost_usd=round(cost, 6),
+        status="done",
+    )
+    store.write_draft(section_id, draft)
+    deps.ledger.add(run_id, cost)
+    return SectionOutcome(
+        section_id=section_id,
+        status="done",
+        cost_usd=round(cost, 6),
+        tokens=tokens,
+        models=sorted(models),
+    )
+
+
+def finish_stage(
+    plan: StagePlan,
+    outcomes: list[SectionOutcome],
+    *,
+    run_id: str,
+    started: datetime,
+    deps: Deps,
+    cap_usd: float | None = None,
+) -> StageResult:
+    """Write the stage's run record and stop the run if the cap stopped any section."""
+    result = StageResult(stage=plan.stage, skipped=plan.skipped, estimate_usd=plan.estimate_usd)
+    tokens = TokenCounts()
+    models: set[str] = {plan.model} if plan.model else set()
+    for o in outcomes:
+        if o.status == "done":
+            result.done += 1
+        elif o.status == "failed":
+            result.failed += 1
+            result.failures[o.section_id] = o.error or ""
+        else:
+            result.not_started += 1
+        result.spent_usd += o.cost_usd
+        tokens.input += o.tokens.input
+        tokens.output += o.tokens.output
+        tokens.cache_read += o.tokens.cache_read
+        tokens.cache_write += o.tokens.cache_write
+        models.update(o.models)
+    if result.not_started:
+        result.stopped_by = "cap"
+        deps.ledger.mark_stopped(run_id)
+    deps.store.write_run(
         RunRecord(
-            run_id=f"{started:%Y%m%dT%H%M%SZ}-{stage.name}-{uuid.uuid4().hex[:6]}",
-            book=store.book,
-            stage=stage.name,
+            run_id=run_id,
+            book=deps.store.book,
+            stage=plan.stage,
             started_at=started.isoformat(),
             ended_at=deps.clock().isoformat(),
-            sections=SectionCounts(done=out.done, skipped=out.skipped, failed=out.failed),
-            estimate_usd=round(out.estimate_usd, 6),
-            cap_usd=out.cap_usd,
-            spent_usd=round(out.spent_usd, 6),
+            sections=SectionCounts(done=result.done, skipped=result.skipped, failed=result.failed),
+            estimate_usd=round(plan.estimate_usd, 6),
+            cap_usd=cap_usd,
+            spent_usd=round(result.spent_usd, 6),
             tokens=tokens,
-            models=sorted(models_used),
-            prompt_versions={stage.name: pv},
-            stopped_by="cap" if out.stopped_by == "cap" else None,
+            models=sorted(models),
+            prompt_versions={plan.stage: plan.prompt_version} if plan.prompt_version else {},
+            code_version=deps.code_version,
+            stopped_by="cap" if result.stopped_by == "cap" else None,
         )
     )
-    return out
+    return result
+
+
+def run_counts(stages: list[StageResult]) -> dict[str, int]:
+    return {
+        "done": sum(s.done for s in stages),
+        "skipped": sum(s.skipped for s in stages),
+        "failed": sum(s.failed for s in stages),
+        "notStarted": sum(s.not_started for s in stages),
+    }
+
+
+# --- local mode ---
+
+
+async def run(request: RunRequest, deps: Deps, *, run_id: str | None = None) -> RunResult:
+    """Run every requested stage in-process (``run --local`` and tests)."""
+    try:
+        deps.preflight()
+    except SourceError as e:
+        return RunResult(error=str(e), error_code=ExitCode.SOURCE_CHECKSUM)
+    try:
+        _plans, summary = estimate_run(request, deps)
+    except (UnknownStage, UnknownSections) as e:
+        return RunResult(error=str(e), error_code=ExitCode.USAGE)
+    if summary.calls_model and not deps.approve_estimate(summary):
+        return RunResult(declined=True)
+
+    run_id = run_id or new_run_id(deps.clock())
+    deps.ledger.create(run_id, deps.store.book, summary.cap_usd)
+    result = RunResult()
+    sem = asyncio.Semaphore(max(1, deps.settings.concurrency))
+
+    async def one(stage: SectionStage, sid: str) -> SectionOutcome:
+        async with sem:
+            return await run_one_section(stage, sid, run_id=run_id, deps=deps)
+
+    for name in request.stages:
+        stage = deps.stage(name)
+        started = deps.clock()
+        if isinstance(stage, BookStage):
+            await stage.run_book(request, deps)
+            result.stages.append(StageResult(stage=name, done=1))
+            continue
+        plan = plan_stage(stage, request, deps)
+        outcomes = list(await asyncio.gather(*(one(stage, sid) for sid in plan.section_ids)))
+        sr = finish_stage(
+            plan, outcomes, run_id=run_id, started=started, deps=deps, cap_usd=summary.cap_usd
+        )
+        result.stages.append(sr)
+        if sr.stopped_by == "cap":
+            break
+
+    status: RunStatus = "stopped-cap" if result.stopped_by == "cap" else "succeeded"
+    deps.ledger.finish(run_id, status, run_counts(result.stages))
+    return result

@@ -14,10 +14,10 @@ from thinkbible_pipeline.drafts.store import DraftStore
 from thinkbible_pipeline.exitcodes import ExitCode
 from thinkbible_pipeline.llm.budget import EstimateSummary
 from thinkbible_pipeline.llm.runner import FakeRunner, ModelError, Usage
-from thinkbible_pipeline.paths import RepoPaths
 from thinkbible_pipeline.requests import RunRequest
 from thinkbible_pipeline.sources.snapshot import ChecksumMismatch
 from thinkbible_pipeline.stages.base import Deps, RunResult, SectionResult, SectionStage, run
+from thinkbible_pipeline.storage import LocalBlobStore
 
 SETTINGS = load_settings()
 IDS = ["mrk-1-1", "mrk-1-9", "mrk-1-12"]
@@ -55,7 +55,7 @@ class SummaryStage(SectionStage):
 
 
 def _store(tmp_path: Path) -> DraftStore:
-    store = DraftStore("mrk", RepoPaths(tmp_path))
+    store = DraftStore("mrk", LocalBlobStore(tmp_path / "drafts"))
     store.write_section_map(
         [
             SectionMapEntry(
@@ -76,6 +76,7 @@ class Harness:
         self.approve = True
         self.settings = dataclasses.replace(SETTINGS, **settings)
         self.preflight_error: Exception | None = None
+        self.extra_stages: dict[str, SectionStage] = {}
 
     def _approve(self, summary: EstimateSummary) -> bool:
         self.estimates.append(summary)
@@ -92,7 +93,7 @@ class Harness:
             pricing=load_pricing(),
             runner_factory=lambda: self.runner,
             approve_estimate=self._approve,
-            stages={"summaries": self.stage},
+            stages={"summaries": self.stage, **self.extra_stages},
             preflight=self._preflight,
         )
         req = RunRequest(book="mark", stages=request.pop("stages", ["summaries"]), **request)
@@ -176,9 +177,48 @@ def test_default_cap_is_twice_the_estimate(tmp_path: Path) -> None:
     h = Harness(tmp_path)
     h.run()
     est = h.estimates[0]
-    assert est.to_process == 3
+    assert [(s.stage, s.to_process) for s in est.stages] == [("summaries", 3)]
     assert est.estimate_usd == pytest.approx(3 * SETTINGS.stage("summaries").default_cost_usd)
     assert est.cap_usd == pytest.approx(2 * est.estimate_usd)
+
+
+class AlignStage(SummaryStage):
+    """A second model stage whose inputs depend on the first stage's output."""
+
+    name = "align"
+
+    def inputs(self, section_id: str, draft: SectionDraft, deps: Deps) -> Any:
+        return {"summary": draft.summary}
+
+    async def execute(
+        self, section_id: str, inputs: Any, draft: SectionDraft, deps: Deps
+    ) -> SectionResult:
+        _out, usage = await deps.runner.parse(
+            self.name, [], str(inputs["summary"]), Summary, section_id=section_id
+        )
+        return SectionResult(usages=[usage])
+
+
+def test_estimate_counts_sections_an_earlier_stage_will_change(tmp_path: Path) -> None:
+    h = Harness(tmp_path)
+    align = AlignStage()
+    h.extra_stages["align"] = align
+    for s in IDS:
+        h.runner.responses[("align", s)] = {"summary": s}
+    h.run(stages=["summaries", "align"])
+    # Change one passage: summaries re-runs it, so align must count it too, before it runs.
+    h.stage.passages["mrk-1-12"] = "edited"
+    h.runner.responses[("summaries", "mrk-1-12")] = {"summary": "new summary"}
+    result = h.run(stages=["summaries", "align"])
+    est = h.estimates[-1]
+    assert [(s.stage, s.to_process, s.skipped) for s in est.stages] == [
+        ("summaries", 1, 2),
+        ("align", 1, 2),
+    ]
+    assert [(s.stage, s.done, s.skipped) for s in result.stages] == [
+        ("summaries", 1, 2),
+        ("align", 1, 2),
+    ]
 
 
 def test_declined_estimate_makes_zero_calls(tmp_path: Path) -> None:
@@ -209,7 +249,7 @@ def test_unimplemented_stage_is_a_usage_error(tmp_path: Path) -> None:
 def test_drafts_are_canonical_json(tmp_path: Path) -> None:
     h = Harness(tmp_path)
     h.run()
-    text = h.store.section_path("mrk-1-1").read_text(encoding="utf-8")
+    text = (tmp_path / "drafts" / "mrk" / "sections" / "mrk-1-1.json").read_text(encoding="utf-8")
     assert text.endswith("}\n")
     assert '\n  "stages": {' in text  # 2-space indent, sorted keys
     keys = [line.split('"')[1] for line in text.splitlines() if line.startswith('  "')]

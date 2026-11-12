@@ -2,9 +2,10 @@ import pytest
 
 from thinkbible_pipeline.config import ConfigError, bare_model_id, load_pricing, load_settings
 from thinkbible_pipeline.drafts.models import RunRecord, SectionCounts, TokenCounts
+from thinkbible_pipeline.ledger import InMemoryLedger
 from thinkbible_pipeline.llm.budget import (
-    Budget,
     EstimateSummary,
+    StageEstimate,
     confirm,
     cost_per_section,
     estimate,
@@ -84,21 +85,34 @@ def test_estimate_uses_last_20_runs() -> None:
     assert cost_per_section("generate", runs, SETTINGS) == pytest.approx(1.0)
 
 
-def test_budget_stops_new_sections_at_cap() -> None:
-    b = Budget(1.0)
-    assert b.can_start()
-    b.add(0.6)
-    assert b.can_start()
-    b.add(0.4)
-    assert not b.can_start()
-    assert Budget(None).can_start()
+def test_ledger_stops_new_sections_at_cap() -> None:
+    ledger = InMemoryLedger()
+    ledger.create("r1", "mrk", 1.0)
+    assert ledger.can_start("r1")
+    ledger.add("r1", 0.6)
+    assert ledger.can_start("r1")
+    ledger.add("r1", 0.4)
+    assert not ledger.can_start("r1")
+    ledger.create("r2", "mrk", None)
+    ledger.add("r2", 100.0)
+    assert ledger.can_start("r2")
+    ledger.mark_stopped("r2")
+    assert not ledger.can_start("r2")
 
 
 def test_confirm_prints_and_asks() -> None:
     lines: list[str] = []
-    summary = EstimateSummary("generate", 8, 2, 0.48, 0.96)
+    summary = EstimateSummary(
+        stages=(
+            StageEstimate("generate", 8, 2, 0.48, calls_model=True),
+            StageEstimate("check", 10, 0, 0.0, calls_model=False),
+        ),
+        estimate_usd=0.48,
+        cap_usd=0.96,
+    )
     assert confirm(summary, yes=False, echo=lines.append, ask=lambda _p: "y")
     assert not confirm(summary, yes=False, echo=lines.append, ask=lambda _p: "")
     assert confirm(summary, yes=True, echo=lines.append, ask=lambda _p: "n")
-    assert "8 sections to process, 2 skipped" in lines[0]
-    assert "$0.48" in lines[1] and "$0.96" in lines[1]
+    assert lines[0] == "generate: 8 sections to process, 2 skipped (already done), about $0.48"
+    assert lines[1] == "check: 10 sections to process, 0 skipped (already done)"
+    assert lines[2] == "estimate $0.48, cap $0.96"

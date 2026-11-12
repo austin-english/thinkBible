@@ -1,58 +1,49 @@
 # `thinkbible_pipeline`
 
-The batch content pipeline (spec 001). It turns the frozen source snapshot into reviewed,
-versioned content packs. Design docs: [`specs/001-content-pack-pipeline/`](../../../specs/001-content-pack-pipeline/)
-(plan, research, data model, [CLI contract](../../../specs/001-content-pack-pipeline/contracts/cli.md)).
-Area rules: [`pipeline/CLAUDE.md`](../../CLAUDE.md).
+The batch content pipeline (spec 001). It turns the frozen source snapshot into versioned content
+packs. Runs execute in AWS: a Step Functions state machine with one Lambda per section per stage.
+The CLI on your machine estimates the cost, starts runs, and shows their status. Design docs:
+[`specs/001-content-pack-pipeline/`](../../../specs/001-content-pack-pipeline/) (plan, research,
+data model, [CLI contract](../../../specs/001-content-pack-pipeline/contracts/cli.md)). Area
+rules: [`pipeline/CLAUDE.md`](../../CLAUDE.md).
 
 ## How a run flows
 
-The entry point is **`cli.py`**: the `thinkbible-pipeline` command runs its Typer `app`.
-`app.py` is not the entry point. It's where the CLI gets its real dependencies.
-
 ```mermaid
 flowchart TD
-    CLI["cli.py<br/>parse flags"] --> REQ["requests.py<br/>RunRequest"]
-    REQ --> APP["app.py<br/>local_deps()"]
+    CLI["cli.py run<br/>parse flags → RunRequest"] --> EST["app.start_cloud_run<br/>estimate_run() on the S3 drafts"]
+    EST --> OK{"Proceed? [y/N]"}
+    OK -- no --> STOP(["nothing starts"])
+    OK -- yes --> SFN["StartExecution<br/>{runId, request, capUsd}"]
 
-    subgraph deps ["Deps (built by app.py)"]
-        CFG["config.py<br/>settings, pricing, env"]
-        PATHS["paths.py<br/>repo paths"]
-        STORE["drafts/store.py<br/>content/drafts/{book}/"]
-        RUNNER["llm/runner.py<br/>BedrockRunner (lazy)"]
-        PRE["sources/snapshot.py<br/>checksum preflight"]
-        REG["stages/__init__.py<br/>stage registry"]
+    subgraph aws ["AWS: state machine thinkbible-pipeline-dev"]
+        SR["StartRun<br/>check sources vs manifest, create ledger item"]
+        SR --> ST["Stages (one at a time)"]
+        ST --> PS["PlanStage<br/>hash inputs, list sections to run"]
+        PS --> SEC["Sections (10 at a time)<br/>RunSection: one Lambda per section"]
+        SEC --> FS["FinishStage<br/>write run record, stop at the cap"]
+        FS --> ST
+        ST --> FR["FinishRun<br/>status, counts, exit code"]
     end
 
-    APP --> deps
-    deps --> RUN["stages/base.py<br/>run(request, deps)"]
-    RUN --> RESULT["RunResult → exitcodes.py<br/>exit 0 / 1 / 2 / 3 / 4"]
-    RESULT --> CLI
+    SFN --> SR
+    FR --> WAIT["--wait: app.wait_for_execution<br/>→ exit 0 / 2 / 3 / 4"]
 ```
 
-Inside `stages/base.run`, each stage goes through the same steps:
+Every box inside AWS calls one shared step in `stages/base.py`. `run --local` calls the same
+steps in-process (asyncio) for a few sections at a time, which is how prompts get tuned without
+redeploying. Before the pipeline is deployed, `--local` keeps drafts in `content/drafts/`.
+
+What one `RunSection` does:
 
 ```mermaid
 flowchart TD
-    START(["run()"]) --> PF{"preflight:<br/>sources match manifest?"}
-    PF -- no --> X2["exit 2"]
-    PF -- yes --> NEXT["next stage in request.stages"]
-    NEXT --> HASH["for each section:<br/>stage.inputs() → input_hash()"]
-    HASH --> SKIP{"same hash and<br/>prompt version as<br/>last success?"}
-    SKIP -- "yes (and not --fresh)" --> SKIPPED["skip: no model call"]
-    SKIP -- no --> TODO["to-do list"]
-    TODO --> EST["llm/budget.py<br/>estimate + cap (2x default)"]
-    EST --> OK{"approve_estimate()<br/>Proceed? [y/N]"}
-    OK -- no --> DECLINED["stop: declined, zero calls"]
-    OK -- yes --> POOL["run sections in parallel<br/>(settings.concurrency)"]
-    POOL --> CAP{"budget.can_start()?"}
-    CAP -- no --> NOTSTARTED["not started → exit 4"]
-    CAP -- yes --> EXEC["stage.execute()<br/>→ llm/runner.parse()"]
-    EXEC -- error --> FAILED["StageRecord failed<br/>(other sections continue) → exit 3"]
-    EXEC -- ok --> PRICE["llm/budget.price()"]
-    PRICE --> WRITE["StageRecord done<br/>drafts/store.write_draft()"]
-    WRITE --> RUNS["drafts/store.append_run()<br/>runs.json"]
-    RUNS --> NEXT
+    IN(["sectionId"]) --> CAP{"ledger.can_start()<br/>spend under cap?"}
+    CAP -- no --> NS["not_started"]
+    CAP -- yes --> EXEC["stage.execute()<br/>→ llm/runner.parse() → Bedrock"]
+    EXEC -- "Throttled" --> RETRY["raised: Step Functions retries with backoff"]
+    EXEC -- "other error" --> FAIL["StageRecord failed<br/>(other sections continue)"]
+    EXEC -- ok --> SAVE["price() → StageRecord done<br/>write draft to S3, ledger.add(cost)"]
 ```
 
 ## Files
@@ -61,55 +52,68 @@ flowchart TD
 
 | File | What it does |
 |---|---|
-| `cli.py` | Thin Typer front door. Parses flags into a request object, calls shared code, maps the result to an exit code. No pipeline logic. Commands from later phases print "not implemented yet" |
-| `requests.py` | `RunRequest`, `PublishRequest`, `ApproveRequest`. A future cloud trigger sends the same thing as JSON (`{"book":"mark","stages":["all"],"capUsd":20}`). Expands `all`, sorts stages into pipeline order, rejects unknown books and stages. Also holds `STAGE_ORDER` and `MODEL_STAGES` |
-| `app.py` | Composition root for local runs: settings, pricing, the draft store, the Bedrock runner (created only when a stage needs it), the `Proceed? [y/N]` prompt and the source checksum preflight. A cloud runner builds its own `Deps` and calls the same `run()` |
+| `cli.py` | Thin Typer front door. `run` starts a cloud run (or `--local`), `status` shows runs and opens the scorecard; `publish`, `promote`, `calibrate`, `eval`, `import`, `sources` arrive with later tasks |
+| `requests.py` | `RunRequest`, `PublishRequest`, `PromoteRequest`. The same JSON travels in the Step Functions execution input. Expands `all`, sorts stages into pipeline order |
+| `app.py` | Composition root for the CLI: `local_deps`, `start_cloud_run` (estimate → confirm → `StartExecution`), `wait_for_execution`, and `draft_blobs` (S3 once deployed, `content/drafts/` before) |
 | `exitcodes.py` | `ExitCode` 0–5, exactly as in the CLI contract |
 
-### Stage runner (`stages/`)
+### Running stages
 
 | File | What it does |
 |---|---|
-| `stages/base.py` | `run(request, deps) -> RunResult`. Hashes each section's inputs with the prompt version and model and skips unchanged sections, so a re-run makes zero model calls. Shows the estimate and waits for approval, runs sections in parallel, stops starting new ones at the spend cap, isolates failures to one section, records a `StageRecord` per section and a `RunRecord` per stage. Defines the `SectionStage` and `BookStage` base classes and `Deps` |
+| `stages/base.py` | The shared steps: `estimate_run`, `plan_stage` (hash and skip), `run_one_section` (cap check, execute, save, add cost), `finish_stage` (run record, cap stop), and `run()` for local mode. Defines `SectionStage`, `BookStage` and `Deps` |
 | `stages/__init__.py` | `registry()`: stage name → implementation. Empty until US1 adds `sections`, `summaries`, `generate` and the rest |
+| `ledger.py` | `SpendLedger`: the run's cap and spend. `InMemoryLedger` for local runs |
+| `cloud/ledger.py` | `DynamoLedger`: the same ledger in DynamoDB, shared by every section Lambda (atomic `ADD`) |
+| `cloud/handlers.py` | The five Lambda handlers: `start_run`, `plan_stage_handler`, `run_section`, `finish_stage_handler`, `finish_run` |
+| `cloud/messages.py` | The JSON payloads between states (`RunInput`, `PlanOutput`, `SectionInput`, …) |
 
 A stage implements four methods: `prompt_version()`, `model()`, `inputs()` (everything its output
 depends on, as JSON-ready data) and `execute()` (does the work and updates the draft in place). The
-runner does everything else.
+runner does everything else, in the cloud and locally.
 
 ### Model calls (`llm/`)
 
 | File | What it does |
 |---|---|
-| `llm/runner.py` | `ModelRunner` protocol. `BedrockRunner` calls Claude in Amazon Bedrock through the Anthropic SDK (`AsyncAnthropicBedrockMantle`, `beta.messages.parse` with a Pydantic output model). It caches the stable system prefix, sets effort per stage, retries a refusal once on Opus (`BetaRefusalFallbackMiddleware`), retries invalid output up to 2 times, and refuses any request that carries `tools`. `FakeRunner` replays recorded outputs for tests |
-| `llm/budget.py` | `price(usage)` from `pricing.toml`. `estimate()`: median cost per section over the last 20 runs, else the settings default. `Budget(cap)`, and `confirm()` for the prompt |
-| `llm/prompts.py` | Builds the system prompt: shared context, then the stage prompt, then (optionally) the question guide. Returns their versions for the run record |
+| `llm/runner.py` | `BedrockRunner`: Claude in Amazon Bedrock through the Anthropic SDK's Mantle client, structured output, cached system prefix, effort per stage, refusal fallback to Opus, retries of invalid output, never any `tools`. Throttling raises `Throttled` so Step Functions retries. `FakeRunner` replays recorded outputs for tests |
+| `llm/budget.py` | `price(usage)` from `pricing.toml`, `estimate()` (median cost per section over the last 20 runs, else the settings default), and the `Proceed? [y/N]` prompt |
+| `llm/prompts.py` | Builds the system prompt: shared context, then the stage prompt, then (optionally) the question guide |
 
-### Data and storage
+### Storage and data
 
 | File | What it does |
 |---|---|
-| `drafts/models.py` | Draft entities (data-model §2): `BookState`, `SectionMapEntry`, `SectionDraft`, `StageRecord`, `RunRecord`, `Approval`, flags, checks, grades |
-| `drafts/store.py` | `DraftStore`: reads and writes `content/drafts/{book}/` (`book.json`, `sections.json`, `sections/{id}.json`, `.generated/{id}.json`, `runs.json`, `approval.json`) |
-| `sources/models.py` | `SourceManifest` and the normalised translation and commentary book formats (data-model §3) |
-| `sources/snapshot.py` | `load_book()` checks a cache file's sha256 against the manifest before parsing it. `verify()` checks them all. Raises `ChecksumMismatch` / `MissingSource` (exit 2) |
-| `jsonio.py` | `JsonModel` base (camelCase JSON, snake_case Python). Canonical JSON writing (sorted keys, 2-space indent, atomic), hashing |
-| `config.py` | Loads `pipeline/config/settings.toml`, `pricing.toml` and `envs/{env}.toml` into frozen dataclasses |
-| `paths.py` | `RepoPaths`: every content, config and prompt path from the repo root. Tests point it at a temp folder |
+| `storage.py` | `BlobStore`: `LocalBlobStore` (a folder) and `S3BlobStore`, with conditional writes |
+| `drafts/models.py`, `drafts/store.py` | Draft entities (data-model §2) and `DraftStore`, which reads and writes `{book}/…` in a `BlobStore`. Run records are one object per stage run |
+| `sources/models.py`, `sources/snapshot.py` | The source manifest and normalised books. `SourceStore` reads the local cache (by `file`) or the sources bucket (by `s3Key`); every read is checked against the manifest's sha256 |
+| `jsonio.py`, `config.py`, `paths.py` | Canonical JSON and hashing; `settings.toml`, `pricing.toml` and `envs/{env}.toml`; repo paths (in a Lambda, `/var/task` is laid out like the repo) |
 
 ## Outside this package
 
 | Path | What it is |
 |---|---|
-| `pipeline/config/settings.toml` | Model, effort, prompt version and default cost per stage; concurrency; refusal fallback model |
-| `pipeline/config/pricing.toml` | Bedrock USD per million tokens, per model |
-| `pipeline/config/envs/dev.toml` | Dev bucket names and CloudFront values |
-| `pipeline/prompts/` | Versioned prompts (`{stage}/vN.md`). Never edit a version that has been used for a run; add `vN+1.md` |
-| `pipeline/tests/unit/` | `test_stage_runner.py`, `test_budget.py`, `test_requests.py`, `test_no_tools.py`, `test_network_guard.py` |
-| `content/drafts/{book}/` | Local draft store for tests and early runs. Moving to S3 in Phase 2b (T087); drafts are pipeline state, not hand-edited |
+| `pipeline/config/` | `settings.toml` (model, effort, prompt version and default cost per stage; concurrency), `pricing.toml`, `envs/dev.toml` (buckets, ledger table, state machine ARN) |
+| `pipeline/prompts/` | Versioned prompts (`{stage}/vN.md`). Never edit a version that has been used for a run |
+| `pipeline/scripts/build_bundle.py` | `make lambda-bundle`: the Lambda zip (arm64, Python 3.12) with dependencies, both packages, config, prompts, schema and manifest |
+| `infra/modules/pipeline/` | Terraform: drafts bucket, ledger table, the five Lambdas, the state machine (`state_machine.asl.json.tftpl`), IAM |
+| `infra/envs/dev/` | The dev environment: the sources bucket and the pipeline |
+| `pipeline/tests/` | Unit tests, plus integration tests on moto: storage, the DynamoDB ledger, the handlers driven through a whole run, and the CLI's cloud path |
+
+## Deploying
+
+```bash
+make lambda-bundle
+cd infra/envs/dev && terraform init && terraform apply
+terraform output     # copy into pipeline/config/envs/dev.toml
+```
+
+Redeploy after code or prompt changes. `--local` runs use the repo's prompts directly.
 
 ## Rules the tests enforce
 
 - Only `sources/importer.py` (US4) may import networking modules (`test_network_guard.py`).
 - No model request carries `tools` (`test_no_tools.py`).
+- The state machine calls exactly the five handlers, and Terraform allows exactly the models in
+  `settings.toml` (`test_state_machine.py`, `test_infra_sync.py`).
 - Tests never call models. They use `FakeRunner`.

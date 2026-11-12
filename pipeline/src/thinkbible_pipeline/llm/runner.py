@@ -67,6 +67,17 @@ class ModelError(Exception):
     """A model call failed for this section. The stage runner marks the section failed."""
 
 
+class Throttled(ModelError):
+    """Bedrock is throttling or overloaded (429/503/529) even after the SDK's own retries.
+
+    Unlike other model errors it isn't recorded as a failed section: in the cloud the Lambda lets
+    it escape so Step Functions retries the section with backoff (research R7).
+    """
+
+
+THROTTLE_STATUS = frozenset({429, 503, 529})
+
+
 class Refused(ModelError):
     """Every model in the chain declined (``stop_reason == "refusal"``)."""
 
@@ -155,6 +166,10 @@ class BedrockRunner:
             except (ValidationError, json.JSONDecodeError) as e:
                 last_error = f"invalid structured output: {e}"
                 continue
+            except anthropic.APIStatusError as e:
+                if e.status_code in THROTTLE_STATUS:
+                    raise Throttled(f"{section_id}: {e.status_code}: {e}") from e
+                raise ModelError(f"{section_id}: {type(e).__name__}: {e}") from e
             except anthropic.APIError as e:
                 raise ModelError(f"{section_id}: {type(e).__name__}: {e}") from e
             if resp.stop_reason == "refusal":

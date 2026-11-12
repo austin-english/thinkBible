@@ -302,7 +302,7 @@ two-stage run of the fixture sections and get the same drafts and run records as
 `drafts push` refuses after a cloud write. The state machine definition references exactly the
 five handlers.
 
-- [ ] T087 Implement `pipeline/src/thinkbible_pipeline/storage.py`:
+- [X] T087 Implement `pipeline/src/thinkbible_pipeline/storage.py`:
   - a `BlobStore` protocol: `get(key) -> (bytes, etag) | None`, `put(key, data, *, if_match=None,
     if_none_match=False) -> etag`, `list(prefix) -> [(key, etag)]`, raising `PreconditionFailed`;
   - `LocalBlobStore(root)` (tests, the git mirror) and `S3BlobStore(bucket, prefix="")` (boto3,
@@ -314,7 +314,7 @@ five handlers.
     and `devVersion`/`lastPromoted` to `BookState` (data-model §2);
   - tests: the Phase 2 tests run on `LocalBlobStore`; `tests/integration/test_storage_s3.py`
     (moto) covers conditional writes.
-- [ ] T088 Split the stage runner in `pipeline/src/thinkbible_pipeline/stages/base.py` into
+- [X] T088 Split the stage runner in `pipeline/src/thinkbible_pipeline/stages/base.py` into
   functions the cloud and local paths share:
   - `plan_stage(stage, request, deps) -> StagePlan` (hash and skip; book-level stages run here);
   - `run_one_section(stage, plan_item, deps) -> SectionOutcome` (cap check, execute, write the
@@ -324,10 +324,10 @@ five handlers.
     (`pipeline/src/thinkbible_pipeline/cloud/ledger.py`, atomic `ADD`, conditional start);
   - `run()` (local mode) composes them with asyncio exactly as today, so the T028 tests keep
     passing; add `tests/integration/test_ledger_dynamo.py` (moto).
-- [ ] T089 Read sources through a `BlobStore` in `sources/snapshot.py`: the local cache for
+- [X] T089 Read sources through a `BlobStore` in `sources/snapshot.py`: the local cache for
   `import` and `--local`, the sources bucket in Lambdas. Every read is still checked against the
   manifest's sha256; the manifest is read from the repo, or from the bundle in a Lambda.
-- [ ] T090 Implement the Lambda handlers in `pipeline/src/thinkbible_pipeline/cloud/handlers.py`
+- [X] T090 Implement the Lambda handlers in `pipeline/src/thinkbible_pipeline/cloud/handlers.py`
   with JSON in/out models in `cloud/messages.py`:
   - `start_run`, `plan_stage`, `run_section`, `finish_stage`, `finish_run` (R7 state machine);
   - configuration from `PIPELINE_ENV`, `DRAFTS_BUCKET`, `SOURCES_BUCKET`, `LEDGER_TABLE`;
@@ -336,18 +336,18 @@ five handlers.
   - `tests/integration/test_handlers.py` (moto + `FakeRunner`): a two-stage fixture run through
     all five handlers matches a `--local` run; the cap marks later sections "not started"; a
     source checksum mismatch fails `start_run`.
-- [ ] T091 [P] Write the state machine in `infra/modules/pipeline/state_machine.asl.json` (a
+- [X] T091 [P] Write the state machine in `infra/modules/pipeline/state_machine.asl.json.tftpl` (a
   Terraform template: function ARNs and `max_concurrency` are variables), with a `Retry` on
   `Bedrock*Throttling`/`TooManyRequests` for `RunSection` and a `Fail` state for source checksum
   errors. Add `pipeline/tests/unit/test_state_machine.py`: the ASL parses, every Task names one of
   the five handlers, the Stages map has `MaxConcurrency` 1.
-- [ ] T092 [P] Implement `pipeline/scripts/build_bundle.py` and `make lambda-bundle` (R19):
+- [X] T092 [P] Implement `pipeline/scripts/build_bundle.py` and `make lambda-bundle` (R19):
   install the locked dependencies for `manylinux2014_aarch64` / Python 3.12 into a staging folder,
   add both packages plus `pipeline/config/`, `pipeline/prompts/`, `pipeline/evals/`,
   `content/schema/` and `content/sources/manifest.json`, write `BUILD_INFO.json` with the git
   HEAD, and zip to
   `pipeline/out/lambda.zip`.
-- [ ] T093 Write Terraform `infra/modules/pipeline/` (`main.tf`, `iam.tf`, `variables.tf`,
+- [X] T093 Write Terraform `infra/modules/pipeline/` (`main.tf`, `iam.tf`, `variables.tf`,
   `outputs.tf`) and add `module "pipeline"` to `infra/envs/dev/main.tf` (needs T037's storage
   module and the sources bucket):
   - the drafts bucket via `modules/storage` (`thinkbible-drafts-dev-522779858032`);
@@ -357,7 +357,7 @@ five handlers.
   - the state machine `thinkbible-pipeline-dev` (Standard) from the ASL template, with logging;
   - IAM per R19 (confirm the Bedrock Mantle invoke action while applying);
   - outputs `drafts_bucket`, `ledger_table`, `state_machine_arn` for `envs/dev.toml`.
-- [ ] T094 Connect the cloud path to the CLI in `pipeline/src/thinkbible_pipeline/cli.py` and
+- [X] T094 Connect the cloud path to the CLI in `pipeline/src/thinkbible_pipeline/cli.py` and
   `app.py`:
   - `run`: estimate with `plan_stage` (read-only) against the S3 drafts, confirm, `StartExecution`
     with `{runId, request, capUsd}`, print the ARN and console link; `--wait` polls and maps the
@@ -437,7 +437,8 @@ confirm `verify` passes.
   - The bucket comes from `envs/{env}.toml` `sources_bucket`.
 - [ ] T036 [US4] Connect `import`, `sources push`, `sources pull` and `verify` to the CLI in
   `pipeline/src/thinkbible_pipeline/cli.py`. `verify` exits 2 on any mismatch.
-- [ ] T037 [P] [US4] Write Terraform:
+- [X] T037 [P] [US4] Write Terraform (done with T093 on 2026-11-12; the sources bucket module
+  uses the account ID from `aws_caller_identity`):
   - **`infra/modules/storage/`** (`main.tf`, `variables.tf`, `outputs.tf`): `aws_s3_bucket` with
     versioning on, public access block (all four true), SSE-S3 and
     `BucketOwnerEnforced`. Variables `name` and `tags`; outputs `id`, `arn`,

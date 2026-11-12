@@ -173,8 +173,14 @@ wheels = [
 cloudfront = [
     { name = "mypy-boto3-cloudfront" },
 ]
+dynamodb = [
+    { name = "mypy-boto3-dynamodb" },
+]
 s3 = [
     { name = "mypy-boto3-s3" },
+]
+stepfunctions = [
+    { name = "mypy-boto3-stepfunctions" },
 ]
 
 [[package]]
@@ -1074,12 +1080,30 @@ wheels = [
 ]
 
 [[package]]
+name = "mypy-boto3-dynamodb"
+version = "1.43.124"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/27/97/990eb2f1169f69aa1924fb3a0396108940a8fb40b08819e4a3d85807c90f/mypy_boto3_dynamodb-1.43.124.tar.gz", hash = "sha256:408cadce2d53a92ecb1e411981c1e18f9ff6ac01877865c3859e4f4495591293", size = 52892, upload-time = "2026-11-04T22:08:38.582Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/41/ce/9f06855739569527c317224c32d3242d10a6fc4f67bddc345e2d3a9a33d5/mypy_boto3_dynamodb-1.43.124-py3-none-any.whl", hash = "sha256:f6200ccf4b1e26b5165be50b166ed9e93670fccda0ddb54118fdfe5d934b922f", size = 63519, upload-time = "2026-11-04T22:08:34.517Z" },
+]
+
+[[package]]
 name = "mypy-boto3-s3"
 version = "1.43.106"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/46/db/e3922d6c62365c1098da97d9a775e78c66827df5cba11619a7d2a11cdae4/mypy_boto3_s3-1.43.106.tar.gz", hash = "sha256:731195f15830699a36e29d3c8abb2918bccd3587eb2edcb233f8046967893279", size = 79447, upload-time = "2026-09-30T22:44:48.472Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b8/4a/52419b5496215ab52c6c257134c1ac0da25c1ca5d802f133424d02a43686/mypy_boto3_s3-1.43.106-py3-none-any.whl", hash = "sha256:e233d04dbcf3925522dff4346e75c37344ec3d1cbb82337e5eed2af263847668", size = 86791, upload-time = "2026-09-30T22:44:46.139Z" },
+]
+
+[[package]]
+name = "mypy-boto3-stepfunctions"
+version = "1.43.117"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/12/a8/8fe75efe2bd2cdd857fb693637a65bba26c29e40a65014d51e4a40f41b1a/mypy_boto3_stepfunctions-1.43.117.tar.gz", hash = "sha256:7dafc27605475c66dbab508cee5f845cfeb531bbf143c44c08bddf2c5572cd60", size = 31531, upload-time = "2026-10-21T22:28:10.146Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/68/53/27feb517e7c16fea382928117bda08f1610d24fdb70bb381a52831183953/mypy_boto3_stepfunctions-1.43.117-py3-none-any.whl", hash = "sha256:17615d7cea6b88e61b20317c4566f7d7ff5ee4f3b4f3d862a210c50fbc905ada", size = 36520, upload-time = "2026-10-21T22:28:07.899Z" },
 ]
 
 [[package]]
@@ -1676,7 +1700,7 @@ source = { virtual = "." }
 
 [package.dev-dependencies]
 dev = [
-    { name = "boto3-stubs", extra = ["cloudfront", "s3"] },
+    { name = "boto3-stubs", extra = ["cloudfront", "dynamodb", "s3", "stepfunctions"] },
     { name = "jsonschema" },
     { name = "moto", extra = ["s3"] },
     { name = "mypy" },
@@ -1690,7 +1714,7 @@ dev = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "boto3-stubs", extras = ["s3", "cloudfront"], specifier = ">=1.35" },
+    { name = "boto3-stubs", extras = ["s3", "cloudfront", "dynamodb", "stepfunctions"], specifier = ">=1.35" },
     { name = "jsonschema", specifier = ">=4.23" },
     { name = "moto", extras = ["s3", "cloudfront"], specifier = ">=5" },
     { name = "mypy", specifier = ">=1.11" },

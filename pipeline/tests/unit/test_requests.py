@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from thinkbible_pipeline.requests import STAGE_ORDER, PublishRequest, RunRequest
+from thinkbible_pipeline.requests import STAGE_ORDER, PromoteRequest, PublishRequest, RunRequest
 
 
 def test_cloud_json_matches_cli_contract() -> None:
@@ -43,7 +43,9 @@ def test_rejects_bad_requests(payload: str) -> None:
         RunRequest.model_validate_json(payload)
 
 
-def test_publish_request_aliases() -> None:
-    req = PublishRequest.model_validate_json('{"book":"mark","env":"prod","dryRun":true}')
+def test_publish_and_promote_requests() -> None:
+    req = PublishRequest.model_validate_json('{"book":"mark","dryRun":true}')
     assert req.dry_run is True
-    assert req.env == "prod"
+    assert PromoteRequest(book="MRK").book_info.slug == "mrk"
+    with pytest.raises(ValidationError):
+        PromoteRequest.model_validate_json('{"book":"mark","env":"prod"}')

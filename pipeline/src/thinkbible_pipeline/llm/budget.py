@@ -40,31 +40,26 @@ def estimate(stage: str, n_sections: int, runs: Sequence[RunRecord], settings: S
     return n_sections * cost_per_section(stage, runs, settings)
 
 
-class Budget:
-    """Tracks spend against a cap. Once spend reaches the cap, no new section may start."""
-
-    def __init__(self, cap_usd: float | None) -> None:
-        self.cap_usd = cap_usd
-        self.spent_usd = 0.0
-
-    def add(self, cost_usd: float) -> None:
-        self.spent_usd += cost_usd
-
-    def can_start(self) -> bool:
-        return self.cap_usd is None or self.spent_usd < self.cap_usd
-
-    @property
-    def exceeded(self) -> bool:
-        return not self.can_start()
-
-
 @dataclass(frozen=True)
-class EstimateSummary:
+class StageEstimate:
     stage: str
     to_process: int
     skipped: int
     estimate_usd: float
-    cap_usd: float
+    calls_model: bool
+
+
+@dataclass(frozen=True)
+class EstimateSummary:
+    """The whole run's estimate, approved once before any model call (research R7, R15)."""
+
+    stages: tuple[StageEstimate, ...]
+    estimate_usd: float
+    cap_usd: float | None
+
+    @property
+    def calls_model(self) -> bool:
+        return any(s.calls_model and s.to_process for s in self.stages)
 
 
 def confirm(
@@ -74,12 +69,14 @@ def confirm(
     echo: Callable[[str], None] = print,
     ask: Callable[[str], str] = input,
 ) -> bool:
-    """Print what a stage will do and what it may cost, then ask unless ``yes``."""
-    echo(
-        f"{summary.stage}: {summary.to_process} sections to process, "
-        f"{summary.skipped} skipped (already done)"
-    )
-    echo(f"  estimate ${summary.estimate_usd:.2f}, cap ${summary.cap_usd:.2f}")
+    """Print what the run will do and what it may cost, then ask unless ``yes``."""
+    for s in summary.stages:
+        line = f"{s.stage}: {s.to_process} sections to process, {s.skipped} skipped (already done)"
+        if s.calls_model and s.to_process:
+            line += f", about ${s.estimate_usd:.2f}"
+        echo(line)
+    cap = f"${summary.cap_usd:.2f}" if summary.cap_usd is not None else "none"
+    echo(f"estimate ${summary.estimate_usd:.2f}, cap {cap}")
     if yes:
         return True
     return ask("Proceed? [y/N] ").strip().lower() in {"y", "yes"}

@@ -1,4 +1,4 @@
-.PHONY: bootstrap lint test ios-test pipeline publish sources-pull tf-fmt
+.PHONY: bootstrap lint test ios-test pipeline publish promote status lambda-bundle sources-pull tf-fmt
 
 PIPELINE = uv run --package thinkbible-pipeline thinkbible-pipeline
 
@@ -25,13 +25,26 @@ BOOK ?= mark
 STAGE ?= all
 ENV ?= dev
 
-# Run pipeline stages locally (see specs/001-content-pack-pipeline/contracts/cli.md).
+# Run pipeline stages in AWS and wait for them (specs/001-content-pack-pipeline/contracts/cli.md).
+# For a few sections in-process: $(PIPELINE) run --book mark --stage generate --local --sections ...
 pipeline:
-	$(PIPELINE) run --book $(BOOK) --stage $(STAGE)
+	$(PIPELINE) run --book $(BOOK) --stage $(STAGE) --env $(ENV) --wait
 
-# Publish an approved book to an environment (dev or prod).
+# Book status, latest runs and spend; opens the scorecard (review.html).
+status:
+	$(PIPELINE) status --book $(BOOK) --env $(ENV) --open
+
+# Publish the book's drafts to dev (a passing run that includes `report` does this itself).
 publish:
-	$(PIPELINE) publish --book $(BOOK) --env $(ENV)
+	$(PIPELINE) publish --book $(BOOK)
+
+# Copy the book's current dev version to production (gated: scorecard, calibration, publish check).
+promote:
+	$(PIPELINE) promote --book $(BOOK)
+
+# Build the pipeline Lambda bundle (pipeline/out/lambda.zip), then `terraform apply` in infra/envs/$(ENV).
+lambda-bundle:
+	uv run python pipeline/scripts/build_bundle.py
 
 # Download the frozen source snapshot from S3 into content/sources/ and verify it.
 sources-pull:

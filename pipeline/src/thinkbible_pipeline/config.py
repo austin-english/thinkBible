@@ -86,10 +86,15 @@ class Pricing:
 @dataclass(frozen=True)
 class EnvConfig:
     name: str
+    region: str
     sources_bucket: str
     packs_bucket: str
     distribution_id: str
     cdn_base_url: str
+    # From `terraform output` once infra/modules/pipeline is applied (empty until then).
+    drafts_bucket: str
+    ledger_table: str
+    state_machine_arn: str
 
 
 def _read(path: Path) -> dict[str, Any]:
@@ -152,8 +157,12 @@ def load_env(name: str, config_dir: Path | None = None) -> EnvConfig:
     raw = _read(_config_dir(config_dir) / "envs" / f"{name}.toml")
     return EnvConfig(
         name=name,
+        region=str(raw.get("region", "us-west-2")),
         sources_bucket=str(raw["sources_bucket"]),
         packs_bucket=str(raw["packs_bucket"]),
         distribution_id=str(raw.get("distribution_id", "")),
         cdn_base_url=str(raw.get("cdn_base_url", "")),
+        drafts_bucket=str(raw.get("drafts_bucket", "")),
+        ledger_table=str(raw.get("ledger_table", "")),
+        state_machine_arn=str(raw.get("state_machine_arn", "")),
     )

@@ -10,12 +10,12 @@ repos:
       # Ruff runs from the uv environment so its version matches `make lint`.
       - id: ruff-check
         name: ruff check
-        entry: uv run ruff check --fix
+        entry: uv run ruff check --fix --force-exclude
         language: system
         types: [python]
       - id: ruff-format
         name: ruff format
-        entry: uv run ruff format
+        entry: uv run ruff format --force-exclude
         language: system
         types: [python]
       # CLAUDE.md: never commit source text. Only the checksum manifest belongs in git.

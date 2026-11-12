@@ -18,7 +18,7 @@ dev = [
   "moto[s3,cloudfront]>=5",
   "jsonschema>=4.23",
   "pre-commit>=3.8",
-  "boto3-stubs[s3,cloudfront]>=1.35",
+  "boto3-stubs[s3,cloudfront,dynamodb,stepfunctions]>=1.35",
   "types-jsonschema>=4.23",
 ]
 

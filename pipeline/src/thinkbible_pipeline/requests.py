@@ -85,9 +85,10 @@ class RunRequest(_Request):
 
 
 class PublishRequest(_Request):
-    env: Env = "dev"
+    """Publish the book's drafts to dev (R14). A passing run does this automatically."""
+
     dry_run: bool = False
 
 
-class ApproveRequest(_Request):
-    pass
+class PromoteRequest(_Request):
+    """Copy the book's current dev version to production (R14, FR-021)."""
