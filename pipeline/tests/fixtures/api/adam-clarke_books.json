@@ -1,0 +1,25 @@
+{
+  "commentary": {
+    "id": "adam-clarke"
+  },
+  "books": [
+    {
+      "id": "GEN",
+      "name": "Genesis",
+      "commonName": "Genesis",
+      "order": 1,
+      "numberOfChapters": 50,
+      "firstChapterNumber": 1,
+      "lastChapterNumber": 50
+    },
+    {
+      "id": "MRK",
+      "name": "Mark",
+      "commonName": "Mark",
+      "order": 41,
+      "numberOfChapters": 16,
+      "firstChapterNumber": 1,
+      "lastChapterNumber": 16
+    }
+  ]
+}

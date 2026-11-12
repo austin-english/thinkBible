@@ -1,0 +1,103 @@
+{
+  "translation": {
+    "id": "BSB",
+    "name": "Berean Standard Bible",
+    "website": "https://berean.bible/",
+    "licenseUrl": "https://berean.bible/",
+    "license": {
+      "attribution": "not-required",
+      "commercialUse": "allowed",
+      "derivatives": "allowed",
+      "copyleft": false,
+      "publicDomain": true
+    },
+    "shortName": "BSB",
+    "englishName": "Berean Standard Bible",
+    "language": "eng",
+    "textDirection": "ltr",
+    "sha256": "788081b7dabf8ec026509b367254d8f2ba112314f2e8eaaeec8d96fa23a00fc9"
+  },
+  "book": {
+    "id": "MRK",
+    "translationId": "BSB",
+    "name": "Mark",
+    "commonName": "Mark",
+    "order": 41,
+    "numberOfChapters": 16,
+    "sha256": "ca655bc454bf30aad23ea9e11fb64e5e342de9b9d4a60ab87443f5555d559dab"
+  },
+  "chapter": {
+    "number": 16,
+    "content": [
+      {
+        "type": "verse",
+        "number": 7,
+        "content": [
+          "But go, tell His disciples and Peter, ‘He is going ahead of you into Galilee. There you will see Him, just as He told you.’”"
+        ]
+      },
+      {
+        "type": "line_break",
+        "paragraph": "m"
+      },
+      {
+        "type": "verse",
+        "number": 8,
+        "content": [
+          "So the women left the tomb and ran away, trembling and bewildered. And in their fear they did not say a word to anyone.",
+          {
+            "noteId": 126
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "content": [
+          "Jesus Appears to Mary Magdalene"
+        ]
+      },
+      {
+        "type": "line_break",
+        "paragraph": "m"
+      },
+      {
+        "type": "verse",
+        "number": 9,
+        "content": [
+          "Early on the first day of the week, after Jesus had risen,",
+          {
+            "noteId": 127
+          },
+          "He appeared first to Mary Magdalene, from whom He had driven out seven demons."
+        ]
+      }
+    ],
+    "footnotes": [
+      {
+        "noteId": 126,
+        "caller": "+",
+        "text": "Some early manuscripts end the Gospel of Mark after verse 8. Other manuscripts contain only a short ending, a version of the following: 9 But they quickly reported all these instructions to Peter’s companions. Afterward, Jesus Himself, through them, sent out from east to west the sacred and imperishable proclamation of eternal salvation. Amen.",
+        "reference": {
+          "chapter": 16,
+          "verse": 8
+        }
+      },
+      {
+        "noteId": 127,
+        "caller": "+",
+        "text": "Or After Jesus had risen early on the first day of the week",
+        "reference": {
+          "chapter": 16,
+          "verse": 9
+        }
+      }
+    ]
+  },
+  "thisChapterAudioLinks": {
+    "david": "https://audio.bible.helloao.org/api/BSB/MRK/16/audio/david.mp3",
+    "hays": "https://audio.bible.helloao.org/api/BSB/MRK/16/audio/hays.mp3",
+    "souer": "https://audio.bible.helloao.org/api/BSB/MRK/16/audio/souer.mp3"
+  },
+  "nextChapterApiLink": "/api/BSB/LUK/1.json",
+  "numberOfVerses": 20
+}

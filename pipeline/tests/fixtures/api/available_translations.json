@@ -1,0 +1,62 @@
+{
+  "translations": [
+    {
+      "id": "BSB",
+      "name": "Berean Standard Bible",
+      "website": "https://berean.bible/",
+      "licenseUrl": "https://berean.bible/",
+      "license": {
+        "attribution": "not-required",
+        "commercialUse": "allowed",
+        "derivatives": "allowed",
+        "copyleft": false,
+        "publicDomain": true
+      },
+      "shortName": "BSB",
+      "englishName": "Berean Standard Bible",
+      "language": "eng",
+      "textDirection": "ltr",
+      "sha256": "788081b7dabf8ec026509b367254d8f2ba112314f2e8eaaeec8d96fa23a00fc9",
+      "availableFormats": [
+        "json"
+      ],
+      "listOfBooksApiLink": "/api/BSB/books.json",
+      "completeTranslationApiLink": "/api/BSB/complete.json",
+      "simpleCompleteTranslationApiLink": "/api/BSB/complete.simple.json",
+      "numberOfBooks": 66,
+      "totalNumberOfChapters": 1189,
+      "totalNumberOfVerses": 31086,
+      "languageName": "English",
+      "languageEnglishName": "English"
+    },
+    {
+      "id": "eng_kjv",
+      "name": "King James (Authorized) Version",
+      "website": "https://ebible.org/Scriptures/details.php?id=eng-kjv2006",
+      "licenseUrl": "https://ebible.org/Scriptures/details.php?id=eng-kjv2006",
+      "license": {
+        "attribution": "not-required",
+        "commercialUse": "allowed",
+        "derivatives": "allowed",
+        "copyleft": false,
+        "publicDomain": true
+      },
+      "shortName": "KJAV",
+      "englishName": "King James Version",
+      "language": "eng",
+      "textDirection": "ltr",
+      "sha256": "053f30b1a3d642ce1693243ccb31261cc44f285a0c05175f473be8005d0b2874",
+      "availableFormats": [
+        "json"
+      ],
+      "listOfBooksApiLink": "/api/eng_kjv/books.json",
+      "completeTranslationApiLink": "/api/eng_kjv/complete.json",
+      "simpleCompleteTranslationApiLink": "/api/eng_kjv/complete.simple.json",
+      "numberOfBooks": 66,
+      "totalNumberOfChapters": 1189,
+      "totalNumberOfVerses": 31102,
+      "languageName": "English",
+      "languageEnglishName": "English"
+    }
+  ]
+}

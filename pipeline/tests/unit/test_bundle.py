@@ -32,10 +32,8 @@ def test_bundle_layout_without_dependencies(tmp_path: Path) -> None:
 
 
 def test_bundle_is_reproducible(tmp_path: Path) -> None:
+    """Same commit → byte-identical zip, so `terraform apply` only redeploys real changes."""
     builder = load_builder()
     a = builder.build(tmp_path / "a", with_dependencies=False)
     b = builder.build(tmp_path / "b", with_dependencies=False)
-    with zipfile.ZipFile(a) as za, zipfile.ZipFile(b) as zb:
-        names = [n for n in za.namelist() if n != "BUILD_INFO.json"]
-        assert names == [n for n in zb.namelist() if n != "BUILD_INFO.json"]
-        assert all(za.read(n) == zb.read(n) for n in names)
+    assert a.read_bytes() == b.read_bytes()

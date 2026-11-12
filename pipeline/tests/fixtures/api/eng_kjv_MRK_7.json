@@ -1,0 +1,112 @@
+{
+  "translation": {
+    "id": "eng_kjv",
+    "name": "King James (Authorized) Version",
+    "website": "https://ebible.org/Scriptures/details.php?id=eng-kjv2006",
+    "licenseUrl": "https://ebible.org/Scriptures/details.php?id=eng-kjv2006",
+    "license": {
+      "attribution": "not-required",
+      "commercialUse": "allowed",
+      "derivatives": "allowed",
+      "copyleft": false,
+      "publicDomain": true
+    },
+    "shortName": "KJAV",
+    "englishName": "King James Version",
+    "language": "eng",
+    "textDirection": "ltr",
+    "sha256": "053f30b1a3d642ce1693243ccb31261cc44f285a0c05175f473be8005d0b2874"
+  },
+  "book": {
+    "id": "MRK",
+    "translationId": "eng_kjv",
+    "name": "Mark",
+    "commonName": "Mark",
+    "order": 41,
+    "numberOfChapters": 16,
+    "sha256": "1f04f16106f7eb89080cb7512e6258357aa5ea64bd0fa422444e0a6390b7ec4e"
+  },
+  "chapter": {
+    "number": 7,
+    "content": [
+      {
+        "type": "verse",
+        "number": 6,
+        "content": [
+          "He answered and said unto them,",
+          {
+            "text": "Well hath Esaias prophesied of you hypocrites, as it is written, This people honoureth me with their lips, but their heart is far from me.",
+            "wordsOfJesus": true
+          }
+        ]
+      },
+      {
+        "type": "verse",
+        "number": 7,
+        "content": [
+          {
+            "text": "Howbeit in vain do they worship me, teaching for doctrines the commandments of men.",
+            "wordsOfJesus": true
+          }
+        ]
+      },
+      {
+        "type": "line_break",
+        "paragraph": "p"
+      },
+      {
+        "type": "verse",
+        "number": 14,
+        "content": [
+          "¶ And when he had called all the people unto him, he said unto them,",
+          {
+            "text": "Hearken unto me every one of you, and understand:",
+            "wordsOfJesus": true
+          }
+        ]
+      },
+      {
+        "type": "verse",
+        "number": 15,
+        "content": [
+          {
+            "text": "There is nothing from without a man, that entering into him can defile him: but the things which come out of him, those are they that defile the man.",
+            "wordsOfJesus": true
+          }
+        ]
+      },
+      {
+        "type": "verse",
+        "number": 16,
+        "content": [
+          {
+            "text": "If any man have ears to hear, let him hear.",
+            "wordsOfJesus": true
+          }
+        ]
+      },
+      {
+        "type": "verse",
+        "number": 17,
+        "content": [
+          "And when he was entered into the house from the people, his disciples asked him concerning the parable."
+        ]
+      },
+      {
+        "type": "verse",
+        "number": 18,
+        "content": [
+          "And he saith unto them,",
+          {
+            "text": "Are ye so without understanding also? Do ye not perceive, that whatsoever thing from without entereth into the man, it cannot defile him;",
+            "wordsOfJesus": true
+          }
+        ]
+      }
+    ],
+    "footnotes": []
+  },
+  "thisChapterAudioLinks": {},
+  "nextChapterApiLink": "/api/eng_kjv/MRK/8.json",
+  "numberOfVerses": 37
+}

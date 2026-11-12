@@ -385,20 +385,20 @@ confirm `verify` passes.
 
 ### Tests for User Story 4 ⚠️ (write first, confirm they fail)
 
-- [ ] T029 [P] [US4] Save small trimmed copies of real API responses as fixtures in
+- [X] T029 [P] [US4] Save small trimmed copies of real API responses as fixtures in
   `pipeline/tests/fixtures/api/`:
   - `BSB_MRK_7.json` (verses 14–18 with the 7:16 gap and footnote);
   - `eng_kjv_MRK_7.json` (the same verses, including 7:16);
   - `BSB_MRK_16.json` (verse 8 footnote);
   - `matthew-henry_MRK_1.json`, `jamieson-fausset-brown_MRK_1.json`, `adam-clarke_MRK_1.json`
     (the first 3 items plus the chapter introduction).
-- [ ] T030 [P] [US4] Write `pipeline/tests/unit/test_normalize.py`:
+- [X] T030 [P] [US4] Write `pipeline/tests/unit/test_normalize.py`:
   - headings, verses, footnotes with chapter/verse, poem lines with indent, and paragraph starts;
   - BSB 7:16 is absent and KJV 7:16 is present;
   - commentary book/chapter introductions and items keyed by `verse`.
-- [ ] T031 [P] [US4] Write `pipeline/tests/unit/test_snapshot_verify.py`: a one-byte change raises
+- [X] T031 [P] [US4] Write `pipeline/tests/unit/test_snapshot_verify.py`: a one-byte change raises
   `ChecksumMismatch`, and a missing file raises `MissingSource` with the pull hint.
-- [ ] T032 [P] [US4] Write `pipeline/tests/integration/test_sources_store.py` with moto S3:
+- [X] T032 [P] [US4] Write `pipeline/tests/integration/test_sources_store.py` with moto S3:
   - `push` uploads with `If-None-Match: *`;
   - re-pushing the same file is a no-op;
   - a different checksum at the same key is refused;
@@ -406,13 +406,13 @@ confirm `verify` passes.
 
 ### Implementation for User Story 4
 
-- [ ] T033 [US4] Implement `pipeline/src/thinkbible_pipeline/sources/normalize.py`:
+- [X] T033 [US4] Implement `pipeline/src/thinkbible_pipeline/sources/normalize.py`:
   - **Translations**: convert API chapter JSON (`chapter.content[]` items of type `heading`,
     `verse`, `line_break`; verse content strings, `{noteId}`, `{text, poem}`, `{lineBreak}`;
     `chapter.footnotes[]`) into `NormalizedTranslationBook`. Drop audio and navigation links.
   - **Commentaries**: convert to `NormalizedCommentaryBook` (book `introduction`, chapter
     `introduction`, `items[{verse, text}]`).
-- [ ] T034 [US4] Implement `pipeline/src/thinkbible_pipeline/sources/importer.py`, the only network
+- [X] T034 [US4] Implement `pipeline/src/thinkbible_pipeline/sources/importer.py`, the only network
   code:
   - **Sources**: `bsb→BSB`, `kjv→eng_kjv`, `matthew-henry`, `jamieson-fausset-brown`,
     `adam-clarke`, from `https://bible.helloao.org/api/...` (R1 URL patterns).
@@ -429,13 +429,13 @@ confirm `verify` passes.
   - **Gaps**: books a commentary lacks (for example, Clarke has 57) are recorded as absent, not
     as errors.
   - **Flags**: `--books` and `--all`.
-- [ ] T035 [US4] Implement `pipeline/src/thinkbible_pipeline/sources/store.py`:
+- [X] T035 [US4] Implement `pipeline/src/thinkbible_pipeline/sources/store.py`:
   - **`push`**: for each manifest file missing from S3, `put_object` with
     `IfNoneMatch="*"` and metadata `sha256`. On 412, compare the remote metadata: equal → skip,
     different → error.
   - **`pull [--books]`**: download missing or mismatched files, then verify.
   - The bucket comes from `envs/{env}.toml` `sources_bucket`.
-- [ ] T036 [US4] Connect `import`, `sources push`, `sources pull` and `verify` to the CLI in
+- [X] T036 [US4] Connect `import`, `sources push`, `sources pull` and `verify` to the CLI in
   `pipeline/src/thinkbible_pipeline/cli.py`. `verify` exits 2 on any mismatch.
 - [X] T037 [P] [US4] Write Terraform (done with T093 on 2026-11-12; the sources bucket module
   uses the account ID from `aws_caller_identity`):
@@ -452,7 +452,9 @@ confirm `verify` passes.
   1. `export AWS_PROFILE=admin-thinkbible`, then `cd infra/envs/dev && terraform init && terraform apply`.
   2. `thinkbible-pipeline import --all`, then `verify`, then `sources push`.
   3. Check Mark: BSB has no 7:16 and has the "BYZ and TR include 16" footnote, and KJV has 7:16.
-     Note which of 9:44, 9:46, 11:26 and 15:28 BSB omits.
+     Note which of 9:44, 9:46, 11:26 and 15:28 BSB omits. (A trial import on 2026-11-12 found
+     BSB 673 verses, KJV 678; BSB omits all five: 7:16, 9:44, 9:46, 11:26, 15:28. JFB has no
+     Mark 15, which the importer records as a missing chapter.)
   4. Commit **only** `content/sources/manifest.json` as
      `content: import source snapshot (Free Use Bible API V…)`.
 

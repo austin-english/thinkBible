@@ -45,24 +45,34 @@ class HeadingItem(JsonModel):
     text: str
 
 
+class Line(JsonModel):
+    """One display line of a verse that contains poetry or a line break."""
+
+    text: str
+    indent: Annotated[int, Field(ge=0)] = 0  # 0 = prose, 1+ = the source's poetry indent level
+
+
 class VerseItem(JsonModel):
     type: Literal["verse"] = "verse"
     number: Annotated[int, Field(ge=1)]
-    text: str
-    lines: list[str] | None = None  # poetry lines, when the source sets them
-    note_ids: list[str] = Field(default_factory=list)
+    text: str  # the whole verse as one string, pieces joined by single spaces
+    lines: list[Line] | None = None  # only when the verse has poetry or a line break
+    note_ids: list[int] = Field(default_factory=list)
 
 
 class BreakItem(JsonModel):
+    """A paragraph or line break between verses."""
+
     type: Literal["break"] = "break"
     paragraph: bool = True
+    marker: str | None = None  # the source's USFM-style marker, e.g. "p" or "m"
 
 
 TranslationItem = Annotated[HeadingItem | VerseItem | BreakItem, Field(discriminator="type")]
 
 
 class Footnote(JsonModel):
-    note_id: str
+    note_id: int
     text: str
     chapter: int
     verse: int

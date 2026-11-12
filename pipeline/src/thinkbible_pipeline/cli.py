@@ -15,6 +15,7 @@ from pydantic import ValidationError
 from thinkbible_pipeline import __version__
 from thinkbible_pipeline.exitcodes import ExitCode
 from thinkbible_pipeline.requests import PromoteRequest, PublishRequest, RunRequest
+from thinkbible_pipeline.sources.models import SourceManifest
 from thinkbible_pipeline.stages.base import StageResult
 
 app = typer.Typer(
@@ -54,34 +55,131 @@ def version() -> None:
     typer.echo(__version__)
 
 
+def _book_codes(books: str | None, all_books: bool) -> list[str] | None:
+    """``--books mark,MAT`` → ["MRK", "MAT"]; ``--all`` → None (every book)."""
+    from thinkbible_core.ids import UnknownBookError, resolve_book
+
+    if all_books:
+        return None
+    if not books:
+        _exit(ExitCode.USAGE, "pass --books MRK,... or --all")
+    try:
+        return [resolve_book(b.strip()).code for b in books.split(",") if b.strip()]
+    except UnknownBookError as e:
+        _exit(ExitCode.USAGE, f"usage error: {e}")
+
+
 @app.command("import")
 def import_(
-    books: Annotated[str | None, typer.Option(help="Comma-separated USFM codes.")] = None,
+    books: Annotated[str | None, typer.Option(help="Comma-separated books (MRK or mark).")] = None,
     all_books: Annotated[bool, typer.Option("--all", help="Import every book.")] = False,
     sources: Annotated[str | None, typer.Option(help="bsb,kjv,matthew-henry,...")] = None,
+    api_version: Annotated[
+        str | None, typer.Option(help="HelloAO API version (default: the latest).")
+    ] = None,
+    env: EnvOpt = "dev",
 ) -> None:
     """Fetch and normalise source text into content/sources/ (the only network fetch)."""
-    _not_implemented("import")
+    from thinkbible_pipeline.config import load_env
+    from thinkbible_pipeline.sources.importer import FetchError, NotFound, import_sources
+
+    codes = _book_codes(books, all_books)
+    try:
+        result = import_sources(
+            books=codes,
+            sources=[s.strip() for s in sources.split(",")] if sources else None,
+            bucket=load_env(env).sources_bucket,
+            api_version=api_version,
+            echo=typer.echo,
+        )
+    except (FetchError, NotFound, ValueError) as e:
+        _exit(ExitCode.USAGE, f"import failed: {e}")
+    typer.echo(
+        f"snapshot {result.snapshot_id} (API {result.api_version}): "
+        f"{len(result.written)} files written"
+    )
+    if result.absent:
+        typer.echo(f"  not covered by the source (expected): {', '.join(result.absent)}")
+    if result.missing_chapters:
+        typer.echo(f"  chapters the source lacks: {', '.join(result.missing_chapters)}")
+    typer.echo("next: `thinkbible-pipeline verify`, then `thinkbible-pipeline sources push`")
+    _exit(ExitCode.OK)
+
+
+def _manifest_or_exit() -> SourceManifest:
+    from thinkbible_pipeline.sources.snapshot import MissingSource, load_manifest
+
+    try:
+        return load_manifest()
+    except MissingSource:
+        _exit(ExitCode.SOURCE_CHECKSUM, "content/sources/manifest.json not found: run `import`")
 
 
 @sources_app.command("push")
-def sources_push() -> None:
+def sources_push(env: EnvOpt = "dev") -> None:
     """Upload cache files listed in the manifest but missing from S3 (write-once)."""
-    _not_implemented("sources push")
+    import boto3
+
+    from thinkbible_pipeline.config import load_env
+    from thinkbible_pipeline.sources.snapshot import SourceError
+    from thinkbible_pipeline.sources.store import PushRefused, push
+
+    envcfg = load_env(env)
+    manifest = _manifest_or_exit()
+    try:
+        result = push(
+            manifest,
+            client=boto3.client("s3", region_name=envcfg.region),
+            bucket=envcfg.sources_bucket,
+        )
+    except (PushRefused, SourceError) as e:
+        _exit(ExitCode.SOURCE_CHECKSUM, str(e))
+    typer.echo(
+        f"{result.uploaded} uploaded, {result.skipped} already in s3://{envcfg.sources_bucket}"
+    )
+    _exit(ExitCode.OK)
 
 
 @sources_app.command("pull")
 def sources_pull(
-    books: Annotated[str | None, typer.Option(help="Comma-separated USFM codes.")] = None,
+    books: Annotated[str | None, typer.Option(help="Comma-separated books (MRK or mark).")] = None,
+    env: EnvOpt = "dev",
 ) -> None:
     """Download manifest files missing from the local cache, then verify them."""
-    _not_implemented("sources pull")
+    import boto3
+
+    from thinkbible_pipeline.config import load_env
+    from thinkbible_pipeline.sources.store import pull
+
+    envcfg = load_env(env)
+    manifest = _manifest_or_exit()
+    codes = _book_codes(books, all_books=books is None)
+    result = pull(
+        manifest,
+        client=boto3.client("s3", region_name=envcfg.region),
+        bucket=envcfg.sources_bucket,
+        books=set(codes) if codes else None,
+    )
+    typer.echo(f"{result.downloaded} downloaded, {result.present} already present and verified")
+    for problem in result.problems:
+        typer.echo(f"  {problem}", err=True)
+    _exit(ExitCode.SOURCE_CHECKSUM if result.problems else ExitCode.OK)
 
 
 @app.command()
 def verify() -> None:
     """Re-check every cached source file against manifest.json."""
-    _not_implemented("verify")
+    from thinkbible_pipeline.sources.snapshot import SourceStore
+    from thinkbible_pipeline.sources.snapshot import verify as verify_sources
+
+    manifest = _manifest_or_exit()
+    problems = verify_sources(store=SourceStore.local(), manifest=manifest)
+    total = sum(len(e.books) for e in manifest.sources.values())
+    for p in problems:
+        typer.echo(f"{p.source}/{p.book}: {p.message}", err=True)
+    if problems:
+        _exit(ExitCode.SOURCE_CHECKSUM, f"{len(problems)} of {total} files failed")
+    _exit(ExitCode.OK, f"all {total} files match manifest.json")
 
 
 def _print_stages(stages: list[StageResult]) -> None:

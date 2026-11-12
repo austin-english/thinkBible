@@ -1,0 +1,46 @@
+{
+  "commentary": {
+    "id": "jamieson-fausset-brown",
+    "name": "Jamieson-Fausset-Brown Bible Commentary",
+    "website": "https://en.wikipedia.org/wiki/Jamieson-Fausset-Brown_Bible_Commentary",
+    "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+    "englishName": "Jamieson-Fausset-Brown Bible Commentary",
+    "language": "eng"
+  },
+  "book": {
+    "id": "MRK",
+    "commentaryId": "jamieson-fausset-brown",
+    "name": "Mark",
+    "commonName": "Mark",
+    "introduction": "THAT the Second Gospel was written by Mark is universally agreed, though by what Mark, not so. The great majority of critics take the writer to be \"John whose surname was Mark,\" of whom we read in the Acts, and who was \"sister's son to Barnabas\" (Col 4:10). But no reason whatever is assigned for …"
+  },
+  "chapter": {
+    "number": 1,
+    "introduction": "\n\n\nPREACHING AND BAPTISM OF JOHN. ( = Mat 3:1-12; Luke 3:1-18). (Mar 1:1-8)\n\nThe beginning of the gospel of Jesus Christ, the Son of God--By the \"Gospel\" of Jesus Christ here is evidently meant the blessed Story which our Evangelist is about to tell of His Life, Ministry, Death, Resurrection, and Glorification, and of the begun Gathering of Believers in His Name. The abruptness with which he announces his subject, and the energetic brevity with which, passing by all preceding events, he hastens over the ministry of John and records the Baptism and Temptation of Jesus--as if impatient to come …",
+    "content": [
+      {
+        "type": "verse",
+        "number": 2,
+        "content": [
+          "As it is written in the prophets, Behold, I send my messenger before thy face, which shall prepare thy way before thee-- (Mal 3:1; Isa 40:3).\n\n"
+        ]
+      },
+      {
+        "type": "verse",
+        "number": 3,
+        "content": [
+          "The voice of one crying in the wilderness, Prepare ye the way of the Lord, make his paths straight--The second of these quotations is given by Matthew and Luke in the same connection, but they reserve the former quotation till they have occasion to return to the Baptist, after his imprisonment (Mat 11:10; Luk 7:27). (Instead of the words, \"as it is written in the Prophets,\" there is weighty …"
+        ]
+      },
+      {
+        "type": "verse",
+        "number": 21,
+        "content": [
+          "HEALING OF A DEMONIAC IN THE SYNAGOGUE OF CAPERNAUM AND THEREAFTER OF SIMON'S MOTHER-IN-LAW AND MANY OTHERS--JESUS, NEXT DAY, IS FOUND IN A SOLITARY PLACE AT MORNING PRAYERS, AND IS ENTREATED TO RETURN, BUT DECLINES, AND GOES FORTH ON HIS FIRST MISSIONARY CIRCUIT. ( = Luk 4:31-44; Mat 8:14-17; Mat 4:23-25). (Mark 1:21-39)\n\nAnd they went into Capernaum--(See on Mat 4:13). \n\nand straightway on the …"
+        ]
+      }
+    ]
+  },
+  "nextChapterApiLink": "/api/c/jamieson-fausset-brown/MRK/2.json",
+  "numberOfVerses": 20
+}

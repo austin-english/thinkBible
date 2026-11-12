@@ -1,11 +1,87 @@
 # `thinkbible_pipeline`
 
-The batch content pipeline (spec 001). It turns the frozen source snapshot into versioned content
-packs. Runs execute in AWS: a Step Functions state machine with one Lambda per section per stage.
-The CLI on your machine estimates the cost, starts runs, and shows their status. Design docs:
-[`specs/001-content-pack-pipeline/`](../../../specs/001-content-pack-pipeline/) (plan, research,
-data model, [CLI contract](../../../specs/001-content-pack-pipeline/contracts/cli.md)). Area
-rules: [`pipeline/CLAUDE.md`](../../CLAUDE.md).
+## About
+
+The batch content pipeline behind ThinkBible (spec 001). It takes the frozen source snapshot (the
+BSB and KJV texts and three public-domain commentaries) and, one book at a time, writes the study
+content the app shows:
+- sections;
+- key ideas attributed to the commentators;
+- levelled questions;
+- context and "views differ" notes.
+
+An automatic quality gate checks every item before a book is published.
+
+Runs execute in AWS: a Step Functions state machine with one Lambda per section per stage, drafts
+in S3 and a spend ledger in DynamoDB. The CLI on your machine shows the cost estimate, starts
+runs, and reports their status. The same code also runs in-process (`run --local`) for a few
+sections at a time while tuning prompts.
+
+Design docs: [`specs/001-content-pack-pipeline/`](../../../specs/001-content-pack-pipeline/) (plan,
+research, data model, [CLI contract](../../../specs/001-content-pack-pipeline/contracts/cli.md)).
+Rules for agents working here: [`pipeline/CLAUDE.md`](../../CLAUDE.md).
+
+## File structure
+
+```text
+pipeline/
+├── CLAUDE.md                       # area rules: no network outside the importer, never tools, …
+├── pyproject.toml                  # package thinkbible-pipeline; CLI script `thinkbible-pipeline`
+├── config/
+│   ├── settings.toml               # model, effort, prompt version, default cost per stage; concurrency
+│   ├── pricing.toml                # Bedrock USD per million tokens, per model
+│   └── envs/dev.toml               # buckets, ledger table, state machine ARN (from `terraform output`)
+├── prompts/
+│   └── _shared/context-v1.md       # opening text of every system prompt; stages add {stage}/vN.md
+├── scripts/
+│   └── build_bundle.py             # `make lambda-bundle`: builds pipeline/out/lambda.zip
+├── src/thinkbible_pipeline/
+│   ├── README.md                   # this file
+│   ├── __main__.py                 # `python -m thinkbible_pipeline`
+│   ├── cli.py                      # Typer CLI: import, sources, verify, run, status, publish, promote, …
+│   ├── app.py                      # wiring for the CLI: local deps, start a cloud run, wait for it
+│   ├── requests.py                 # RunRequest / PublishRequest / PromoteRequest (CLI and cloud JSON)
+│   ├── exitcodes.py                # exit codes 0–5 from the CLI contract
+│   ├── config.py                   # loads config/*.toml into frozen dataclasses
+│   ├── paths.py                    # repo paths (in a Lambda, /var/task is laid out like the repo)
+│   ├── jsonio.py                   # canonical JSON, hashing, the camelCase base model
+│   ├── storage.py                  # BlobStore: a local folder or S3, with conditional writes
+│   ├── ledger.py                   # SpendLedger: a run's cap and spend (in memory for local runs)
+│   ├── stages/
+│   │   ├── base.py                 # shared steps: estimate, plan, run one section, finish; local run()
+│   │   └── __init__.py             # registry() of stage implementations (filled in by US1+)
+│   ├── cloud/
+│   │   ├── handlers.py             # the five Lambda handlers the state machine calls
+│   │   ├── messages.py             # JSON payloads between the state machine's steps
+│   │   └── ledger.py               # DynamoLedger: the spend ledger in DynamoDB
+│   ├── llm/
+│   │   ├── runner.py               # BedrockRunner (Claude on Bedrock) and FakeRunner (tests)
+│   │   ├── budget.py               # pricing, cost estimate, the Proceed? [y/N] prompt
+│   │   └── prompts.py              # assembles the versioned system prompt for a stage
+│   ├── drafts/
+│   │   ├── models.py               # BookState, SectionDraft, RunRecord, … (data-model §2)
+│   │   └── store.py                # DraftStore: reads and writes {book}/… in a BlobStore
+│   └── sources/
+│       ├── models.py               # source manifest and normalised book formats (data-model §3)
+│       ├── importer.py             # `import`: the ONLY network code; fetches the five sources once
+│       ├── normalize.py            # API chapter JSON → normalised book files
+│       ├── snapshot.py             # reads source files and checks each against the manifest
+│       └── store.py                # `sources push` / `sources pull`: cache ↔ write-once S3 bucket
+└── tests/
+    ├── unit/                       # runner, budget, requests, state machine, bundle, guards
+    ├── integration/                # on moto: storage, DynamoDB ledger, handlers, CLI cloud path
+    └── fixtures/                   # trimmed API responses (api/) and recorded model outputs
+
+infra/modules/pipeline/             # Terraform for the cloud side
+├── main.tf                         # drafts bucket, ledger table, the five Lambdas, the state machine
+├── iam.tf                          # least-privilege roles for the Lambdas and Step Functions
+├── state_machine.asl.json.tftpl    # the state machine definition (a Terraform template)
+├── variables.tf
+└── outputs.tf                      # values to copy into config/envs/<env>.toml
+```
+
+Later user stories add `sections/`, `commentary/`, `gate/`, `report/`, `publish/` and the
+individual stages (US1–US3).
 
 ## How a run flows
 
@@ -30,11 +106,8 @@ flowchart TD
     FR --> WAIT["--wait: app.wait_for_execution<br/>→ exit 0 / 2 / 3 / 4"]
 ```
 
-Every box inside AWS calls one shared step in `stages/base.py`. `run --local` calls the same
-steps in-process (asyncio) for a few sections at a time, which is how prompts get tuned without
-redeploying. Before the pipeline is deployed, `--local` keeps drafts in `content/drafts/`.
-
-What one `RunSection` does:
+Every step inside AWS calls one shared function in `stages/base.py`. `run --local` calls the same
+functions in-process. What one `RunSection` does:
 
 ```mermaid
 flowchart TD
@@ -46,74 +119,95 @@ flowchart TD
     EXEC -- ok --> SAVE["price() → StageRecord done<br/>write draft to S3, ledger.add(cost)"]
 ```
 
-## Files
+Things to know:
+- **Unchanged work is skipped.** Each stage hashes everything a section's output depends on (its
+  inputs, the prompt version and the model). If the hash matches the last successful run, the
+  section is skipped. Re-running an unchanged book makes no model calls; `--fresh` forces it.
+- **One bad section doesn't stop the book.** It's recorded as failed, the rest carry on, and the
+  next run retries it.
+- **Spend has a cap,** by default twice the estimate. Once spend reaches it, no new section starts;
+  sections already running finish.
 
-### Entry and wiring
+## Freezing the sources (once)
 
-| File | What it does |
-|---|---|
-| `cli.py` | Thin Typer front door. `run` starts a cloud run (or `--local`), `status` shows runs and opens the scorecard; `publish`, `promote`, `calibrate`, `eval`, `import`, `sources` arrive with later tasks |
-| `requests.py` | `RunRequest`, `PublishRequest`, `PromoteRequest`. The same JSON travels in the Step Functions execution input. Expands `all`, sorts stages into pipeline order |
-| `app.py` | Composition root for the CLI: `local_deps`, `start_cloud_run` (estimate → confirm → `StartExecution`), `wait_for_execution`, and `draft_blobs` (S3 once deployed, `content/drafts/` before) |
-| `exitcodes.py` | `ExitCode` 0–5, exactly as in the CLI contract |
+```bash
+thinkbible-pipeline import --all        # ~47 min: 5 sources × 66 books, 2 requests a second
+thinkbible-pipeline verify              # every cached file against content/sources/manifest.json
+thinkbible-pipeline sources push        # write-once upload to the sources bucket
+```
 
-### Running stages
+Commit only `content/sources/manifest.json`. On a new machine, `sources pull` restores the cache.
+`import` is the only command that fetches text from the web, and it isn't run again unless a
+source is deliberately added (constitution II).
 
-| File | What it does |
-|---|---|
-| `stages/base.py` | The shared steps: `estimate_run`, `plan_stage` (hash and skip), `run_one_section` (cap check, execute, save, add cost), `finish_stage` (run record, cap stop), and `run()` for local mode. Defines `SectionStage`, `BookStage` and `Deps` |
-| `stages/__init__.py` | `registry()`: stage name → implementation. Empty until US1 adds `sections`, `summaries`, `generate` and the rest |
-| `ledger.py` | `SpendLedger`: the run's cap and spend. `InMemoryLedger` for local runs |
-| `cloud/ledger.py` | `DynamoLedger`: the same ledger in DynamoDB, shared by every section Lambda (atomic `ADD`) |
-| `cloud/handlers.py` | The five Lambda handlers: `start_run`, `plan_stage_handler`, `run_section`, `finish_stage_handler`, `finish_run` |
-| `cloud/messages.py` | The JSON payloads between states (`RunInput`, `PlanOutput`, `SectionInput`, …) |
+## Running it
 
-A stage implements four methods: `prompt_version()`, `model()`, `inputs()` (everything its output
-depends on, as JSON-ready data) and `execute()` (does the work and updates the draft in place). The
-runner does everything else, in the cloud and locally.
+```bash
+make pipeline BOOK=mark STAGE=all       # in AWS: estimate, confirm, start, wait for the result
+make status BOOK=mark                   # latest runs, spend, and the scorecard
+uv run --package thinkbible-pipeline thinkbible-pipeline run --book mark --stage generate \
+  --local --sections mrk-1-1,mrk-1-9    # in-process, two sections, using the repo's prompts
+```
 
-### Model calls (`llm/`)
-
-| File | What it does |
-|---|---|
-| `llm/runner.py` | `BedrockRunner`: Claude in Amazon Bedrock through the Anthropic SDK's Mantle client, structured output, cached system prefix, effort per stage, refusal fallback to Opus, retries of invalid output, never any `tools`. Throttling raises `Throttled` so Step Functions retries. `FakeRunner` replays recorded outputs for tests |
-| `llm/budget.py` | `price(usage)` from `pricing.toml`, `estimate()` (median cost per section over the last 20 runs, else the settings default), and the `Proceed? [y/N]` prompt |
-| `llm/prompts.py` | Builds the system prompt: shared context, then the stage prompt, then (optionally) the question guide |
-
-### Storage and data
-
-| File | What it does |
-|---|---|
-| `storage.py` | `BlobStore`: `LocalBlobStore` (a folder) and `S3BlobStore`, with conditional writes |
-| `drafts/models.py`, `drafts/store.py` | Draft entities (data-model §2) and `DraftStore`, which reads and writes `{book}/…` in a `BlobStore`. Run records are one object per stage run |
-| `sources/models.py`, `sources/snapshot.py` | The source manifest and normalised books. `SourceStore` reads the local cache (by `file`) or the sources bucket (by `s3Key`); every read is checked against the manifest's sha256 |
-| `jsonio.py`, `config.py`, `paths.py` | Canonical JSON and hashing; `settings.toml`, `pricing.toml` and `envs/{env}.toml`; repo paths (in a Lambda, `/var/task` is laid out like the repo) |
-
-## Outside this package
-
-| Path | What it is |
-|---|---|
-| `pipeline/config/` | `settings.toml` (model, effort, prompt version and default cost per stage; concurrency), `pricing.toml`, `envs/dev.toml` (buckets, ledger table, state machine ARN) |
-| `pipeline/prompts/` | Versioned prompts (`{stage}/vN.md`). Never edit a version that has been used for a run |
-| `pipeline/scripts/build_bundle.py` | `make lambda-bundle`: the Lambda zip (arm64, Python 3.12) with dependencies, both packages, config, prompts, schema and manifest |
-| `infra/modules/pipeline/` | Terraform: drafts bucket, ledger table, the five Lambdas, the state machine (`state_machine.asl.json.tftpl`), IAM |
-| `infra/envs/dev/` | The dev environment: the sources bucket and the pipeline |
-| `pipeline/tests/` | Unit tests, plus integration tests on moto: storage, the DynamoDB ledger, the handlers driven through a whole run, and the CLI's cloud path |
+Before the pipeline is deployed, `run` says so and points you to `--local`, which then keeps
+drafts in `content/drafts/` instead of S3.
 
 ## Deploying
 
 ```bash
-make lambda-bundle
+make lambda-bundle                              # build pipeline/out/lambda.zip
 cd infra/envs/dev && terraform init && terraform apply
-terraform output     # copy into pipeline/config/envs/dev.toml
+terraform output                                # copy into pipeline/config/envs/dev.toml
 ```
 
-Redeploy after code or prompt changes. `--local` runs use the repo's prompts directly.
+Rebuild and re-apply after any change to pipeline code, config or prompts. The Lambdas only see
+what was in the zip. `--local` runs read the repo directly, which is why they're the fast way to
+tune prompts.
+
+### What `make lambda-bundle` does
+
+It runs `pipeline/scripts/build_bundle.py`, which builds `pipeline/out/lambda.zip` (about 25 MB,
+gitignored):
+
+1. **Lists the dependencies.** It exports the exact locked versions the pipeline uses from
+   `uv.lock` (`anthropic`, `pydantic`, `boto3`, …), without dev tools.
+2. **Downloads Lambda's builds of them.** The Lambdas run Linux on ARM (arm64, Python 3.12), not
+   macOS. Packages with compiled code, such as `pydantic-core`, are fetched as Linux arm64 wheels.
+3. **Adds our code:** the `thinkbible_core` and `thinkbible_pipeline` packages.
+4. **Adds the files the code reads at runtime,** laid out like the repo so the code finds them the
+   same way it does locally:
+   - `pipeline/config/` and `pipeline/prompts/`;
+   - `content/schema/`, the content pack contract;
+   - `content/sources/manifest.json`, the source checksums (from US4; until then the build warns
+     that it's missing);
+   - `pipeline/evals/`, the grader calibration set (from US2).
+5. **Writes `BUILD_INFO.json`** with the git commit it was built from. Every run record stores it
+   as `codeVersion`, so you can tell which code produced a draft. There's deliberately no build
+   timestamp: the same commit gives a byte-identical zip, so `terraform apply` only redeploys the
+   Lambdas when the code changed.
+6. **Zips it** and fails if the zip is over 50 MB, Lambda's limit for a direct upload.
+
+The five Lambdas share this one zip; each starts at a different handler in `cloud/handlers.py`.
+`terraform apply` uploads it to all five when it changed.
+
+## Writing a stage
+
+A stage implements four methods; the runner does the rest, in the cloud and locally:
+
+| Method | What it returns |
+|---|---|
+| `prompt_version()` | The prompt version it uses (recorded and hashed) |
+| `model()` | The Bedrock model ID it calls, or `None` if it calls no model |
+| `inputs()` | Everything its output depends on, as JSON-ready data. Hashed to decide skips |
+| `execute()` | Does the work, updates the section's draft in place, and returns the token usage |
+
+Whole-book stages (`sections`, `report`) subclass `BookStage` and implement `run_book()` instead.
+Register a stage in `stages/__init__.py`.
 
 ## Rules the tests enforce
 
 - Only `sources/importer.py` (US4) may import networking modules (`test_network_guard.py`).
 - No model request carries `tools` (`test_no_tools.py`).
-- The state machine calls exactly the five handlers, and Terraform allows exactly the models in
-  `settings.toml` (`test_state_machine.py`, `test_infra_sync.py`).
-- Tests never call models. They use `FakeRunner`.
+- The state machine calls exactly the five handlers (`test_state_machine.py`).
+- Terraform allows exactly the models and concurrency in `settings.toml` (`test_infra_sync.py`).
+- Tests never call models. They use `FakeRunner`, and AWS is mocked with moto.

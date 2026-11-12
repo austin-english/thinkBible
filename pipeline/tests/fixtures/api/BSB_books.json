@@ -1,0 +1,38 @@
+{
+  "translation": {
+    "id": "BSB",
+    "name": "Berean Standard Bible",
+    "website": "https://berean.bible/",
+    "licenseUrl": "https://berean.bible/",
+    "license": {
+      "attribution": "not-required",
+      "commercialUse": "allowed",
+      "derivatives": "allowed",
+      "copyleft": false,
+      "publicDomain": true
+    },
+    "shortName": "BSB",
+    "englishName": "Berean Standard Bible",
+    "language": "eng",
+    "textDirection": "ltr",
+    "sha256": "788081b7dabf8ec026509b367254d8f2ba112314f2e8eaaeec8d96fa23a00fc9"
+  },
+  "books": [
+    {
+      "id": "GEN",
+      "name": "Genesis",
+      "commonName": "Genesis",
+      "order": 1,
+      "numberOfChapters": 50,
+      "sha256": "69b91bd12450954a8b2c024e1cb5bda3ac6018e4cbdc1e16759c644c33de805c"
+    },
+    {
+      "id": "MRK",
+      "name": "Mark",
+      "commonName": "Mark",
+      "order": 41,
+      "numberOfChapters": 16,
+      "sha256": "ca655bc454bf30aad23ea9e11fb64e5e342de9b9d4a60ab87443f5555d559dab"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "commentary": {
+    "id": "matthew-henry",
+    "name": "Matthew Henry Bible Commentary",
+    "website": "https://en.wikipedia.org/wiki/Matthew_Henry",
+    "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+    "englishName": "Matthew Henry Bible Commentary",
+    "language": "eng"
+  },
+  "book": {
+    "id": "MRK",
+    "commentaryId": "matthew-henry",
+    "name": "Mark",
+    "commonName": "Mark",
+    "introduction": "An Exposition, with Practical Observations, of The Gospel According to St. Mark\n\nWe have heard the evidence given in by the first witness to the doctrine and miracles of our Lord Jesus; and now here is another witness produced, who calls for our attention. The second living creature saith, Come, …"
+  },
+  "chapter": {
+    "number": 1,
+    "introduction": "Mark's narrative does not take rise so early as those of Matthew and Luke do, from the birth of our Saviour, but from John's baptism, from which he soon passes to Christ's public ministry. Accordingly, in this chapter, we have, I. The office of John Baptist illustrated by the prophecy of him (Mar 1:1-3), and by the history of him (Mar 1:4-8). II. Christ's baptism, and his being owned from heaven (Mar 1:9-11). III. His temptation (Mar 1:12, Mar 1:13). IV. His preaching (Mar 1:14, Mar 1:15, Mar 1:21, Mar 1:22, Mar 1:38, Mar 1:39). V. His calling disciples (Mar 1:16-20). VI. His praying (Mar …",
+    "content": [
+      {
+        "type": "verse",
+        "number": 1,
+        "content": [
+          "We may observe here,\nI. What the New Testament is - the divine testament, to which we adhere above all that is human; the new testament, which we advance above that which was old. It is the gospel of Jesus Christ the Son of God, Mar 1:1. 1. It is gospel; it is God's word, and is faithful and true; see Rev 19:9; Rev 21:5; Rev 22:6. It is a good word, and well worthy of all acceptation; it brings …"
+        ]
+      },
+      {
+        "type": "verse",
+        "number": 9,
+        "content": [
+          "We have here a brief account of Christ's baptism and temptation, which were largely related Mt. 3 and 4.\nI. His baptism, which was his first public appearance, after he had long lived obscurely in Nazareth. O how much hidden worth is there, which in this world is either lost in the dust of contempt and cannot be known, or wrapped up in the veil of humility and will not be known! But sooner or …"
+        ]
+      },
+      {
+        "type": "verse",
+        "number": 14,
+        "content": [
+          "Here is, I. A general account of Christ's preaching in Galilee. John gives an account of his preaching in Judea, before this (ch. 2 and 3), which the other evangelists had omitted, who chiefly relate what occurred in Galilee, because that was least known at Jerusalem. Observe,\n1. When Jesus began to preach in Galilee; After that John was put in prison. When he had finished his testimony, then …"
+        ]
+      }
+    ]
+  },
+  "nextChapterApiLink": "/api/c/matthew-henry/MRK/2.json",
+  "numberOfVerses": 6
+}

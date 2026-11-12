@@ -1,0 +1,153 @@
+{
+  "translation": {
+    "id": "BSB",
+    "name": "Berean Standard Bible",
+    "website": "https://berean.bible/",
+    "licenseUrl": "https://berean.bible/",
+    "license": {
+      "attribution": "not-required",
+      "commercialUse": "allowed",
+      "derivatives": "allowed",
+      "copyleft": false,
+      "publicDomain": true
+    },
+    "shortName": "BSB",
+    "englishName": "Berean Standard Bible",
+    "language": "eng",
+    "textDirection": "ltr",
+    "sha256": "788081b7dabf8ec026509b367254d8f2ba112314f2e8eaaeec8d96fa23a00fc9"
+  },
+  "book": {
+    "id": "MRK",
+    "translationId": "BSB",
+    "name": "Mark",
+    "commonName": "Mark",
+    "order": 41,
+    "numberOfChapters": 16,
+    "sha256": "ca655bc454bf30aad23ea9e11fb64e5e342de9b9d4a60ab87443f5555d559dab"
+  },
+  "chapter": {
+    "number": 7,
+    "content": [
+      {
+        "type": "line_break",
+        "paragraph": "m"
+      },
+      {
+        "type": "verse",
+        "number": 6,
+        "content": [
+          "Jesus answered them, “Isaiah prophesied correctly about you hypocrites, as it is written:",
+          {
+            "lineBreak": true
+          },
+          {
+            "text": "‘These people honor Me with their lips,",
+            "poem": 1
+          },
+          {
+            "text": "but their hearts are far from Me.",
+            "poem": 2
+          }
+        ]
+      },
+      {
+        "type": "verse",
+        "number": 7,
+        "content": [
+          {
+            "text": "They worship Me in vain;",
+            "poem": 1
+          },
+          {
+            "text": "they teach as doctrine the precepts of men.’",
+            "poem": 2
+          },
+          {
+            "noteId": 38
+          }
+        ]
+      },
+      {
+        "type": "line_break",
+        "paragraph": "m"
+      },
+      {
+        "type": "heading",
+        "content": [
+          "What Defiles a Man"
+        ]
+      },
+      {
+        "type": "line_break",
+        "paragraph": "m"
+      },
+      {
+        "type": "verse",
+        "number": 14,
+        "content": [
+          "Once again Jesus called the crowd to Him and said, “All of you, listen to Me and understand:"
+        ]
+      },
+      {
+        "type": "verse",
+        "number": 15,
+        "content": [
+          "Nothing that enters a man from the outside can defile him; but the things that come out of a man, these are what defile him.”",
+          {
+            "noteId": 43
+          }
+        ]
+      },
+      {
+        "type": "line_break",
+        "paragraph": "m"
+      },
+      {
+        "type": "verse",
+        "number": 17,
+        "content": [
+          "After Jesus had left the crowd and gone into the house, His disciples inquired about the parable."
+        ]
+      },
+      {
+        "type": "line_break",
+        "paragraph": "m"
+      },
+      {
+        "type": "verse",
+        "number": 18,
+        "content": [
+          "“Are you still so dull?” He asked. “Do you not understand? Nothing that enters a man from the outside can defile him,"
+        ]
+      }
+    ],
+    "footnotes": [
+      {
+        "noteId": 38,
+        "caller": "+",
+        "text": "Isaiah 29:13 (see also LXX)",
+        "reference": {
+          "chapter": 7,
+          "verse": 7
+        }
+      },
+      {
+        "noteId": 43,
+        "caller": "+",
+        "text": "BYZ and TR include 16 If anyone has ears to hear, let him hear.",
+        "reference": {
+          "chapter": 7,
+          "verse": 15
+        }
+      }
+    ]
+  },
+  "thisChapterAudioLinks": {
+    "david": "https://audio.bible.helloao.org/api/BSB/MRK/7/audio/david.mp3",
+    "hays": "https://audio.bible.helloao.org/api/BSB/MRK/7/audio/hays.mp3",
+    "souer": "https://audio.bible.helloao.org/api/BSB/MRK/7/audio/souer.mp3"
+  },
+  "nextChapterApiLink": "/api/BSB/MRK/8.json",
+  "numberOfVerses": 36
+}

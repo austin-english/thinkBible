@@ -20,7 +20,6 @@ import shutil
 import subprocess
 import sys
 import zipfile
-from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -53,12 +52,9 @@ def git_info() -> dict[str, object]:
         dirty = bool(_run(["git", "status", "--porcelain", "--untracked-files=no"]).strip())
     except (OSError, subprocess.CalledProcessError):
         head, dirty = "unknown", True
-    return {
-        "gitHead": head + ("-dirty" if dirty else ""),
-        "builtAt": datetime.now(UTC).isoformat(timespec="seconds"),
-        "platform": PLATFORM,
-        "python": PYTHON,
-    }
+    # No build timestamp: the same commit must give a byte-identical zip, so `terraform apply`
+    # only redeploys the Lambdas when the code actually changed.
+    return {"gitHead": head + ("-dirty" if dirty else ""), "platform": PLATFORM, "python": PYTHON}
 
 
 def install_dependencies(staging: Path) -> None:
