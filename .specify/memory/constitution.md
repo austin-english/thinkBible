@@ -92,14 +92,14 @@ Rationale: reflections on faith are personal. The safest data is data the server
 - `content/schema/section.schema.json` is the single contract for packs. A change MUST
   update the schema first, then `shared/` models, pipeline output and Swift `ContentKit`
   models in the same change, with contract tests on both sides.
-- Question and key idea IDs are permanent and never reused, in any environment. Retired
-  questions stay in packs, marked retired. Production pack updates are additive and
-  versioned; nothing a user has answered is ever deleted. Dev is a staging environment and
-  MAY be republished from scratch.
+- Question and key idea IDs are permanent and never reused, in any channel. Retired
+  questions stay in packs, marked retired. Live pack updates are additive and versioned;
+  nothing a user has answered is ever deleted. The draft channel is a staging area and MAY be
+  republished from scratch.
 - Saved reflections MUST snapshot the question and key ideas exactly as shown, so they stay
   complete whatever later packs change.
-- No pack reaches production without passing the automatic quality gate and the owner's
-  explicit promotion from dev, made after reading that content in the app.
+- No pack reaches the live channel without passing the automatic quality gate and the owner's
+  explicit promotion from the draft channel, made after reading that content in the app.
 
 Rationale: users' saved reflections must never break, and three codebases read the same data.
 
@@ -151,10 +151,13 @@ and future theming correct by construction.
   (Sonnet-class model, batch inference where possible). Prompts are versioned files in
   `pipeline/prompts/`; outputs are keyed by book, section and prompt version, so re-runs are
   idempotent.
-- **Content delivery:** versioned packs in S3 behind CloudFront; one study file per book shared
-  by all translations, plus one verse-text file per translation.
-- **Infrastructure:** Terraform only (modules `api`, `pipeline`, `storage`, `cdn`; envs `dev`,
-  `prod`), least-privilege IAM per function. No console-only resources.
+- **Content delivery:** versioned packs in S3 behind one CloudFront distribution, in two
+  channels: `draft/` (what the owner's TestFlight and debug builds read) and `live/` (what
+  readers get). One study file per book shared by all translations, plus one verse-text file
+  per translation.
+- **Infrastructure:** Terraform only, one AWS environment with one root in `infra/` (modules
+  `api`, `pipeline`, `storage`, `cdn`). Draft and live are channels of the packs bucket, not
+  separate infrastructure. Least-privilege IAM per function. No console-only resources.
 - **Python tooling:** uv workspace, ruff, mypy `--strict`, pytest.
 - **Secrets:** never in the repo. No `.env` files, Terraform state or signing keys committed.
 
@@ -174,14 +177,15 @@ and future theming correct by construction.
   - Prompt changes MUST be evaluated against a fixed set of sample sections before a new
     prompt version is used for publishing.
   - The model grader in the quality gate MUST be calibrated against the owner's own grades
-    (at least 85% agreement on at least 30 items) before its scores gate a production
-    promotion, and recalibrated whenever its prompt or model changes.
+    (at least 85% agreement on at least 30 items) before its scores gate a promotion to live,
+    and recalibrated whenever its prompt or model changes.
 - **Gates before merge:** `make lint` and `make test` pass. `make ios-test` passes for app
   changes. Schema changes include updated models on all three sides.
 - **Commits:** small, with a scope prefix (`ios:`, `backend:`, `pipeline:`, `infra:`,
   `content:`, `docs:`).
-- **Content review:** every book passes the automatic quality gate and is published to dev.
-  The owner reads it in the app and promotes it to production. After launch, reader feedback
+- **Content review:** every book passes the automatic quality gate and is published to the
+  draft channel. The owner reads it in the app and promotes it to live. After launch, reader
+  feedback
   ("not helpful" flags, problem reports) drives retire-and-replace in later versions.
 
 ## Governance
@@ -197,4 +201,4 @@ and future theming correct by construction.
   implementing any feature that touches content, privacy or payments.
 - Runtime guidance for agents lives in the root `CLAUDE.md` and per-area `CLAUDE.md` files.
 
-**Version**: 1.2.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-10
+**Version**: 1.2.1 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-13
