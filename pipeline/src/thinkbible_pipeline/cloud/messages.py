@@ -52,5 +52,5 @@ class RunOutput(JsonModel):
     exit_code: int
     spent_usd: float
     stages: list[StageResult]
-    # True when the run included `report` and no section failed: the book can go to dev (R14).
+    # True when the run included `report` and no section failed: publish to the draft channel (R14).
     publishable: bool

@@ -28,7 +28,6 @@ sources_app = typer.Typer(
 app.add_typer(sources_app, name="sources")
 
 BookOpt = Annotated[str, typer.Option("--book", help="Book name (mark) or USFM code (MRK).")]
-EnvOpt = Annotated[str, typer.Option("--env", help="dev or prod.")]
 
 
 def _exit(code: ExitCode, message: str | None = None) -> NoReturn:
@@ -82,10 +81,9 @@ def import_(
     refresh: Annotated[
         bool, typer.Option(help="Re-fetch books already imported (default: skip them).")
     ] = False,
-    env: EnvOpt = "dev",
 ) -> None:
     """Fetch and normalise source text into content/sources/ (the only network fetch)."""
-    from thinkbible_pipeline.config import load_env
+    from thinkbible_pipeline.config import load_aws
     from thinkbible_pipeline.sources.importer import FetchError, NotFound, import_sources
 
     codes = _book_codes(books, all_books)
@@ -93,7 +91,7 @@ def import_(
         result = import_sources(
             books=codes,
             sources=[s.strip() for s in sources.split(",")] if sources else None,
-            bucket=load_env(env).sources_bucket,
+            bucket=load_aws().sources_bucket,
             api_version=api_version,
             refresh=refresh,
             echo=typer.echo,
@@ -125,15 +123,15 @@ def _manifest_or_exit() -> SourceManifest:
 
 
 @sources_app.command("push")
-def sources_push(env: EnvOpt = "dev") -> None:
+def sources_push() -> None:
     """Upload cache files listed in the manifest but missing from S3 (write-once)."""
     import boto3
 
-    from thinkbible_pipeline.config import load_env
+    from thinkbible_pipeline.config import load_aws
     from thinkbible_pipeline.sources.snapshot import SourceError
     from thinkbible_pipeline.sources.store import PushRefused, push
 
-    envcfg = load_env(env)
+    envcfg = load_aws()
     manifest = _manifest_or_exit()
     try:
         result = push(
@@ -152,15 +150,14 @@ def sources_push(env: EnvOpt = "dev") -> None:
 @sources_app.command("pull")
 def sources_pull(
     books: Annotated[str | None, typer.Option(help="Comma-separated books (MRK or mark).")] = None,
-    env: EnvOpt = "dev",
 ) -> None:
     """Download manifest files missing from the local cache, then verify them."""
     import boto3
 
-    from thinkbible_pipeline.config import load_env
+    from thinkbible_pipeline.config import load_aws
     from thinkbible_pipeline.sources.store import pull
 
-    envcfg = load_env(env)
+    envcfg = load_aws()
     manifest = _manifest_or_exit()
     codes = _book_codes(books, all_books=books is None)
     result = pull(
@@ -203,19 +200,38 @@ def sources_check(
 
 
 @app.command()
-def verify() -> None:
-    """Re-check every cached source file against manifest.json."""
+def verify(
+    remote: Annotated[
+        bool,
+        typer.Option(
+            "--remote",
+            help="Check the sources bucket instead of the local cache (downloads every file).",
+        ),
+    ] = False,
+) -> None:
+    """Re-check every source file against manifest.json: the local cache, or S3 with --remote."""
     from thinkbible_pipeline.sources.snapshot import SourceStore
     from thinkbible_pipeline.sources.snapshot import verify as verify_sources
 
     manifest = _manifest_or_exit()
-    problems = verify_sources(store=SourceStore.local(), manifest=manifest)
+    if remote:
+        import boto3
+
+        from thinkbible_pipeline.config import load_aws
+
+        aws = load_aws()
+        store = SourceStore.s3(
+            aws.sources_bucket, client=boto3.client("s3", region_name=aws.region)
+        )
+    else:
+        store = SourceStore.local()
+    problems = verify_sources(store=store, manifest=manifest)
     total = sum(len(e.files()) for e in manifest.sources.values())
     for p in problems:
         typer.echo(f"{p.source}/{p.book}: {p.message}", err=True)
     if problems:
-        _exit(ExitCode.SOURCE_CHECKSUM, f"{len(problems)} of {total} files failed")
-    _exit(ExitCode.OK, f"all {total} files match manifest.json")
+        _exit(ExitCode.SOURCE_CHECKSUM, f"{len(problems)} of {total} files failed in {store.label}")
+    _exit(ExitCode.OK, f"all {total} files in {store.label} match manifest.json")
 
 
 def _print_stages(stages: list[StageResult]) -> None:
@@ -233,7 +249,7 @@ def run(
     book: BookOpt,
     stage: Annotated[str, typer.Option("--stage", help="A stage, a comma list, or all.")],
     sections: Annotated[str | None, typer.Option(help="Comma-separated section IDs.")] = None,
-    fresh: Annotated[bool, typer.Option(help="Regenerate sections not yet in production.")] = False,
+    fresh: Annotated[bool, typer.Option(help="Regenerate sections not yet live.")] = False,
     refresh: Annotated[bool, typer.Option(help="Add questions to promoted sections.")] = False,
     cap: Annotated[float | None, typer.Option(help="Spend cap in USD (default 2x).")] = None,
     yes: Annotated[bool, typer.Option("--yes", help="Skip the Proceed? prompt.")] = False,
@@ -241,7 +257,6 @@ def run(
     local: Annotated[
         bool, typer.Option("--local", help="Run in this process (a few sections, prompt tuning).")
     ] = False,
-    env: EnvOpt = "dev",
 ) -> None:
     """Run one stage, several, or all of them: in AWS by default, or in-process with --local."""
     try:
@@ -253,7 +268,6 @@ def run(
             refresh=refresh,
             cap_usd=cap,
             auto_approve=yes,
-            env=env,  # type: ignore[arg-type]
         )
     except ValidationError as e:
         _usage(e)
@@ -278,9 +292,9 @@ def run(
 
     import boto3
 
-    from thinkbible_pipeline.config import load_env
+    from thinkbible_pipeline.config import load_aws
 
-    sfn = boto3.client("stepfunctions", region_name=load_env(request.env).region)
+    sfn = boto3.client("stepfunctions", region_name=load_aws().region)
     code, output = wiring.wait_for_execution(started.execution_arn, sfn, echo=typer.echo)
     if output:
         _print_stages([StageResult.model_validate(s) for s in output.get("stages", [])])
@@ -294,7 +308,6 @@ def status(
     open_report: Annotated[
         bool, typer.Option("--open", help="Download and open the scorecard (review.html).")
     ] = False,
-    env: EnvOpt = "dev",
 ) -> None:
     """Book status, the latest runs with spend and counts, and the scorecard."""
     import tempfile
@@ -302,7 +315,7 @@ def status(
     from pathlib import Path
 
     from thinkbible_pipeline import app as wiring
-    from thinkbible_pipeline.config import load_env
+    from thinkbible_pipeline.config import load_aws
     from thinkbible_pipeline.drafts.store import DraftStore
     from thinkbible_pipeline.paths import repo_paths
 
@@ -311,7 +324,7 @@ def status(
     except ValidationError as e:
         _usage(e)
     paths = repo_paths()
-    envcfg = load_env(env, paths.config)
+    envcfg = load_aws(paths.config)
     store = DraftStore(request.book_info.slug, wiring.draft_blobs(envcfg, paths))
     state = store.read_book()
     typer.echo(f"{request.book_info.name}: {state.status if state else 'not started'}")
@@ -355,7 +368,7 @@ def publish(
     book: BookOpt,
     dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
 ) -> None:
-    """Publish the book's drafts to dev. A passing run that includes `report` does this itself."""
+    """Publish the book's drafts to the draft channel. A passing run with `report` does this."""
     try:
         PublishRequest(book=book, dry_run=dry_run)
     except ValidationError as e:
@@ -365,7 +378,7 @@ def publish(
 
 @app.command()
 def promote(book: BookOpt) -> None:
-    """Copy the book's current dev version, byte for byte, to production (gated)."""
+    """Copy the book's current draft version, byte for byte, to the live channel (gated)."""
     try:
         PromoteRequest(book=book)
     except ValidationError as e:

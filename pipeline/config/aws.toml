@@ -1,12 +1,15 @@
-# Dev environment (us-west-2, account 522779858032). Values marked "terraform output" are filled
-# in after `terraform apply` in infra/envs/dev; until then, `run --local` uses content/drafts/.
+# The one AWS environment (us-west-2, account 522779858032). The pipeline values come from
+# `terraform output` in infra/ (2026-11-13: a single environment; draft and live content are two
+# channels of one packs bucket, not two copies of the infrastructure).
 region = "us-west-2"
 sources_bucket = "thinkbible-sources-522779858032"
-packs_bucket = "thinkbible-packs-dev-522779858032"
-distribution_id = ""     # terraform output
-cdn_base_url = ""        # terraform output
 
-# Pipeline (infra/modules/pipeline)
-drafts_bucket = ""       # terraform output: thinkbible-drafts-dev-522779858032
-ledger_table = ""        # terraform output: thinkbible-pipeline-runs-dev
-state_machine_arn = ""   # terraform output
+# Pipeline (infra/modules/pipeline). Re-copy after the 2026-11-13 rename: the names lost "-dev".
+drafts_bucket = "thinkbible-drafts-522779858032"
+ledger_table = "thinkbible-pipeline-runs"
+state_machine_arn = "arn:aws:states:us-west-2:522779858032:stateMachine:thinkbible-pipeline"
+
+# Published packs, prefixes draft/ and live/, and the CDN (US3 `publish`; not created yet)
+packs_bucket = "thinkbible-packs-522779858032"
+distribution_id = ""
+cdn_base_url = ""

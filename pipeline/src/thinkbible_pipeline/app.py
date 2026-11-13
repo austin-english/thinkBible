@@ -13,7 +13,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from thinkbible_pipeline.config import EnvConfig, load_env, load_pricing, load_settings
+from thinkbible_pipeline.config import AwsConfig, load_aws, load_pricing, load_settings
 from thinkbible_pipeline.drafts.store import DraftStore
 from thinkbible_pipeline.exitcodes import ExitCode
 from thinkbible_pipeline.llm.budget import EstimateSummary, confirm
@@ -48,7 +48,7 @@ def git_head(paths: RepoPaths) -> str:
     return out.stdout.strip()
 
 
-def draft_blobs(env: EnvConfig, paths: RepoPaths) -> BlobStore:
+def draft_blobs(env: AwsConfig, paths: RepoPaths) -> BlobStore:
     """The S3 drafts bucket once the pipeline is deployed; ``content/drafts/`` before that."""
     if env.drafts_bucket:
         return S3BlobStore(env.drafts_bucket, "drafts/")
@@ -72,11 +72,11 @@ def local_deps(
     echo: Callable[[str], None] = print,
     ask: Callable[[str], str] = input,
     paths: RepoPaths | None = None,
-    env: EnvConfig | None = None,
+    env: AwsConfig | None = None,
 ) -> Deps:
     """Dependencies for ``run --local`` and for the CLI's estimate before a cloud run."""
     paths = paths or repo_paths()
-    env = env or load_env(request.env, paths.config)
+    env = env or load_aws(paths.config)
     settings = load_settings(paths.config)
 
     def approve(summary: EstimateSummary) -> bool:
@@ -122,18 +122,17 @@ def start_cloud_run(
     echo: Callable[[str], None] = print,
     ask: Callable[[str], str] = input,
     paths: RepoPaths | None = None,
-    env: EnvConfig | None = None,
+    env: AwsConfig | None = None,
     sfn: SFNClient | None = None,
 ) -> CloudStart:
     """Estimate from the S3 drafts, confirm, then start the Step Functions execution (R7)."""
     paths = paths or repo_paths()
-    env = env or load_env(request.env, paths.config)
+    env = env or load_aws(paths.config)
     if not (env.state_machine_arn and env.drafts_bucket):
         return CloudStart(
             ExitCode.USAGE,
-            f"the pipeline isn't deployed in {env.name} yet (state_machine_arn / drafts_bucket "
-            f"are empty in pipeline/config/envs/{env.name}.toml): apply infra/envs/{env.name}, "
-            "or use --local",
+            "the pipeline isn't deployed yet (state_machine_arn / drafts_bucket are empty in "
+            "pipeline/config/aws.toml): apply infra/ and copy `terraform output`, or use --local",
         )
     deps = local_deps(request, echo=echo, ask=ask, paths=paths, env=env)
     try:

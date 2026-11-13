@@ -12,7 +12,6 @@ def test_cloud_json_matches_cli_contract() -> None:
     assert req.cap_usd == 20
     assert req.auto_approve is True
     assert req.book_info.code == "MRK"
-    assert req.env == "dev"
 
 
 def test_cli_style_values() -> None:

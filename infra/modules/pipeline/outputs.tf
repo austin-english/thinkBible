@@ -1,4 +1,4 @@
-# Copy these into pipeline/config/envs/<env>.toml after `terraform apply`.
+# Copy these into pipeline/config/aws.toml after `terraform apply`.
 
 output "drafts_bucket" {
   description = "drafts_bucket"

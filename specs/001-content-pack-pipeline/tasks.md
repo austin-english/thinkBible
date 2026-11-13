@@ -54,7 +54,7 @@ feature adds.
   - `pipeline:` → `uv run --package thinkbible-pipeline thinkbible-pipeline run --book $(BOOK) --stage $(STAGE)`;
   - add `publish:` → `… thinkbible-pipeline publish --book $(BOOK) --env $(ENV)`;
   - add `sources-pull:` → `… thinkbible-pipeline sources pull`;
-  - keep `ENV ?= dev`.
+  - keep `ENV ?= dev` (removed 2026-11-13: one environment).
 - [X] T005 [P] Create `.pre-commit-config.yaml` with:
   - ruff (lint and format) and check-json;
   - a local hook that fails if any staged path matches `content/sources/` other than
@@ -185,8 +185,8 @@ feature adds.
     - Haiku 5.5 is 0.10/0.50 and Opus 5.5 is 4/20, with cache read 5% and cache write 125% of
       input.
     - Add a comment: "re-check with `aws bedrock list-foundation-model-agreement-offers`".
-  - **`pipeline/config/envs/dev.toml`**: `sources_bucket = "thinkbible-sources-522779858032"`,
-    `packs_bucket = "thinkbible-packs-dev-522779858032"`, `distribution_id = ""`,
+  - **`pipeline/config/aws.toml`**: `sources_bucket = "thinkbible-sources-522779858032"`,
+    `packs_bucket = "thinkbible-packs-522779858032"`, `distribution_id = ""`,
     `cdn_base_url = ""`.
   - **`pipeline/src/thinkbible_pipeline/config.py`**: loads all three with `tomllib` into frozen
     dataclasses.
@@ -248,7 +248,7 @@ feature adds.
     - a frozen Pydantic `RunRequest` with `book`, `stages: list[str]` (`all` expands to the
       cli.md order), `sections: list[str] | None`, `fresh: bool = False`,
       `refresh: bool = False`, `cap_usd: float | None` (`None` = 2× the estimate),
-      `auto_approve: bool = False`, `env: str = "dev"`;
+      `auto_approve: bool = False` (an `env` field was removed on 2026-11-13);
     - `RunRequest.model_validate_json(...)` must accept the same JSON the cloud will send
       (camelCase aliases: `capUsd`, `autoApprove`);
     - also `PublishRequest(book, env, dry_run)` and `ApproveRequest(book)`.
@@ -311,7 +311,7 @@ five handlers.
     with one object per stage run, `runs/{runId}-{stage}.json`;
   - remove what the 2026-11-10 gate decision made obsolete: `.generated/`, `humanEdits`,
     `flags`/`Flag` and `Approval`; add `dropped`, `levelChanges` and `failed` to `SectionDraft`
-    and `devVersion`/`lastPromoted` to `BookState` (data-model §2);
+    and `draftVersion`/`lastPromoted` to `BookState` (data-model §2);
   - tests: the Phase 2 tests run on `LocalBlobStore`; `tests/integration/test_storage_s3.py`
     (moto) covers conditional writes.
 - [X] T088 Split the stage runner in `pipeline/src/thinkbible_pipeline/stages/base.py` into
@@ -330,7 +330,7 @@ five handlers.
 - [X] T090 Implement the Lambda handlers in `pipeline/src/thinkbible_pipeline/cloud/handlers.py`
   with JSON in/out models in `cloud/messages.py`:
   - `start_run`, `plan_stage`, `run_section`, `finish_stage`, `finish_run` (R7 state machine);
-  - configuration from `PIPELINE_ENV`, `DRAFTS_BUCKET`, `SOURCES_BUCKET`, `LEDGER_TABLE`;
+  - configuration from `DRAFTS_BUCKET`, `SOURCES_BUCKET`, `LEDGER_TABLE` (`PIPELINE_ENV` removed 2026-11-13);
   - `run_section` catches model errors and records a failed section; it lets Bedrock throttling
     escape so Step Functions retries it;
   - `tests/integration/test_handlers.py` (moto + `FakeRunner`): a two-stage fixture run through
@@ -348,15 +348,15 @@ five handlers.
   HEAD, and zip to
   `pipeline/out/lambda.zip`.
 - [X] T093 Write Terraform `infra/modules/pipeline/` (`main.tf`, `iam.tf`, `variables.tf`,
-  `outputs.tf`) and add `module "pipeline"` to `infra/envs/dev/main.tf` (needs T037's storage
+  `outputs.tf`) and add `module "pipeline"` to `infra/main.tf` (needs T037's storage
   module and the sources bucket):
-  - the drafts bucket via `modules/storage` (`thinkbible-drafts-dev-522779858032`);
-  - DynamoDB `thinkbible-pipeline-runs-dev` (on-demand, key `runId`, TTL attribute `ttl`);
+  - the drafts bucket via `modules/storage` (`thinkbible-drafts-522779858032`);
+  - DynamoDB `thinkbible-pipeline-runs` (on-demand, key `runId`, TTL attribute `ttl`);
   - five `aws_lambda_function`s from the bundle (arm64, python3.12, timeouts per R19, env vars),
     with log groups (30-day retention);
-  - the state machine `thinkbible-pipeline-dev` (Standard) from the ASL template, with logging;
+  - the state machine `thinkbible-pipeline` (Standard) from the ASL template, with logging;
   - IAM per R19 (`bedrock:InvokeModel` on the configured inference profiles and their models);
-  - outputs `drafts_bucket`, `ledger_table`, `state_machine_arn` for `envs/dev.toml`.
+  - outputs `drafts_bucket`, `ledger_table`, `state_machine_arn` for `aws.toml`.
 - [X] T094 Connect the cloud path to the CLI in `pipeline/src/thinkbible_pipeline/cli.py` and
   `app.py`:
   - `run`: estimate with `plan_stage` (read-only) against the S3 drafts, confirm, `StartExecution`
@@ -365,7 +365,7 @@ five handlers.
   - `status --book [--open]`: the ledger's latest runs, run records, the latest scorecard's pass
     rates and failed sections; `--open` downloads `review.html` and opens it;
   - replace `ApproveRequest` with `PromoteRequest` in `requests.py`;
-  - `envs/dev.toml` gains `drafts_bucket`, `ledger_table`, `state_machine_arn`;
+  - `aws.toml` gains `drafts_bucket`, `ledger_table`, `state_machine_arn`;
   - Makefile: `pipeline` adds `--wait`; new `lambda-bundle`, `status` and `promote` targets;
   - update `pipeline/src/thinkbible_pipeline/README.md` (cloud flow and gate diagrams).
 
@@ -449,7 +449,7 @@ confirm `verify` passes.
     `IfNoneMatch="*"` and metadata `sha256`. On 412, compare the remote metadata: equal → skip,
     different → error.
   - **`pull [--books]`**: download missing or mismatched files, then verify.
-  - The bucket comes from `envs/{env}.toml` `sources_bucket`.
+  - The bucket comes from `aws.toml` `sources_bucket`.
 - [X] T036 [US4] Connect `import`, `sources push`, `sources pull` and `verify` to the CLI in
   `pipeline/src/thinkbible_pipeline/cli.py`. `verify` exits 2 on any mismatch.
 - [X] T037 [P] [US4] Write Terraform (done with T093 on 2026-11-12; the sources bucket module
@@ -458,9 +458,10 @@ confirm `verify` passes.
     versioning on, public access block (all four true), SSE-S3 and
     `BucketOwnerEnforced`. Variables `name` and `tags`; outputs `id`, `arn`,
     `bucket_regional_domain_name`.
-  - **`infra/envs/dev/`** (`main.tf`, `backend.tf`, `outputs.tf`):
+  - **`infra/`** (`main.tf`, `backend.tf`, `outputs.tf`):
     - S3 backend `bucket = "thinkbible-tfstate-522779858032"`,
-      `key = "envs/dev/terraform.tfstate"`, `region = "us-west-2"`, `use_lockfile = true`;
+      `key = "thinkbible/terraform.tfstate"` (moved from `envs/dev/` on 2026-11-13),
+      `region = "us-west-2"`, `use_lockfile = true`;
     - provider `aws` with region `us-west-2`;
     - `module "sources"` named `thinkbible-sources-522779858032`.
 - [ ] T038 [US4] **Owner run** (AWS, no Bedrock needed):
@@ -468,13 +469,13 @@ confirm `verify` passes.
      commentaries re-imported from CrossWire MHC 2.2, JFB 3.0, Clarke 2.0), then
      `sources check` and `verify` (both pass: 333 files).
   2. `export AWS_PROFILE=admin-thinkbible`, `make lambda-bundle`, then
-     `cd infra/envs/dev && terraform init && terraform apply`; copy the outputs into
-     `pipeline/config/envs/dev.toml`.
+     `cd infra/ && terraform init && terraform apply`; copy the outputs into
+     `pipeline/config/aws.toml`.
   3. `sources push`.
   4. Check Mark: BSB has no 7:16 and has the "BYZ and TR include 16" footnote, and KJV has 7:16.
      (`sources check` lists the BSB's 16 omitted verses, including Mark 7:16, 9:44, 9:46, 11:26
      and 15:28.)
-  5. Commit **only** `content/sources/manifest.json` and `dev.toml` as
+  5. Commit **only** `content/sources/manifest.json` and `aws.toml` as
      `content: import source snapshot (BSB/KJV HelloAO V1.16.0, commentaries CrossWire)`.
 
 **Checkpoint**: The snapshot is in S3, the manifest is in git, and quickstart §2 passes.
@@ -601,8 +602,8 @@ every key idea names a commentator. Then, with Bedrock, Mark 1–16 is fully dra
   - `--sections`, `--fresh`, `--cap` and `--yes` work;
   - `BookState.status` follows the data-model.md state machine.
 - [ ] T057 [US1] **Owner run** (needs Bedrock quotas above 0, docs/aws-setup.md):
-  1. `make lambda-bundle`, then `terraform apply` in `infra/envs/dev` (T093), and copy the
-     outputs into `pipeline/config/envs/dev.toml`.
+  1. `make lambda-bundle`, then `terraform apply` in `infra/` (T093), and copy the
+     outputs into `pipeline/config/aws.toml`.
   2. Tune on two sections first: `thinkbible-pipeline run --book mark --stage summaries,generate
      --local --sections mrk-1-1,mrk-1-9`.
   3. `make pipeline BOOK=mark STAGE=all`, confirming the estimate; then `make status BOOK=mark`
@@ -690,14 +691,14 @@ without a usable Level 1 question is regenerated and then marked failed.
 
 ---
 
-## Phase 6: User Story 3 – Publish to dev, read in the app, promote to production (Priority: P1)
+## Phase 6: User Story 3 – Publish to the draft channel, read in the app, promote to live (Priority: P1)
 
-**Goal**: A run whose gate passes publishes the book to dev. `promote` copies that exact pack to
-production after checking the thresholds, the calibration, and the additive production publish
-check, then updates prod's index and invalidates it in CloudFront.
+**Goal**: A run whose gate passes publishes the book to the draft channel. `promote` copies that exact pack to
+live after checking the thresholds, the calibration, and the additive live publish
+check, then updates the live channel's index and invalidates it in CloudFront.
 
-**Independent Test**: Run the fixture book through the gate and confirm it is published to dev
-(moto). Promote it and confirm prod has byte-identical files. Promotion is refused below the
+**Independent Test**: Run the fixture book through the gate and confirm it is published to the draft channel
+(moto). Promote it and confirm `live/` has byte-identical files. Promotion is refused below the
 thresholds, with a stale calibration, and on an in-place text edit of a promoted item (exit 5).
 
 ### Tests for User Story 3 ⚠️
@@ -705,7 +706,7 @@ thresholds, with a stale calibration, and on an in-place text edit of a promoted
 - [ ] T065 [P] [US3] Write `pipeline/tests/unit/test_promote.py`:
   - `promote` refuses when the scorecard isn't promotable (failed sections, pass rates below the
     thresholds) or the calibration is missing, under 85%, or for another grader version;
-  - it copies the dev files without rebuilding (same sha256s).
+  - it copies the draft files without rebuilding (same sha256s).
 - [ ] T066 [P] [US3] Write `pipeline/tests/unit/test_publish_check.py`. Each data-model.md
   publish-check rule refuses a promotion:
   - a missing section ID or a changed range;
@@ -715,7 +716,7 @@ thresholds, with a stale calibration, and on an in-place text edit of a promoted
   - a reused ID;
   - `replaces` pointing to an item that isn't retired.
 
-  A valid retire-plus-replace passes. Dev publishes skip the check.
+  A valid retire-plus-replace passes. Draft publishes skip the check.
 - [ ] T067 [P] [US3] Write `pipeline/tests/unit/test_build_pack.py`:
   - the study pack is built from the drafts, without dropped items;
   - `addedIn` is set on new items, `packVersion` is `1.0.0` on first publish, and `minor` is
@@ -724,13 +725,14 @@ thresholds, with a stale calibration, and on an in-place text edit of a promoted
   - verse files include `omittedVerses`, `lines` and `paragraphStart`;
   - every output validates against the schemas.
 - [ ] T068 [US3] Write `pipeline/tests/integration/test_publish_moto.py`:
-  - a run ending with `report` and no failed section publishes to the dev packs bucket: objects
-    appear at `v1/books/mrk/{version}/study.json` and `…/verses/{bsb,kjv}.json` with
-    `Cache-Control: public, max-age=31536000, immutable`, and `v1/index.json` with
-    `public, max-age=300`; a run with a failed section publishes nothing;
-  - `promote` copies them to the prod bucket and updates prod's index;
-  - a second promotion downloads the previous production `study.json` through the index;
-  - a CloudFront invalidation is requested for `/v1/index.json` in each environment (stubbed).
+  - a run ending with `report` and no failed section publishes to the draft channel: objects
+    appear at `draft/v1/books/mrk/{version}/study.json` and `…/verses/{bsb,kjv}.json`, and
+    `draft/v1/index.json`, all with `public, max-age=300`; a run with a failed section publishes
+    nothing;
+  - `promote` copies them to `live/v1/books/…` with `public, max-age=31536000, immutable` and
+    updates `live/v1/index.json`;
+  - a second promotion downloads the previous live `study.json` through the live index;
+  - a CloudFront invalidation is requested for the channel's `index.json` (stubbed).
 
 ### Implementation for User Story 3
 
@@ -740,41 +742,39 @@ thresholds, with a stale calibration, and on an in-place text edit of a promoted
   - the version rule: first publish `1.0.0`; added or retired content → minor; notes or verse
     text only → patch.
 - [ ] T071 [US3] Implement `pipeline/src/thinkbible_pipeline/publish/publish_check.py`
-  (data-model.md "Publish check", production only).
+  (data-model.md "Publish check", live only).
 - [ ] T072 [US3] Implement `pipeline/src/thinkbible_pipeline/publish/upload.py` (boto3), used for
-  dev publishes:
+  draft publishes:
   - `put_object` each file with `ContentType="application/json"` and the cdn-layout.md
     Cache-Control values;
   - write `index.json` with each file's sha256 and byte size;
-  - `create_invalidation(Paths=["/v1/index.json"])`;
+  - `create_invalidation(Paths=["/draft/v1/index.json"])`;
   - call it from `finish_run` (cloud) and the local runner when the run included `report` and no
     section failed (R14).
 
-  Bucket and distribution IDs come from `envs/{env}.toml`.
+  Bucket and distribution IDs come from `aws.toml`.
 - [ ] T069 [US3] Implement `pipeline/src/thinkbible_pipeline/publish/promote.py`: check the
-  scorecard and calibration, fetch the current prod `index.json` and previous `study.json`, run
-  the publish check, copy the dev files byte for byte, update prod's index and invalidate it.
+  scorecard and calibration, fetch the current `live/v1/index.json` and previous `study.json`,
+  run the publish check, copy the draft files byte for byte to `live/`, update the live index and
+  invalidate it.
   Set `BookState.lastPromoted`.
 - [ ] T073 [P] [US3] Write Terraform:
   - **`infra/modules/cdn/`** (`main.tf`, `variables.tf`, `outputs.tf`): an
     `aws_cloudfront_distribution` with Origin Access Control to the packs bucket, `compress = true`,
     a cache policy that respects origin `Cache-Control`, `PriceClass_100`, HTTPS redirect, and the
     bucket policy allowing only this distribution. Outputs `distribution_id` and `domain_name`.
-  - **`infra/envs/dev/main.tf`**: add `module "packs"` (storage, `thinkbible-packs-dev-522779858032`)
-    and `module "cdn"`, with outputs for `envs/dev.toml`.
-  - **`infra/envs/prod/`**: the production packs bucket and `module "cdn"`. Whether prod lives in
-    the dev account for now or in the planned prod account (docs/aws-setup.md → Later) is decided
-    at T075.
-- [ ] T074 [US3] Connect `publish --book [--dry-run]` (dev) and `promote --book` in `cli.py`. Their
+  - **`infra/main.tf`**: add `module "packs"` (storage, `thinkbible-packs-522779858032`)
+    and `module "cdn"`, with outputs for `aws.toml`.
+- [ ] T074 [US3] Connect `publish --book [--dry-run]` (draft) and `promote --book` in `cli.py`. Their
   gates (failed sections; thresholds, calibration, publish check) exit 5.
 - [ ] T075 [US3] **Owner run**:
-  1. `terraform apply` in `infra/envs/dev` (and `infra/envs/prod`), then copy the outputs into
-     `pipeline/config/envs/{dev,prod}.toml`.
-  2. Confirm the last Mark run published to dev: `curl https://<dev-domain>/v1/index.json`.
-  3. Read Mark in the app on dev (once spec 002's reader exists; until then, the scorecard).
-  4. `make promote BOOK=mark`, then `curl https://<prod-domain>/v1/index.json` (quickstart §6).
+  1. `terraform apply` in `infra/`, then copy the outputs into `pipeline/config/aws.toml`.
+  2. Confirm the last Mark run published to the draft channel:
+     `curl https://<domain>/draft/v1/index.json`.
+  3. Read Mark in the app on the draft channel (once spec 002's reader exists; until then, the scorecard).
+  4. `make promote BOOK=mark`, then `curl https://<domain>/live/v1/index.json` (quickstart §6).
 
-**Checkpoint**: Mark can be published to dev and promoted. The app (spec 002) can use the pack.
+**Checkpoint**: Mark can be published to the draft channel and promoted. The app (spec 002) can use the pack.
 
 ---
 
@@ -842,7 +842,7 @@ text edit is refused.
     - a section with any promoted item is **excluded** from `generate`, `summaries` and
       `align`, whatever `--fresh` or a prompt-version change says, unless `--refresh` is given;
     - excluded sections are left out of the cost estimate and listed as
-      "skipped: in production (use --refresh)";
+      "skipped: live (use --refresh)";
     - `check`, `review`, `levels` and `report` still run on them, because they don't rewrite
       content.
 - [ ] T081 [US6] Add `retire --book B --item ID [--replace]` to `cli.py`, implemented in
@@ -916,7 +916,7 @@ owner run.
 ### Critical path
 
 T001 → T009–T016 → T019–T027 → T087–T094 (cloud) → T033–T038 (snapshot) → T045–T057 (generate
-and spike) → T060–T064, T095–T097 (gate and calibration) → T069–T075 (publish to dev, promote).
+and spike) → T060–T064, T095–T097 (gate and calibration) → T069–T075 (publish to the draft channel, promote).
 
 ---
 
@@ -962,7 +962,7 @@ Task: "Implement drafts/ids.py"
 ### Incremental delivery
 
 4. US2: flags make review fast.
-5. US3: publish Mark to dev. Spec 002 (the reader) can then build against a real pack.
+5. US3: publish Mark to the draft channel. Spec 002 (the reader) can then build against a real pack.
 6. US5: KJV variants and manuscript notes. These are needed before the KJV switch ships.
 7. US6: retire and replace. Only needed after the first publish.
 

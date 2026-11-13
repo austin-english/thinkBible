@@ -476,7 +476,7 @@ thinkbible/
 ├─ backend/                   # Lambdas: compare, authorizer (App Attest)
 ├─ pipeline/                  # batch jobs: import_text, commentary, generate, checks, review, publish
 │  └─ prompts/                # versioned prompts
-├─ infra/                     # Terraform: modules (api, pipeline, storage, cdn) + envs (dev, prod)
+├─ infra/                     # Terraform, one environment: root + modules (api, pipeline, storage, cdn)
 ├─ ios/                       # open in Xcode
 │  ├─ ThinkBible.xcodeproj    # app target (Feed, ChapterPanel, You, Paywall)
 │  └─ Packages/               # DesignSystem, ContentKit, ReflectionKit, APIClient

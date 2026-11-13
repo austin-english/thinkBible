@@ -66,9 +66,10 @@ constitution and these specs:
 - **No manual review of generated JSON.** Rule checks, the evidence check, an Opus 5.5 grader and
   a level check drop weak items and write a read-only scorecard. The grader is calibrated once
   against the owner's grades (≥ 85% agreement on ≥ 30 items).
-- **Dev, then production.** A run whose gate passes publishes to dev; the owner reads it in the
-  app and runs `promote`. Frozen text and the additive publish check apply to production only.
-- Constitution amended to v1.2.0 for this.
+- **Draft, then live.** A run whose gate passes publishes to the draft channel; the owner reads it
+  in the app and runs `promote`. Frozen text and the additive publish check apply to live only.
+- Constitution amended to v1.2.0 for this. In v1.2.1 (2026-11-13), draft and live became two
+  channels of one packs bucket in a single AWS environment, instead of two environments.
 
 ### Book-feel redesign (2026-11-10)
 

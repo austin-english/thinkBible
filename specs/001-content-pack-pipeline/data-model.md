@@ -96,10 +96,10 @@ The latest version per book, with the path, sha256 and byte size of every file.
 8. Every `{{ref:C:V(-V)}}` placeholder resolves in every published translation.
 9. Retiring a key idea also retires the active questions that target only that idea (FR-024).
 
-### Publish check (previous production version → new version, on `promote`)
+### Publish check (previous live version → new version, on `promote`)
 
-Applies to production only; dev may be republished from scratch (constitution VII). The previous
-production `study.json` is downloaded from S3 through prod's `index.json`. The publish
+Applies to live only; the draft channel may be republished from scratch (constitution VII). The previous
+live `study.json` is downloaded from S3 through the live channel's `index.json`. The publish
 fails, with exit code 5, if any of these hold:
 - a section ID from the previous version is missing, or its chapter or verse range changed;
 - a key idea or question ID is missing;
@@ -131,22 +131,22 @@ drafts/mrk/
 |---|---|
 | `book` | `{id, name}` |
 | `status` | See the state machine below |
-| `devVersion` | semver or null: the version currently on dev |
-| `lastPromoted` | semver or null: the last version promoted to production |
-| `idCounters` | `{sectionId: {k: n, q: n}}`. Only ever increases (R13), in every environment |
+| `draftVersion` | semver or null: the version currently on the draft channel |
+| `lastPromoted` | semver or null: the last version promoted to live |
+| `idCounters` | `{sectionId: {k: n, q: n}}`. Only ever increases (R13), in both channels |
 
 **State machine**:
 
 ```
-(none) → sectioned → generating → generated → gated ─┬→ published-dev → promoted
+(none) → sectioned → generating → generated → gated ─┬→ published-draft → promoted
                          ▲                            │        │
                          │                            └→ failed (sections failed; nothing published)
                          └──────────── re-run (prompt change, --fresh, failed sections) ──┘
 ```
 
-- `published-dev` requires a gate with no failed sections (FR-021).
+- `published-draft` requires a gate with no failed sections (FR-021).
 - `promoted` requires pass rates at or above the thresholds, a current calibration of at least
-  85%, and a passing production publish check (R14). It is recorded with its version. Later runs
+  85%, and a passing live publish check (R14). It is recorded with its version. Later runs
   start a new cycle toward the next version.
 
 ### SectionMap entry (`sections.json`)

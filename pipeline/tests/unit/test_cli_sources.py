@@ -50,7 +50,9 @@ def test_verify_without_manifest(repo: RepoPaths) -> None:
 def test_verify_ok_then_tampered(repo: RepoPaths) -> None:
     path = write_snapshot(repo)
     ok = CliRunner().invoke(app, ["verify"])
-    assert ok.exit_code == 0 and "all 1 files match" in ok.output
+    assert (
+        ok.exit_code == 0 and "all 1 files in" in ok.output and "match manifest.json" in ok.output
+    )
     path.write_bytes(path.read_bytes().replace(b"MRK", b"MRX"))
     bad = CliRunner().invoke(app, ["verify"])
     assert bad.exit_code == 2 and "bsb/MRK" in bad.output

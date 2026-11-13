@@ -12,7 +12,7 @@ from moto import mock_aws
 from pydantic import BaseModel
 
 from thinkbible_pipeline import app
-from thinkbible_pipeline.config import load_env, load_settings
+from thinkbible_pipeline.config import load_aws, load_settings
 from thinkbible_pipeline.drafts.models import SectionDraft, SectionMapEntry
 from thinkbible_pipeline.drafts.store import DraftStore
 from thinkbible_pipeline.exitcodes import ExitCode
@@ -73,7 +73,7 @@ def aws(monkeypatch: pytest.MonkeyPatch) -> Iterator[tuple[Any, str]]:
 
 
 def test_refuses_before_deploy() -> None:
-    env = dataclasses.replace(load_env("dev"), state_machine_arn="", drafts_bucket="")
+    env = dataclasses.replace(load_aws(), state_machine_arn="", drafts_bucket="")
     started = app.start_cloud_run(RunRequest(book="mark", stages=["summaries"]), env=env)
     assert started.exit_code == ExitCode.USAGE
     assert "--local" in started.message and started.execution_arn is None
@@ -81,7 +81,7 @@ def test_refuses_before_deploy() -> None:
 
 def test_estimates_then_starts_an_execution(aws: tuple[Any, str]) -> None:
     sfn, arn = aws
-    env = dataclasses.replace(load_env("dev"), state_machine_arn=arn, drafts_bucket="drafts-test")
+    env = dataclasses.replace(load_aws(), state_machine_arn=arn, drafts_bucket="drafts-test")
     lines: list[str] = []
     started = app.start_cloud_run(
         RunRequest(book="mark", stages=["summaries"]),
@@ -103,7 +103,7 @@ def test_estimates_then_starts_an_execution(aws: tuple[Any, str]) -> None:
 
 def test_declined_estimate_starts_nothing(aws: tuple[Any, str]) -> None:
     sfn, arn = aws
-    env = dataclasses.replace(load_env("dev"), state_machine_arn=arn, drafts_bucket="drafts-test")
+    env = dataclasses.replace(load_aws(), state_machine_arn=arn, drafts_bucket="drafts-test")
     started = app.start_cloud_run(
         RunRequest(book="mark", stages=["summaries"]),
         env=env,
@@ -147,7 +147,7 @@ def test_local_drafts_until_deployed(tmp_path: Path) -> None:
     from thinkbible_pipeline.paths import RepoPaths
     from thinkbible_pipeline.storage import LocalBlobStore
 
-    env = dataclasses.replace(load_env("dev"), drafts_bucket="")
+    env = dataclasses.replace(load_aws(), drafts_bucket="")
     assert isinstance(app.draft_blobs(env, RepoPaths(tmp_path)), LocalBlobStore)
     env = dataclasses.replace(env, drafts_bucket="drafts-test")
     assert isinstance(app.draft_blobs(env, RepoPaths(tmp_path)), S3BlobStore)

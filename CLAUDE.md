@@ -20,7 +20,7 @@ Read these before any non-trivial change:
 | `backend/` | Python Lambdas: `compare` (live AI) and `authorizer` (App Attest) | VS Code |
 | `pipeline/` | Python batch jobs that turn frozen sources into reviewed content packs | VS Code |
 | `shared/` | Python package `thinkbible_core`: pack models used by backend + pipeline | VS Code |
-| `infra/` | Terraform: modules `api`, `pipeline`, `storage`, `cdn`; envs `dev`, `prod` | VS Code |
+| `infra/` | Terraform, one AWS environment: the root (`main.tf`) and modules `api`, `pipeline`, `storage`, `cdn` | VS Code |
 | `content/` | `schema/` (contract), `sources/manifest.json` (checksums of the S3 snapshot; the text itself is a gitignored local cache), `drafts/` (reviewed drafts). Published packs live only in S3 | VS Code |
 | `api/` | OpenAPI spec for the compare endpoint | VS Code |
 | `docs/` | Brief and design handoff | either |
@@ -44,7 +44,9 @@ make bootstrap    # uv sync for shared/backend/pipeline, pre-commit hooks
 make lint         # ruff + mypy (Python), terraform fmt -check
 make test         # pytest for shared, backend, pipeline
 make ios-test     # xcodebuild test (after the Xcode project exists)
-make pipeline BOOK=mark STAGE=all   # run batch jobs locally against dev
+make pipeline BOOK=mark STAGE=all   # run batch jobs in AWS (or `run --local` for a few sections)
+make deploy       # Lambda bundle + terraform apply in infra/
+make sources-publish   # after an import: check, verify, push, verify the S3 copy
 ```
 
 ## Spec Kit

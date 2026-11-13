@@ -1,4 +1,4 @@
-"""Lambda handlers for the ``thinkbible-pipeline-{env}`` state machine (research R7).
+"""Lambda handlers for the ``thinkbible-pipeline`` state machine (research R7).
 
 Each handler parses its payload, builds the cloud ``Deps`` (S3 drafts and sources, the DynamoDB
 ledger, the Bedrock runner) and calls one shared step from ``stages/base.py``.
@@ -58,7 +58,6 @@ class SourceChecksumError(Exception):
 class CloudEnv:
     """Set by Terraform on every pipeline Lambda (research R19)."""
 
-    env: str
     drafts_bucket: str
     sources_bucket: str
     ledger_table: str
@@ -67,7 +66,6 @@ class CloudEnv:
     @classmethod
     def from_environ(cls) -> CloudEnv:
         return cls(
-            env=os.environ["PIPELINE_ENV"],
             drafts_bucket=os.environ["DRAFTS_BUCKET"],
             sources_bucket=os.environ["SOURCES_BUCKET"],
             ledger_table=os.environ["LEDGER_TABLE"],

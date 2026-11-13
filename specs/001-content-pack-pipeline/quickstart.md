@@ -5,13 +5,13 @@ These steps prove spec 001 works. Commands, data shapes and URLs are defined in
 
 ## Prerequisites
 
-- `uv`, Python 3.12, Terraform ≥ 1.8, and the AWS CLI with a profile for the dev account
+- `uv`, Python 3.12, Terraform ≥ 1.8, and the AWS CLI with a profile for the ThinkBible account
   (`export AWS_PROFILE=admin-thinkbible`).
-- Bedrock model access granted in the dev account and region for Claude Sonnet 5.5 and Claude
+- Bedrock model access granted in the AWS account and region for Claude Sonnet 5.5 and Claude
   Haiku 5.5, plus Claude Opus 5.5 for the refusal fallback: the token-per-minute quotas must be
   above 0 (docs/aws-setup.md → Troubleshooting).
 - `pipeline/config/pricing.toml` holds current Bedrock prices (R15), and
-  `pipeline/config/envs/dev.toml` holds the bucket names, ledger table, state machine ARN and
+  `pipeline/config/aws.toml` holds the bucket names, ledger table, state machine ARN and
   distribution ID from `terraform output`.
 
 ## 0. Bootstrap and offline tests (no AWS, no cost)
@@ -26,28 +26,26 @@ make lint && make test
 - the unit tests for sections, cross-references, checks, the publish check, the merge and the cost
   cap;
 - the fake-model integration test, which runs a fixture book through `run` → the gate →
-  publish to dev → `promote` against moto S3.
+  publish to the draft channel → `promote` against moto S3.
 
-## 1. Dev infrastructure (once, and after code or prompt changes)
+## 1. Infrastructure (once, and after code or prompt changes)
 
 ```bash
 make lambda-bundle
-cd infra/envs/dev && terraform init && terraform apply
+cd infra && terraform init && terraform apply
 ```
 
 **Expected**: private sources, drafts and packs buckets, a CloudFront distribution in front of
 the packs bucket, the run ledger table, five pipeline Lambdas and the
-`thinkbible-pipeline-dev` state machine. Copy the outputs into `pipeline/config/envs/dev.toml`.
-Before the first promotion, `infra/envs/prod` adds the production packs bucket and CloudFront
-(`pipeline/config/envs/prod.toml`).
+`thinkbible-pipeline` state machine. Copy the outputs into `pipeline/config/aws.toml`. There is
+one environment: draft and live are the `draft/` and `live/` channels of the one packs bucket
+(contracts/cdn-layout.md). The packs bucket and CloudFront arrive with US3.
 
 ## 2. Freeze the sources (once, about 25 minutes)
 
 ```bash
 uv run --package thinkbible-pipeline thinkbible-pipeline import --all
-uv run --package thinkbible-pipeline thinkbible-pipeline sources check
-uv run --package thinkbible-pipeline thinkbible-pipeline verify
-uv run --package thinkbible-pipeline thinkbible-pipeline sources push
+make sources-publish    # sources check → verify → sources push → verify --remote
 ```
 
 **Expected**:
@@ -59,6 +57,7 @@ uv run --package thinkbible-pipeline thinkbible-pipeline sources push
 - `bsb/MRK.json` has no 7:16 and does have the "BYZ and TR include 16" footnote. `kjv/MRK.json`
   has 7:16.
 - `sources push` uploads every file. Running it again uploads nothing.
+- `verify --remote` reports every file in the sources bucket matching the manifest.
 - An interrupted import picks up where it stopped when run again.
 
 Commit **only the manifest** as
@@ -100,7 +99,7 @@ make status BOOK=mark                    # opens the scorecard
 1. Before starting the execution, it prints an estimate (about $8–14 for about 100 sections,
    including the Opus grader) and the cap, and asks for confirmation. Then it prints the
    execution ARN and a console link.
-2. The run ends with the book published to dev (no failed sections).
+2. The run ends with the book published to the draft channel (no failed sections).
 3. The scorecard shows the pass rates against the thresholds (90% of ideas, 80% of questions:
    SC-004), every dropped item with its reason, the calibration agreement, and the cost.
 
@@ -122,36 +121,36 @@ make pipeline BOOK=mark STAGE=all
 
 **Expected**: the estimate shows 0 sections to process and $0.00, and no model calls are made.
 
-## 6. Read on dev, then promote
+## 6. Read on the draft channel, then promote
 
 ```bash
-curl -s https://<dev-distribution>/v1/index.json | jq .
+curl -s https://<distribution>/draft/v1/index.json | jq .
 make promote BOOK=mark
-curl -s https://<prod-distribution>/v1/index.json | jq .
+curl -s https://<distribution>/live/v1/index.json | jq .
 ```
 
 **Expected**:
-- Dev's `index.json` lists `MRK` at its version, with the sha256 and size of `study.json`,
+- The draft channel's `index.json` lists `MRK` at its version, with the sha256 and size of `study.json`,
   `verses/bsb.json` and `verses/kjv.json`; the three files validate against the schemas, and the
   total compressed size is under 1 MB (SC-007).
-- After reading the book in the app on dev, `promote` copies the same files to production:
-  prod's `index.json` shows the same version and sha256s.
+- After reading the book in the app on the draft channel, `promote` copies the same files to live:
+  the live channel's `index.json` shows the same version and sha256s.
 - Nothing was added under `content/` in git except `calibration.json`.
 
 ## 7. Gate and promotion refusals (FR-021, FR-024)
 
 1. **Failed section**: make one section fail (a recorded fake output with no usable Level 1
-   question in the integration test). **Expected**: nothing is published to dev, exit code 3, and
+   question in the integration test). **Expected**: nothing is published to the draft channel, exit code 3, and
    the scorecard names the section.
 2. **Below threshold**: set `gate.min_question_pass_rate` above the book's rate and `promote`.
    **Expected**: exit code 5, "question pass rate 0.84 < 0.90".
 3. **Stale calibration**: add a new grader prompt version, then `promote`. **Expected**: exit
    code 5, "grader calibration is for review v1; run `calibrate`".
-4. **Frozen text in production**: after a promotion, change a promoted question's text and
+4. **Frozen live text**: after a promotion, change a promoted question's text and
    promote again. **Expected**: exit code 5, "published text changed: mrk-1-1-q1".
 5. **Retire and replace**: retire that question and add a replacement with `replaces`, then run,
-   publish to dev and promote. **Expected**: the next version is promoted. The old ID is still
-   present with `status: retired`, and prod's `index.json` points to the new version.
+   publish to the draft channel and promote. **Expected**: the next version is promoted. The old ID is still
+   present with `status: retired`, and the live channel's `index.json` points to the new version.
 
 ## 8. Spend cap (FR-028)
 

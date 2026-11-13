@@ -7,7 +7,7 @@
 # 2026-11-12: the Claude 5.5 models are blocked for this account (quota 0, "account history"), so
 # the stages run on Claude 4.x for now. When 5.5 opens up, change the models here (Haiku 5.5:
 # effort "low", Sonnet/Opus 5.5: effort "medium"; thinking is always on for 5.5), add them to
-# `bedrock_models` in infra/envs/*/main.tf, and re-apply.
+# `bedrock_models` in infra/main.tf, and re-apply.
 
 region = "us-west-2"
 endpoint = "runtime"  # "runtime" (bedrock-runtime) or "mantle" (bedrock-mantle)

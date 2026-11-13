@@ -6,7 +6,7 @@ The CLI parses flags into these; API Gateway or Step Functions will send the sam
 
 from __future__ import annotations
 
-from typing import Annotated, Literal
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
@@ -25,8 +25,6 @@ STAGE_ORDER: tuple[str, ...] = (
     "report",
 )
 MODEL_STAGES = frozenset({"summaries", "generate", "align", "review", "levels"})
-
-Env = Literal["dev", "prod"]
 
 
 class _Request(BaseModel):
@@ -57,7 +55,6 @@ class RunRequest(_Request):
     refresh: bool = False
     cap_usd: Annotated[float, Field(gt=0)] | None = None  # None = 2x the estimate
     auto_approve: bool = False
-    env: Env = "dev"
 
     @field_validator("stages", mode="before")
     @classmethod
@@ -85,10 +82,10 @@ class RunRequest(_Request):
 
 
 class PublishRequest(_Request):
-    """Publish the book's drafts to dev (R14). A passing run does this automatically."""
+    """Publish the book's drafts to the draft channel (R14). A passing run does this itself."""
 
     dry_run: bool = False
 
 
 class PromoteRequest(_Request):
-    """Copy the book's current dev version to production (R14, FR-021)."""
+    """Copy the book's current draft version to the live channel (R14, FR-021)."""

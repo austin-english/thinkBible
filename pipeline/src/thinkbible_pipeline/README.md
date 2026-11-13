@@ -30,7 +30,7 @@ pipeline/
 ├── config/
 │   ├── settings.toml               # model, effort, prompt version, default cost per stage; concurrency
 │   ├── pricing.toml                # Bedrock USD per million tokens, per model
-│   └── envs/dev.toml               # buckets, ledger table, state machine ARN (from `terraform output`)
+│   └── aws.toml                    # buckets, ledger table, state machine ARN (from `terraform output`)
 ├── prompts/
 │   └── _shared/context-v1.md       # opening text of every system prompt; stages add {stage}/vN.md
 ├── scripts/
@@ -81,7 +81,7 @@ infra/modules/pipeline/             # Terraform for the cloud side
 ├── iam.tf                          # least-privilege roles for the Lambdas and Step Functions
 ├── state_machine.asl.json.tftpl    # the state machine definition (a Terraform template)
 ├── variables.tf
-└── outputs.tf                      # values to copy into config/envs/<env>.toml
+└── outputs.tf                      # values to copy into config/aws.toml
 ```
 
 Later user stories add `sections/`, `commentary/`, `gate/`, `report/`, `publish/` and the
@@ -96,7 +96,7 @@ flowchart TD
     OK -- no --> STOP(["nothing starts"])
     OK -- yes --> SFN["StartExecution<br/>{runId, request, capUsd}"]
 
-    subgraph aws ["AWS: state machine thinkbible-pipeline-dev"]
+    subgraph aws ["AWS: state machine thinkbible-pipeline"]
         SR["StartRun<br/>check sources vs manifest, create ledger item"]
         SR --> ST["Stages (one at a time)"]
         ST --> PS["PlanStage<br/>hash inputs, list sections to run"]
@@ -142,12 +142,25 @@ Things to know:
 HelloAO also serves commentaries, but theirs were hand-copied and have shifted and missing
 chapters, so the commentaries come from CrossWire (research R2a).
 
+Two steps, with `AWS_PROFILE=admin-thinkbible` set and the infrastructure deployed:
+
 ```bash
-thinkbible-pipeline import --all        # saves after every book; a re-run resumes
-thinkbible-pipeline sources check       # complete and in place? (versification, order, coverage)
-thinkbible-pipeline verify              # every cached file against content/sources/manifest.json
-thinkbible-pipeline sources push        # write-once upload to the sources bucket
+uv run --package thinkbible-pipeline thinkbible-pipeline import --all   # saves after every book; a re-run resumes
+make sources-publish                    # check, verify, push, then verify what's in S3
 ```
+
+`make sources-publish` runs these in order and stops at the first failure:
+
+| Step | Command | Proves |
+|---|---|---|
+| 1 | `sources check` | The cache is complete and in place (versification, order, coverage) |
+| 2 | `verify` | Every cached file matches `content/sources/manifest.json` |
+| 3 | `sources push` | Uploads what S3 doesn't have yet (write-once; safe to re-run) |
+| 4 | `verify --remote` | Downloads every file from the sources bucket and checks it against the manifest |
+
+It never moves or changes the local cache. Commit `content/sources/manifest.json` once it
+passes. `sources push` on its own uploads only what's missing, so re-running it after a
+partial upload is safe.
 
 - **Nothing upstream can break the snapshot later.** Each file is checksummed and stored
   write-once. Each commentary's module zip is archived next to its books, so re-runs (and parser
@@ -176,10 +189,12 @@ drafts in `content/drafts/` instead of S3.
 ## Deploying
 
 ```bash
-make lambda-bundle                              # build pipeline/out/lambda.zip
-cd infra/envs/dev && terraform init && terraform apply
-terraform output                                # copy into pipeline/config/envs/dev.toml
+export AWS_PROFILE=admin-thinkbible
+make deploy                                     # make lambda-bundle, then terraform apply in infra/
+terraform -chdir=infra output                   # first time: copy into pipeline/config/aws.toml
 ```
+
+The first time on a machine, run `terraform -chdir=infra init` before `make deploy`.
 
 Rebuild and re-apply after any change to pipeline code, config or prompts. The Lambdas only see
 what was in the zip. `--local` runs read the repo directly, which is why they're the fast way to

@@ -129,15 +129,15 @@ regions:
 
 - **Terraform state bucket**: `thinkbible-tfstate-<ThinkBible account id>` in **us-west-2**, with
   versioning on and all public access blocked. It was created by hand on 2026-11-04, after a first
-  copy in us-east-2 was deleted. Put its name in the `infra/envs/dev` backend config. Every other
+  copy in us-east-2 was deleted. Put its name in the `infra/` backend config. Every other
   bucket and CloudFront are created by Terraform.
-- **Bucket naming**: `thinkbible-<purpose>[-<env>]-<ThinkBible account id>`, for example
-  `thinkbible-sources-<id>` and `thinkbible-packs-dev-<id>`. Lowercase, hyphens, no dots.
+- **Bucket naming**: `thinkbible-<purpose>-<ThinkBible account id>`, for example
+  `thinkbible-sources-<id>` and `thinkbible-packs-<id>`. Lowercase, hyphens, no dots.
 
 ## Later (not needed yet)
 
-- **Prod account:** a new account in the organization (email `<you>+aws-prod@gmail.com`). Assign
-  your user to it in Identity Center and add an `admin-thinkbible-prod` CLI profile.
+- **No prod account** (2026-11-13): ThinkBible runs as one environment. Draft and live content
+  are channels of one packs bucket, so a second account isn't planned.
 - **Narrower daily access:** a `ThinkBibleDeveloper` permission set (Bedrock invoke, the ThinkBible
   buckets, CloudFront invalidation) to use instead of AdministratorAccess.
 - **CI deploys:** a GitHub Actions role trusted through OIDC, created by Terraform. No stored keys.

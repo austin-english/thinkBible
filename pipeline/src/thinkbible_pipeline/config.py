@@ -1,4 +1,4 @@
-"""Load ``pipeline/config/{settings,pricing}.toml`` and ``envs/{env}.toml`` as dataclasses."""
+"""Load ``pipeline/config/{settings,pricing,aws}.toml`` as dataclasses."""
 
 from __future__ import annotations
 
@@ -96,17 +96,19 @@ class Pricing:
 
 
 @dataclass(frozen=True)
-class EnvConfig:
-    name: str
+class AwsConfig:
+    """``pipeline/config/aws.toml``: the one AWS environment (``terraform output`` in infra/)."""
+
     region: str
     sources_bucket: str
-    packs_bucket: str
-    distribution_id: str
-    cdn_base_url: str
-    # From `terraform output` once infra/modules/pipeline is applied (empty until then).
+    # The pipeline (empty until infra/ is applied; `run --local` then keeps drafts locally).
     drafts_bucket: str
     ledger_table: str
     state_machine_arn: str
+    # Published packs: one bucket with draft/ and live/ channels, one CDN (US3).
+    packs_bucket: str
+    distribution_id: str
+    cdn_base_url: str
 
 
 def _read(path: Path) -> dict[str, Any]:
@@ -174,16 +176,15 @@ def load_pricing(config_dir: Path | None = None) -> Pricing:
     return Pricing(models=MappingProxyType(models))
 
 
-def load_env(name: str, config_dir: Path | None = None) -> EnvConfig:
-    raw = _read(_config_dir(config_dir) / "envs" / f"{name}.toml")
-    return EnvConfig(
-        name=name,
+def load_aws(config_dir: Path | None = None) -> AwsConfig:
+    raw = _read(_config_dir(config_dir) / "aws.toml")
+    return AwsConfig(
         region=str(raw.get("region", "us-west-2")),
         sources_bucket=str(raw["sources_bucket"]),
-        packs_bucket=str(raw["packs_bucket"]),
-        distribution_id=str(raw.get("distribution_id", "")),
-        cdn_base_url=str(raw.get("cdn_base_url", "")),
         drafts_bucket=str(raw.get("drafts_bucket", "")),
         ledger_table=str(raw.get("ledger_table", "")),
         state_machine_arn=str(raw.get("state_machine_arn", "")),
+        packs_bucket=str(raw.get("packs_bucket", "")),
+        distribution_id=str(raw.get("distribution_id", "")),
+        cdn_base_url=str(raw.get("cdn_base_url", "")),
     )

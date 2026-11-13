@@ -1,8 +1,3 @@
-variable "env" {
-  description = "Environment name: dev or prod."
-  type        = string
-}
-
 variable "sources_bucket_name" {
   description = "The sources snapshot bucket (read-only to the pipeline)."
   type        = string

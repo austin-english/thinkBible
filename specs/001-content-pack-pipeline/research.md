@@ -45,8 +45,7 @@ manifest records it for provenance.
 - **Files**: one **normalised** JSON file per source per book. Normalising removes audio links,
   navigation links and other presentation-only fields. It keeps verses, headings, paragraph
   breaks, poetry indent, footnotes, and commentary introductions and items.
-- **S3**: the files are stored in a private, versioned bucket (`thinkbible-sources`, in the dev
-  account for now) under `snapshots/{snapshotId}/{source}/{BOOK}.json`.
+- **S3**: the files are stored in a private, versioned bucket (`thinkbible-sources-<account id>`) under `snapshots/{snapshotId}/{source}/{BOOK}.json`.
   - `snapshotId` is the import date, for example `2026-11-05`.
   - Uploads are conditional writes (`If-None-Match: *`), so an object is never overwritten. A
     re-import creates a new snapshot ID.
@@ -307,7 +306,7 @@ the stack is AWS. This is a config switch if that ever changes.
                  was reached
   FinishRun    Lambda finish_run: final counts, status and scorecard → execution output
                (exit code 0/3/4). When the run included `report` and no section failed, it
-               publishes the book to dev (R14)
+               publishes the book to the draft channel (R14)
   ```
 
   One Lambda per section per stage keeps each invocation far below the 15-minute limit, and a
@@ -338,7 +337,7 @@ original plan): rejected on 2026-11-10 in favour of the cloud end state.
 - **Drafts live in S3** (`thinkbible-drafts-{env}-{account}`, versioned, private), under
   `drafts/{book}/` with the layout in data-model §2. Lambdas read and write them there.
 - **Drafts are pipeline state, not a review surface** (revised 2026-11-10): no one edits them by
-  hand, and they are not mirrored into git. The scorecard (R17) and the app on dev are where
+  hand, and they are not mirrored into git. The scorecard (R17) and the app on the draft channel are where
   content is read. S3 versioning keeps every earlier draft recoverable.
 - Each section draft records, per stage: prompt version, model ID, input hash (sha256 of the
   canonical JSON of all inputs) and cost. A stage skips a section when the recorded prompt
@@ -360,7 +359,7 @@ favour of the automatic quality gate and in-app review.
 
 The original decision, a three-way merge of hand edits with regenerated output, is dropped: drafts
 are no longer edited by hand. To change content, change the prompt (a new version) and regenerate,
-or after a production publish, retire and replace (US6).
+or after a live publish, retire and replace (US6).
 
 ## R10. Checking that ideas really come from the commentators (FR-007, constitution IV)
 
@@ -430,25 +429,29 @@ risk.
 ## R14. Publishing and delivery (revised 2026-11-10)
 
 **Decision**:
-- **Dev publish is automatic**: a run that includes `report` and has no failed section ends by
-  building the pack from the drafts and publishing it to the dev packs bucket. It writes one study
-  file and one verse-text file per translation under `/v1/books/{book}/{version}/…` with immutable
-  cache headers, rewrites dev's `/v1/index.json` (short cache) and invalidates that path. Dev
+- **One environment, two channels** (revised 2026-11-13): a single packs bucket and CloudFront
+  distribution serve `draft/` (the owner's own builds) and `live/` (readers). An idle second AWS
+  environment would add complexity, not safety; the channels keep what matters, that unreviewed
+  content never reaches readers.
+- **Draft publish is automatic**: a run that includes `report` and has no failed section ends by
+  building the pack from the drafts and publishing it to the draft channel. It writes one study
+  file and one verse-text file per translation under `/draft/v1/books/{book}/{version}/…`,
+  rewrites `/draft/v1/index.json` (short cache) and invalidates that path. The draft channel
   runs no additive publish check, so a book can be regenerated and republished freely before its
-  first production publish; IDs are still never reused (R13 counters only increase).
-- **Promotion to production is explicit**: `promote --book B` copies the exact files of the
-  book's current dev version (same bytes, same sha256) to the production packs bucket, after:
+  first live publish; IDs are still never reused (R13 counters only increase).
+- **Promotion to live is explicit**: `promote --book B` copies the exact files of the
+  book's current draft version (same bytes, same sha256) to `live/`, with immutable cache headers, after:
   the gate passed with pass rates at or above the thresholds (R16); the grader calibration is at
-  or above 85% for its current prompt and model; and the production publish check passes against
-  the last production version, downloaded through prod's `index.json` (data-model "Publish
-  check"). Then it rewrites prod's `index.json` and invalidates it.
-- Published packs are **not** copied into git. S3 is the record of what was published: versioned
-  paths are never overwritten, and bucket versioning is on.
+  or above 85% for its current prompt and model; and the live publish check passes against
+  the last live version, downloaded through `/live/v1/index.json` (data-model "Publish
+  check"). Then it rewrites `/live/v1/index.json` and invalidates it.
+- Published packs are **not** copied into git. S3 is the record of what was published: live
+  versioned paths are never overwritten, and bucket versioning is on.
 - Infrastructure is Terraform:
   - the `storage` module (a private, versioned S3 bucket), used for sources, drafts and packs;
-  - the `cdn` module (CloudFront with origin access control, compression on), in front of each
-    environment's packs bucket;
-  - plus `envs/dev` (and `envs/prod` before the first promotion).
+  - the `cdn` module (CloudFront with origin access control, compression on), in front of the
+    packs bucket;
+  - all in the one root, `infra/`.
 - The full URL layout is in [contracts/cdn-layout.md](contracts/cdn-layout.md).
 
 ## R15. Cost estimate and cap (FR-027, FR-028)
@@ -488,7 +491,7 @@ risk.
   - cost estimate and cap;
   - the no-tools and no-network guards.
 - **Integration test**: a 2-chapter fixture book runs the whole flow (`run --local --stage all`
-  → gate → publish to dev → `promote`) with a fake `ModelRunner` (recorded outputs) and S3 mocked
+  → gate → publish to the draft channel → `promote`) with a fake `ModelRunner` (recorded outputs) and S3 mocked
   by moto. The Lambda handlers are driven through the same flow (Phase 2b).
 - **The quality gate's grader** (revised 2026-11-10; replaces manual review):
   - Opus 5.5 grades every key idea and question 1–5 against a fixed rubric in
@@ -508,7 +511,7 @@ risk.
   - `calibrate` runs the grader on the set and records its agreement (pass/fail match) with the
     grader prompt version and model. Promotion requires at least 85% on the current version; a
     change to either requires re-running `calibrate` (labels are reused).
-- **Prompt evaluation** (before a new prompt version is used for a production book):
+- **Prompt evaluation** (before a new prompt version is used for a live book):
   - `eval` runs `generate`, `review` and `levels` in local mode on a fixed sample of 15–25 Mark
     sections (`pipeline/evals/mark-sample.json`): narrative, teaching, miracle, parable, a
     genealogy-like list, and Mark 7 and Mark 16 for manuscript cases.
@@ -534,8 +537,8 @@ risk.
 
 ## R18. Approval (superseded 2026-11-10)
 
-There is no `approve` command. The automatic gate (R16) decides what is published to dev, and
-`promote` (R14) is the owner's explicit decision to publish to production, made after reading
+There is no `approve` command. The automatic gate (R16) decides what is published to the draft channel, and
+`promote` (R14) is the owner's explicit decision to publish to live, made after reading
 the book in the app.
 
 ## R19. Lambda packaging and deploy (added 2026-11-10)
@@ -555,7 +558,7 @@ the book in the app.
   state machine, the drafts bucket, the ledger table and IAM. A prompt change is a new prompt
   version file plus a redeploy; `--local` runs read prompts from the repo, so tuning needs no
   deploy.
-- **Configuration**: handlers read `PIPELINE_ENV`, `DRAFTS_BUCKET`, `SOURCES_BUCKET` and
+- **Configuration**: handlers read `DRAFTS_BUCKET`, `SOURCES_BUCKET` and
   `LEDGER_TABLE` from environment variables set by Terraform. Lambdas read source files straight
   from the sources bucket and check each against the bundled manifest (FR-002).
 - **IAM** (least privilege): Bedrock invoke on the three Claude 5.5 models only, read on the

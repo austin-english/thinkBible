@@ -15,7 +15,6 @@ provider "aws" {
   default_tags {
     tags = {
       project    = "thinkbible"
-      env        = "dev"
       managed_by = "terraform"
     }
   }

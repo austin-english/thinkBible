@@ -5,15 +5,16 @@
 **Created**: 2026-11-03
 
 **Status**: Draft (revised 2026-11-10: cloud runs; automatic quality gate instead of manual
-review; dev → production promotion)
+review; draft → live promotion)
 
 **Input**: User description: "Content pack format and pipeline (brief spec 2): freeze the BSB, KJV
 and three public-domain commentaries as checksummed sources; turn them, one book at a time, into
 reviewed, versioned study content (sections, key ideas, leveled question pools, context and
 views-differ notes, translation variants); run automatic checks and model review; stop at a human
 review gate; publish versioned packs the app downloads and caches. Launch book: Mark."
-(2026-11-10: the human review gate became an automatic quality gate, publishing to dev, and an
-owner promotion to production after reading the book in the app. See Clarifications.)
+(2026-11-10: the human review gate became an automatic quality gate, publishing to the draft channel, and an
+owner promotion to live after reading the book in the app. See Clarifications. 2026-11-13: draft
+and live are two channels of one packs bucket in a single AWS environment, not two environments.)
 
 **References**: [docs/brief.md](../../docs/brief.md) (Content sources and licensing, Content
 pipeline, Question freshness, Data model); `content/schema/section.schema.json` (to be created by
@@ -28,7 +29,7 @@ this feature); constitution principles II, III, IV, VII.
   the draft JSON files, and an `approve` command approves the book. Review happens as a git diff.
   **Superseded 2026-11-10** (below).
 - Q: After a question or key idea has been published, can you still edit its text in a later pack
-  version? → A: No (MVP). (2026-11-10: "published" means published to production.) Published wording is frozen, typos included. A fix retires the item
+  version? → A: No (MVP). (2026-11-10: "published" means published to live.) Published wording is frozen, typos included. A fix retires the item
   and adds a new one with a new ID that records which item it replaces. Drafts stay freely
   editable until first publish.
 - Q: Once a book is published, can the verse ranges of its sections change in a later version? →
@@ -46,20 +47,20 @@ this feature); constitution principles II, III, IV, VII.
 - Q: Does the owner review and edit the generated JSON? → A: No. Item-by-item review is replaced
   by an automatic quality gate: rule checks, the evidence check, and a model grader that grades
   every item against a fixed rubric. Failing items are dropped or replaced by their alternate, and
-  each run produces a read-only scorecard. A book that passes the gate is published to dev; the
-  owner reads it in the app and promotes it to production. After launch, reader feedback drives
+  each run produces a read-only scorecard. A book that passes the gate is published to the draft channel; the
+  owner reads it in the app and promotes it to live. After launch, reader feedback drives
   retire-and-replace (constitution v1.2.0).
 - Q: How is the model grader trusted? → A: The owner grades a fixed calibration set (at least 30
   items) once. The grader must agree with those grades at least 85% of the time before its scores
   can allow a promotion, and is recalibrated whenever its prompt or model changes.
-- Q: Do the "frozen once published" rules apply to dev? → A: No. Dev is a staging environment and
+- Q: Do the "frozen once published" rules apply to the draft channel? → A: No. The draft channel is a staging area and
   may be republished from scratch. Frozen text, frozen section ranges and the additive publish
-  check apply from the first production publish. IDs are never reused anywhere.
+  check apply from the first live publish. IDs are never reused anywhere.
 
 ## User Scenarios & Testing *(mandatory)*
 
 The primary actor is the **content owner** (the developer, who runs the pipeline, calibrates the
-grader, reads each book in the app on dev and promotes it). The secondary actor is the **app**,
+grader, reads each book in the app on the draft channel and promotes it). The secondary actor is the **app**,
 which consumes published packs.
 
 ### User Story 1 - Generate and read a book's study content (Priority: P1)
@@ -67,13 +68,13 @@ which consumes published packs.
 The content owner runs the pipeline for one book (Mark) against the frozen sources. They get every
 section of that book, each with its verse range, title, 1–5 key ideas attributed to commentators, a
 leveled question pool, a context note and any "views differ" note. They can read it all in a
-read-only scorecard and content report, and in the app once it is published to dev.
+read-only scorecard and content report, and in the app once it is published to the draft channel.
 
 **Why this priority**: This is the brief's "step zero" content spike. If the key ideas aren't sound
 and the questions aren't worth answering, nothing downstream matters. It also produces the first
 real pack for every other feature to build against.
 
-**Independent Test**: Run the generate stage for Mark in the dev environment. Confirm a draft study
+**Independent Test**: Run the generate stage for Mark in AWS. Confirm a draft study
 file exists for every section, the read-only report shows them all, and every key idea names at
 least one of the three commentators.
 
@@ -142,37 +143,37 @@ regenerated and then marked failed.
 
 ---
 
-### User Story 3 - Publish to dev, read in the app, promote to production (Priority: P1)
+### User Story 3 - Publish to the draft channel, read in the app, promote to live (Priority: P1)
 
-A run whose gate passes ends by publishing the book to dev. The owner reads it in the app and, if
-it reads well, promotes that exact pack version to production. Nothing reaches production
+A run whose gate passes ends by publishing the book to the draft channel. The owner reads it in the app and, if
+it reads well, promotes that exact pack version to live. Nothing reaches the live channel
 without that promotion.
 
 **Why this priority**: Publishing is how content reaches users, and reading in the app is the
 owner's check before readers see it (constitution VII).
 
-**Independent Test**: Run Mark with a passing gate and confirm it is published to dev at a
-versioned path with provenance. Promote it and confirm production serves the identical files.
+**Independent Test**: Run Mark with a passing gate and confirm it is published to the draft channel at a
+versioned path with provenance. Promote it and confirm live serves the identical files.
 Confirm promotion is refused when the gate failed, the scores are under the thresholds, or the
 grader's calibration is missing or stale.
 
 **Acceptance Scenarios**:
 
 1. **Given** a run whose gate passes (no failed sections), **When** it finishes, **Then** one study
-   file (shared by both translations) and one verse-text file per translation are published to dev
-   at a path that includes the pack version, and dev's index points at it. The study file records
+   file (shared by both translations) and one verse-text file per translation are published to the draft channel
+   at a path that includes the pack version, and the draft channel's index points at it. The study file records
    the source names, snapshot dates, checksums, prompt versions, question-guide version and the
    gate's scores it was built from.
 2. **Given** a run with failed sections, **When** it finishes, **Then** nothing is published, and
    the scorecard says which sections failed and why.
-3. **Given** a book on dev, **When** the owner promotes it, **Then** the exact dev files (same
-   bytes and checksums) are published to production, after the production publish check (Story 6)
+3. **Given** a book on the draft channel, **When** the owner promotes it, **Then** the exact draft files (same
+   bytes and checksums) are published to live, after the live publish check (Story 6)
    passes. Promotion is refused if the pass rates are below the configured thresholds or the
    grader's calibration is below 85% or older than its current prompt and model.
 4. **Given** a published pack, **When** a newer version is published, **Then** the older version
    stays available, and the app can find the latest version for each book.
-5. **Given** a book on dev that has not been promoted, **When** it is regenerated and republished,
-   **Then** dev may replace it entirely; IDs are still never reused.
+5. **Given** a book on the draft channel that has not been promoted, **When** it is regenerated and republished,
+   **Then** the draft channel may replace it entirely; IDs are still never reused.
 
 ---
 
@@ -238,7 +239,7 @@ Weak questions are retired, never deleted.
 **Why this priority**: Not needed for launch, but the pack format must support it from day one,
 because saved reflections depend on IDs never changing.
 
-**Independent Test**: Promote Mark v1 to production, run a refresh that retires one question and
+**Independent Test**: Promote Mark v1 to live, run a refresh that retires one question and
 adds one, and promote v1.1. Confirm every v1 question ID is still present in v1.1 with unchanged text, the
 retired one is marked retired, and no ID was reused. Then edit a published question's text in
 place and confirm the publish check refuses the version.
@@ -249,8 +250,8 @@ place and confirm the publish check refuses the version.
    in the next pack version with status "retired" and the version it was retired in.
 2. **Given** a refresh, **When** new questions are added, **Then** they get new IDs never used
    before in that book, and record the pack version they were added in.
-3. **Given** any new production pack version, **When** the publish check compares it with the
-   previous production version, **Then** publishing fails if any question or key idea ID is missing, reused,
+3. **Given** any new live pack version, **When** the publish check compares it with the
+   previous live version, **Then** publishing fails if any question or key idea ID is missing, reused,
    or has different text.
 4. **Given** a typo in a published key idea, **When** the owner fixes it, **Then** the old idea is
    retired, a new idea with a new ID records that it replaces the old one, any question that
@@ -366,7 +367,7 @@ place and confirm the publish check refuses the version.
   the level check. Items at or below the configured threshold are dropped or replaced by their
   alternate; levels are adjusted; grades and reasons are recorded per item.
 - **FR-018**: The system MUST track each section's stage (generated, checked, graded, failed,
-  published to dev, promoted), keyed by book, section and prompt version, so runs are idempotent
+  published to the draft channel, promoted), keyed by book, section and prompt version, so runs are idempotent
   and resumable. A failed section is regenerated once before it is marked failed.
 - **FR-019**: Every run MUST produce a read-only scorecard per book: pass rates for key ideas and
   questions, every dropped item with its reason, failed sections, "no prompt" sections with their
@@ -376,7 +377,7 @@ place and confirm the publish check refuses the version.
   a fixed calibration set of at least 30 items once, and the grader must agree on at least 85% of
   them. The agreement and the grader's prompt and model versions are recorded, and a change to
   either requires recalibration.
-- **FR-029**: Prompt changes MUST be evaluated before use on a book bound for production: an `eval`
+- **FR-029**: Prompt changes MUST be evaluated before use on a book bound for live: an `eval`
   command runs the current and candidate prompt versions on a fixed sample of 15–25 sections and
   grades both with the gate's rubric. A candidate is adopted only if it scores at least as well.
 
@@ -392,8 +393,8 @@ place and confirm the publish check refuses the version.
 
 **Publishing and versioning**
 
-- **FR-021**: A run whose gate passes MUST end by publishing the book to dev. Publishing to
-  production MUST be a separate, owner-triggered promotion that copies an exact dev pack version,
+- **FR-021**: A run whose gate passes MUST end by publishing the book to the draft channel. Publishing to
+  live MUST be a separate, owner-triggered promotion that copies an exact draft pack version,
   and requires a passed gate, pass rates at or above the configured thresholds, and a current
   grader calibration (FR-020).
 - **FR-022**: A published pack MUST consist of one study file per book (shared by all translations)
@@ -401,15 +402,15 @@ place and confirm the publish check refuses the version.
   a per-book pointer tells the app the latest version.
 - **FR-023**: Every study file MUST record provenance: source names, snapshot dates, checksums,
   prompt versions, question-guide version and pack version.
-- **FR-024**: Production pack updates MUST be additive. IDs are never removed, changed or reused. Once
+- **FR-024**: Live pack updates MUST be additive. IDs are never removed, changed or reused. Once
   published, the text of a question or key idea is frozen, typos included. A fix retires the item
   and adds a new item with a new ID that records the ID it replaces. Retired questions and key
   ideas stay in the pack with status "retired". Retiring a key idea also retires the active
   questions that target only that idea. Before every promotion, a publish check compares the new
-  version with the last production version and MUST fail if any published ID is missing, reused
+  version with the last live version and MUST fail if any published ID is missing, reused
   or has different text, or if any published section's verse range has changed. Content is freely
-  regenerated, and dev freely republished, until a book's first production publish. IDs are
-  never reused, in dev or production.
+  regenerated, and the draft channel freely republished, until a book's first live publish. IDs are
+  never reused, in the draft channel or live.
 - **FR-025**: The pack format MUST be defined by a single schema, which pipeline output, backend
   models and app models are all validated against.
 - **FR-026**: The pack format MUST allow optional per-verse notes (names, places, customs) for a
@@ -445,7 +446,7 @@ place and confirm the publish check refuses the version.
 - **SC-002**: Generating Mark (~100 sections) end to end takes under 30 minutes on demand and costs
   under $15 in model usage.
 - **SC-003**: Promoting Mark needs no item-by-item review: the owner's work is the one-time grader
-  calibration (about 30 items) and reading the book in the app on dev.
+  calibration (about 30 items) and reading the book in the app on the draft channel.
 - **SC-004**: In the content spike, the calibrated grader passes at least 90% of Mark's key ideas
   and at least 80% of its questions before any item is dropped, and the owner's in-app read agrees.
 - **SC-005**: Re-running a finished book with an unchanged prompt version makes zero model calls.
@@ -456,7 +457,7 @@ place and confirm the publish check refuses the version.
 - **SC-008**: No pipeline run spends more than its cap plus the cost of the sections that were
   already in progress when the cap was hit.
 - **SC-009**: The grader agrees with the owner on at least 85% of the calibration set before any
-  promotion to production.
+  promotion to live.
 
 ## Assumptions
 
@@ -466,7 +467,7 @@ place and confirm the publish check refuses the version.
   and Wikisource) provide the three commentaries, under the licenses noted in the brief. The
   API's own commentary data was hand-copied and has shifted and missing chapters, so it isn't used
   (research R2a). Spot verification against a printed or CCEL edition happens for Mark.
-- Runs execute in the cloud (Step Functions and Lambda in the dev environment), using on-demand
+- Runs execute in the cloud (Step Functions and Lambda in AWS), using on-demand
   model calls while prompts are tuned (revised 2026-11-10). The same stages can run on the owner's
   machine for a few sections at a time. Bedrock batch inference follows when later books are
   generated. All of these use the same stages and outputs.

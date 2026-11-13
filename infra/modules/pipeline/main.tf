@@ -5,7 +5,7 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 locals {
-  prefix     = "thinkbible-pipeline-${var.env}"
+  prefix     = "thinkbible-pipeline"
   account_id = data.aws_caller_identity.current.account_id
   handlers   = "thinkbible_pipeline.cloud.handlers"
 
@@ -21,12 +21,12 @@ locals {
 
 module "drafts" {
   source = "../storage"
-  name   = "thinkbible-drafts-${var.env}-${local.account_id}"
+  name   = "thinkbible-drafts-${local.account_id}"
   tags   = var.tags
 }
 
 resource "aws_dynamodb_table" "runs" {
-  name         = "thinkbible-pipeline-runs-${var.env}"
+  name         = "thinkbible-pipeline-runs"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "runId"
 
@@ -64,7 +64,6 @@ resource "aws_lambda_function" "fn" {
 
   environment {
     variables = {
-      PIPELINE_ENV         = var.env
       DRAFTS_BUCKET        = module.drafts.id
       SOURCES_BUCKET       = var.sources_bucket_name
       LEDGER_TABLE         = aws_dynamodb_table.runs.name

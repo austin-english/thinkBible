@@ -14,9 +14,9 @@ The batch content pipeline (spec 001). The root `CLAUDE.md` and the constitution
 - **Drafts are pipeline state in S3, not hand-edited** (2026-11-10). Quality comes from the
   automatic gate (checks, evidence check, the calibrated Opus grader, level check), which drops
   weak items and records why in the scorecard. To change content, add a prompt version and
-  regenerate; after a production promotion, retire and replace.
-- **Production content is frozen.** Never change the text of a promoted question or key idea.
-  Retire and replace it instead (FR-024). Dev may be republished from scratch; IDs are never
+  regenerate; after a promotion to live, retire and replace.
+- **Live content is frozen.** Never change the text of a promoted question or key idea.
+  Retire and replace it instead (FR-024). The draft channel may be republished from scratch; IDs are never
   reused anywhere.
 - **No source text in git.** Only `content/sources/manifest.json` is committed.
 - Every model-calling run shows an estimate and respects the spend cap. Tests use `FakeRunner` and

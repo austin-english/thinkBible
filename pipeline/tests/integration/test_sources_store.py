@@ -106,3 +106,30 @@ def test_module_zips_are_pushed_and_pulled_with_the_books(tmp_path: Path, s3: An
     (paths.sources / rel).unlink()
     assert pull(manifest, paths=paths, client=s3).downloaded == 1
     assert (paths.sources / rel).read_bytes() == zip_bytes
+
+
+def test_verify_remote_checks_the_bucket_not_the_cache(
+    tmp_path: Path, s3: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from typer.testing import CliRunner
+
+    from thinkbible_pipeline.cli import app
+    from thinkbible_pipeline.config import load_aws
+    from thinkbible_pipeline.jsonio import write_json
+    from thinkbible_pipeline.sources import snapshot
+
+    bucket = load_aws().sources_bucket
+    s3.create_bucket(Bucket=bucket, CreateBucketConfiguration={"LocationConstraint": "us-west-2"})
+    paths, manifest = cache(tmp_path, {"bsb/MRK.json": b'{"a":1}', "kjv/MRK.json": b'{"b":2}'})
+    write_json(paths.manifest, manifest.to_doc())
+    monkeypatch.setattr(snapshot, "repo_paths", lambda: paths)
+
+    missing = CliRunner().invoke(app, ["verify", "--remote"])
+    assert missing.exit_code == 2 and "2 of 2 files failed" in missing.output
+
+    push(manifest, paths=paths, client=s3, bucket=bucket)
+    for rel in ("bsb/MRK.json", "kjv/MRK.json"):
+        (paths.sources / rel).unlink()  # the local cache plays no part
+    ok = CliRunner().invoke(app, ["verify", "--remote"])
+    assert ok.exit_code == 0, ok.output
+    assert f"all 2 files in s3://{bucket} match" in ok.output

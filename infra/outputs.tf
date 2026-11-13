@@ -1,4 +1,4 @@
-# Copy into pipeline/config/envs/dev.toml.
+# Copy into pipeline/config/aws.toml.
 
 output "sources_bucket" {
   value = module.sources.id

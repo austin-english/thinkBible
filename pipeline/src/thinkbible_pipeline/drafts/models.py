@@ -8,14 +8,14 @@ from pydantic import Field
 
 from thinkbible_pipeline.jsonio import JsonModel
 
-# data-model §2 state machine (revised 2026-11-10: automatic gate, dev → production).
+# data-model §2 state machine (revised 2026-11-10: automatic gate; 2026-11-13: draft → live).
 BookStatus = Literal[
     "sectioned",
     "generating",
     "generated",
     "gated",
     "failed",
-    "published-dev",
+    "published-draft",
     "promoted",
 ]
 
@@ -33,8 +33,8 @@ class IdCounter(JsonModel):
 class BookState(JsonModel):
     book: BookRef
     status: BookStatus
-    dev_version: str | None = None  # the version currently on dev
-    last_promoted: str | None = None  # the last version promoted to production
+    draft_version: str | None = None  # the version currently on the draft channel
+    last_promoted: str | None = None  # the last version promoted to the live channel
     # Only ever increases (R13): IDs are never reused.
     id_counters: dict[str, IdCounter] = Field(default_factory=dict)
 

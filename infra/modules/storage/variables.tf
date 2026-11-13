@@ -1,5 +1,5 @@
 variable "name" {
-  description = "Bucket name: thinkbible-<purpose>[-<env>]-<account id> (docs/aws-setup.md)."
+  description = "Bucket name: thinkbible-<purpose>-<account id> (docs/aws-setup.md)."
   type        = string
 }
 

@@ -23,9 +23,9 @@ on:
 - An automatic quality gate replaces manual review (revised 2026-11-10, constitution v1.2.0):
   rule checks, the evidence check, an Opus 5.5 grader calibrated against the owner's grades, and
   a level check drop weak items and record why. Each run ends with a read-only scorecard.
-- A run whose gate passes publishes the book to dev. The owner reads it in the app and runs
-  `promote`, which copies that exact pack to production after an additive "publish check"
-  against the last production version. Packs are versioned JSON in S3 behind CloudFront.
+- A run whose gate passes publishes the book to the draft channel. The owner reads it in the app and runs
+  `promote`, which copies that exact pack to live after an additive "publish check"
+  against the last live version. Packs are versioned JSON in S3 behind CloudFront.
 - Model calls go to Claude Sonnet 5.5 (generate), Haiku 5.5 (summaries, align, levels) and Opus
   5.5 (the grader, refusal fallback) on Bedrock, with structured outputs and no tools. Each run
   shows a cost estimate before it starts and stops at a spending cap.
@@ -57,7 +57,8 @@ on:
   integration test with moto S3
 - A manual, paid `eval` command for prompt changes (R16)
 
-**Target Platform**: AWS in `dev` and `prod` (us-west-2): Step Functions Standard, Lambda
+**Target Platform**: one AWS environment (us-west-2; draft and live are channels of the packs
+bucket, revised 2026-11-13): Step Functions Standard, Lambda
 (Python 3.12, arm64), S3, DynamoDB, Bedrock, CloudFront. The CLI runs on the developer's Mac
 
 **Project Type**: cloud batch pipeline (Step Functions + Lambda) with a thin CLI, a shared models
@@ -92,7 +93,7 @@ deferred, see Complexity Tracking).*
 | IV. Every idea attributed | `sources` needs ≥ 1 commentator, each backed by an evidence quote checked against that commentator's excerpt (R10). The pack's `sources` table gives display names, so the app builds citations from the pack | ✅ |
 | V. Offline-first | Packs are static, versioned JSON with sha256s in the index, so the app can cache them and check integrity (cdn-layout) | ✅ |
 | VI. Reflections belong to the user | No user data is involved | ✅ N/A |
-| VII. One contract, permanent IDs | JSON Schemas are written first (contracts → `content/schema/`), with Pydantic models and contract tests from shared fixtures. Production-only additive publish check, frozen text and ranges in production, `replaces` links, IDs never reused anywhere; production only through `promote` after the gate and the owner's in-app read (v1.2.0) | ✅ |
+| VII. One contract, permanent IDs | JSON Schemas are written first (contracts → `content/schema/`), with Pydantic models and contract tests from shared fixtures. Live-only additive publish check, frozen text and ranges live, `replaces` links, IDs never reused anywhere; live only through `promote` after the gate and the owner's in-app read (v1.2.0) | ✅ |
 | VIII. Guide, never judge | The question guide holds the tone and neutrality rules, the grader enforces them, and views-differ notes stay neutral. The tradition of each commentary is recorded in `sources` for the About page | ✅ |
 | IX. Bounded live cost | Not live. The batch equivalent is the estimate, confirm and cap (FR-027, FR-028) | ✅ |
 | X. Accessible, token UI | No UI | ✅ N/A |
@@ -151,7 +152,7 @@ pipeline/                         # uv package thinkbible-pipeline
 ├── config/
 │   ├── settings.toml             # models per stage, effort, concurrency, region, cost defaults
 │   ├── pricing.toml              # $/Mtok per model (Bedrock prices)
-│   └── envs/{dev,prod}.toml      # buckets, ledger table, state machine ARN, distribution id
+│   └── aws.toml                  # buckets, ledger table, state machine ARN, distribution id
 ├── prompts/
 │   ├── question-guide/v1.md      # quality rules + 10–20 approved examples
 │   └── {summaries,extract,questions,align,review,levels}/v1.md
@@ -171,7 +172,7 @@ pipeline/                         # uv package thinkbible-pipeline
 │   ├── gate/                     # rubric outcomes, drops, alternates, scorecard.py, calibration.py
 │   ├── report/                   # render.py + templates/review.html.j2 (read-only scorecard)
 │   ├── evals/                    # run.py (prompt eval)
-│   └── publish/                  # build.py, publish_check.py, upload.py (dev), promote.py (dev → prod)
+│   └── publish/                  # build.py, publish_check.py, upload.py (draft), promote.py (draft → live)
 ├── scripts/build_bundle.py       # Lambda zip: packages + config + prompts + content/schema + manifest
 └── tests/{unit,integration,fixtures}
 
@@ -179,8 +180,7 @@ infra/
 ├── modules/storage/              # private versioned S3 bucket (sources, drafts, packs)
 ├── modules/cdn/                  # CloudFront + OAC, compression, cache policies (packs bucket only)
 ├── modules/pipeline/             # drafts bucket, ledger table, Lambdas, Step Functions state machine, IAM
-├── envs/dev/                     # sources, packs + cdn, pipeline; S3 remote state (bucket created by hand once)
-└── envs/prod/                    # production packs + cdn (before the first promotion)
+└── main.tf, backend.tf, …        # the one root: sources, pipeline, packs (draft/ + live/) + cdn; S3 remote state
 
 .github/workflows/python.yml      # make lint + make test
 ```
