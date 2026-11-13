@@ -4,7 +4,13 @@ import json
 from pathlib import Path
 from typing import Any
 
-from thinkbible_pipeline.sources.models import BreakItem, HeadingItem, Line, VerseItem
+from thinkbible_pipeline.sources.models import (
+    BreakItem,
+    HeadingItem,
+    Line,
+    SubtitleItem,
+    VerseItem,
+)
 from thinkbible_pipeline.sources.normalize import (
     normalize_commentary_book,
     normalize_translation_book,
@@ -63,6 +69,18 @@ def test_headings_and_paragraph_breaks() -> None:
     breaks = [i for i in ch.items if isinstance(i, BreakItem)]
     assert breaks and all(b.paragraph for b in breaks)
     assert {b.marker for b in breaks} <= {"m", "p"}
+
+
+def test_psalm_title_is_kept_before_verse_one() -> None:
+    ch = normalize_translation_chapter(raw("BSB_PSA_3"))
+    kinds = [i.type for i in ch.items]
+    assert kinds[:3] == ["heading", "subtitle", "break"]
+    title = ch.items[1]
+    assert isinstance(title, SubtitleItem)
+    assert title.text == "A Psalm of David, when he fled from his son Absalom."
+    two = verses(ch)[2]
+    assert two.lines is not None and two.lines[-1] == Line(text="Selah", indent=0)
+    assert two.note_ids == [5]
 
 
 def test_presentation_fields_are_dropped() -> None:

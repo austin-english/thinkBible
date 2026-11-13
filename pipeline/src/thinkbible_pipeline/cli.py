@@ -77,6 +77,9 @@ def import_(
     api_version: Annotated[
         str | None, typer.Option(help="HelloAO API version (default: the latest).")
     ] = None,
+    refresh: Annotated[
+        bool, typer.Option(help="Re-fetch books already imported (default: skip them).")
+    ] = False,
     env: EnvOpt = "dev",
 ) -> None:
     """Fetch and normalise source text into content/sources/ (the only network fetch)."""
@@ -90,13 +93,14 @@ def import_(
             sources=[s.strip() for s in sources.split(",")] if sources else None,
             bucket=load_env(env).sources_bucket,
             api_version=api_version,
+            refresh=refresh,
             echo=typer.echo,
         )
     except (FetchError, NotFound, ValueError) as e:
         _exit(ExitCode.USAGE, f"import failed: {e}")
     typer.echo(
         f"snapshot {result.snapshot_id} (API {result.api_version}): "
-        f"{len(result.written)} files written"
+        f"{len(result.written)} files written, {len(result.skipped)} already imported"
     )
     if result.absent:
         typer.echo(f"  not covered by the source (expected): {', '.join(result.absent)}")

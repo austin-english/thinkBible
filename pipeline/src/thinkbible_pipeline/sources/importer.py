@@ -7,6 +7,10 @@ second, with a generic User-Agent and exponential backoff on errors.
 The output is ``content/sources/{source}/{BOOK}.json`` (gitignored) plus an updated
 ``content/sources/manifest.json`` (committed after ``sources push``). Each file gets a snapshot
 ID (today's date), its sha256, and the S3 key it will have in the write-once sources bucket.
+
+The manifest is saved after every book, and a re-run skips books that are already in it and
+whose cached file still matches, so an interrupted ``import --all`` picks up where it stopped.
+``refresh=True`` (``--refresh``) fetches everything again.
 """
 
 from __future__ import annotations
@@ -168,6 +172,7 @@ class ImportResult:
     snapshot_id: str
     api_version: str
     written: list[str] = field(default_factory=list)  # "bsb/MRK"
+    skipped: list[str] = field(default_factory=list)  # already imported and still matching
     absent: list[str] = field(default_factory=list)  # books a commentary doesn't cover
     missing_chapters: list[str] = field(default_factory=list)  # "adam-clarke/MRK/3"
 
@@ -181,6 +186,7 @@ def import_sources(
     paths: RepoPaths | None = None,
     api_version: str | None = None,
     now: datetime | None = None,
+    refresh: bool = False,
     echo: Callable[[str], None] = print,
 ) -> ImportResult:
     """Fetch, normalise and cache ``books`` (USFM codes; all 66 when None) for ``sources``."""
@@ -224,11 +230,16 @@ def import_sources(
         entry.upstream_sha256 = meta.get("sha256")
         entry.tradition = spec.tradition
         available = {b["id"]: b for b in fetch.json(f"{spec.api_root}/books.json")["books"]}
+        manifest.sources[key] = entry
 
         for book in wanted_books:
             info = available.get(book)
             if info is None:
                 result.absent.append(f"{key}/{book}")
+                continue
+            done = entry.books.get(book)
+            if not refresh and done is not None and _cached_matches(paths, done):
+                result.skipped.append(f"{key}/{book}")
                 continue
             first = int(info.get("firstChapterNumber") or 1)
             last = int(info.get("lastChapterNumber") or info["numberOfChapters"])
@@ -257,8 +268,16 @@ def import_sources(
                 snapshot_id=snapshot_id,
             )
             result.written.append(f"{key}/{book}")
+            # Save after each book, so an interrupted import keeps what it finished.
+            write_json(paths.manifest, manifest.to_doc())
             echo(f"  {key}/{book}: {len(raws)} chapters, {len(data):,} bytes")
-        manifest.sources[key] = entry
-        # Save after each source, so an interrupted import keeps what it finished.
-        write_json(paths.manifest, manifest.to_doc())
+        write_json(paths.manifest, manifest.to_doc())  # licence and metadata, even if all skipped
+    if result.skipped:
+        echo(f"  skipped {len(result.skipped)} books already imported (--refresh to re-fetch)")
     return result
+
+
+def _cached_matches(paths: RepoPaths, bf: BookFile) -> bool:
+    """Is this book already in the cache, byte for byte as the manifest records it?"""
+    cached = paths.sources / bf.file
+    return cached.is_file() and sha256_hex(cached.read_bytes()) == bf.sha256

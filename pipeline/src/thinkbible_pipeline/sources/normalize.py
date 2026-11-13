@@ -1,8 +1,8 @@
 """Turn Free Use Bible API chapter JSON into the normalised book files (research R2, data-model §3).
 
-Kept: verses, headings, paragraph breaks, poetry lines with their indent, footnotes, commentary
-introductions and items. Dropped: audio links, navigation links, red-letter markup and other
-presentation-only fields.
+Kept: verses, headings, psalm titles, paragraph breaks, poetry lines with their indent,
+footnotes, commentary introductions and items. Dropped: audio links, navigation links,
+red-letter markup and other presentation-only fields.
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ from thinkbible_pipeline.sources.models import (
     Line,
     NormalizedCommentaryBook,
     NormalizedTranslationBook,
+    SubtitleItem,
     TranslationChapter,
     TranslationItem,
     VerseItem,
@@ -40,7 +41,8 @@ def _join(pieces: Iterable[str]) -> str:
     return _SPACES.sub(" ", " ".join(p for p in pieces if p)).strip()
 
 
-def _verse(raw: Json) -> VerseItem:
+def _pieces(content: list[Any], where: str) -> tuple[list[Line], list[int], bool]:
+    """Verse-style content → display lines, footnote IDs, and whether it has poetry/breaks."""
     lines: list[Line] = []
     prose: list[str] = []
     note_ids: list[int] = []
@@ -51,7 +53,7 @@ def _verse(raw: Json) -> VerseItem:
             lines.append(Line(text=_join(prose), indent=0))
             prose.clear()
 
-    for piece in raw.get("content", []):
+    for piece in content:
         if isinstance(piece, str):
             prose.append(piece)
         elif "noteId" in piece:
@@ -67,15 +69,25 @@ def _verse(raw: Json) -> VerseItem:
             else:  # e.g. {"text", "wordsOfJesus"}: keep the words, drop the markup
                 prose.append(piece["text"])
         else:
-            raise NormalizeError(f"unknown verse content {piece!r} in verse {raw.get('number')}")
+            raise NormalizeError(f"unknown verse content {piece!r} in {where}")
     flush_prose()
-    text = _join(line.text for line in lines)
+    return lines, note_ids, has_lines
+
+
+def _verse(raw: Json) -> VerseItem:
+    lines, note_ids, has_lines = _pieces(raw.get("content", []), f"verse {raw.get('number')}")
     return VerseItem(
         number=int(raw["number"]),
-        text=text,
+        text=_join(line.text for line in lines),
         lines=lines if has_lines else None,
         note_ids=note_ids,
     )
+
+
+def _subtitle(raw: Json) -> SubtitleItem:
+    """A psalm title. Same pieces as a verse; shown before verse 1."""
+    lines, note_ids, _ = _pieces(raw.get("content", []), "a psalm title")
+    return SubtitleItem(text=_join(line.text for line in lines), note_ids=note_ids)
 
 
 def normalize_translation_chapter(raw: Json) -> TranslationChapter:
@@ -88,6 +100,8 @@ def normalize_translation_chapter(raw: Json) -> TranslationChapter:
             items.append(_verse(item))
         elif kind == "heading":
             items.append(HeadingItem(text=_join(str(p) for p in item.get("content", []))))
+        elif kind == "hebrew_subtitle":
+            items.append(_subtitle(item))
         elif kind == "line_break":
             marker = item.get("paragraph")
             items.append(BreakItem(paragraph=marker is not None, marker=marker))

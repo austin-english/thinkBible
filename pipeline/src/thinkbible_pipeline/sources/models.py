@@ -45,6 +45,14 @@ class HeadingItem(JsonModel):
     text: str
 
 
+class SubtitleItem(JsonModel):
+    """A psalm's title ("A Psalm of David, when he fled ..."): part of the text, before verse 1."""
+
+    type: Literal["subtitle"] = "subtitle"
+    text: str
+    note_ids: list[int] = Field(default_factory=list)
+
+
 class Line(JsonModel):
     """One display line of a verse that contains poetry or a line break."""
 
@@ -68,7 +76,9 @@ class BreakItem(JsonModel):
     marker: str | None = None  # the source's USFM-style marker, e.g. "p" or "m"
 
 
-TranslationItem = Annotated[HeadingItem | VerseItem | BreakItem, Field(discriminator="type")]
+TranslationItem = Annotated[
+    HeadingItem | SubtitleItem | VerseItem | BreakItem, Field(discriminator="type")
+]
 
 
 class Footnote(JsonModel):

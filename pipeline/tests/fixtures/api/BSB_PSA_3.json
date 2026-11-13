@@ -1,0 +1,71 @@
+{
+  "translation": {
+    "id": "BSB"
+  },
+  "book": {
+    "id": "PSA"
+  },
+  "chapter": {
+    "number": 3,
+    "content": [
+      {
+        "type": "heading",
+        "content": [
+          "Deliver Me, O LORD!"
+        ]
+      },
+      {
+        "type": "hebrew_subtitle",
+        "content": [
+          "A Psalm of David, when he fled from his son Absalom."
+        ]
+      },
+      {
+        "type": "line_break"
+      },
+      {
+        "type": "verse",
+        "number": 1,
+        "content": [
+          {
+            "text": "O LORD, how my foes have increased!",
+            "poem": 1
+          },
+          {
+            "text": "How many rise up against me!",
+            "poem": 2
+          }
+        ]
+      },
+      {
+        "type": "verse",
+        "number": 2,
+        "content": [
+          {
+            "text": "Many say of me,",
+            "poem": 1
+          },
+          {
+            "text": "“God will not deliver him.”",
+            "poem": 2
+          },
+          "Selah",
+          {
+            "noteId": 5
+          }
+        ]
+      }
+    ],
+    "footnotes": [
+      {
+        "noteId": 5,
+        "caller": "+",
+        "text": "Selah or Interlude is probably a musical or literary term; here and throughout the Psalms.",
+        "reference": {
+          "chapter": 3,
+          "verse": 2
+        }
+      }
+    ]
+  }
+}

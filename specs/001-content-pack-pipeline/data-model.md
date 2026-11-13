@@ -228,8 +228,13 @@ Rules:
 
 ### Normalised translation book (`{tr}/{BOOK}.json`)
 
-`{book, chapters: [{number, items: [heading{text} | verse{number, text, lines?, noteIds[]} |
-break{paragraph}], footnotes: [{noteId, text, chapter, verse}]}]}`
+`{book, chapters: [{number, items: [heading{text} | subtitle{text, noteIds[]} |
+verse{number, text, lines?, noteIds[]} | break{paragraph, marker?}], footnotes: [{noteId, text,
+chapter, verse}]}]}`
+
+`subtitle` is a psalm title such as "A Psalm of David, when he fled from his son Absalom." (the
+API's `hebrew_subtitle`). It's part of the text, not an editorial heading, so the first section of
+the psalm includes it.
 
 ### Normalised commentary book (`{commentator}/{BOOK}.json`)
 

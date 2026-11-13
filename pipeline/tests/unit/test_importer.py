@@ -168,6 +168,47 @@ def test_reimport_keeps_other_sources_in_the_manifest(tmp_path: Path) -> None:
     assert set(manifest.sources) == {"bsb", "kjv"}
 
 
+def test_rerun_skips_books_already_imported(tmp_path: Path) -> None:
+    paths = RepoPaths(tmp_path)
+    kw: dict[str, Any] = {"bucket": "b", "paths": paths, "now": NOW, "echo": lambda _l: None}
+    import_sources(books=["MRK"], sources=["bsb"], fetch=FakeFetcher(), **kw)
+    again = FakeFetcher()
+    result = import_sources(books=["MRK", "GEN"], sources=["bsb"], fetch=again, **kw)
+    assert result.skipped == ["bsb/MRK"] and result.written == ["bsb/GEN"]
+    assert not any("/MRK/" in p for p in again.paths)
+    manifest = SourceManifest.model_validate(read_json(paths.manifest))
+    assert set(manifest.sources["bsb"].books) == {"MRK", "GEN"}
+
+
+def test_changed_cache_file_or_refresh_fetches_again(tmp_path: Path) -> None:
+    paths = RepoPaths(tmp_path)
+    kw: dict[str, Any] = {"bucket": "b", "paths": paths, "now": NOW, "echo": lambda _l: None}
+    import_sources(books=["MRK"], sources=["bsb"], fetch=FakeFetcher(), **kw)
+    (paths.sources / "bsb" / "MRK.json").write_text("{}")
+    assert import_sources(books=["MRK"], sources=["bsb"], fetch=FakeFetcher(), **kw).written
+    refreshed = import_sources(
+        books=["MRK"], sources=["bsb"], fetch=FakeFetcher(), refresh=True, **kw
+    )
+    assert refreshed.written == ["bsb/MRK"] and refreshed.skipped == []
+
+
+def test_interrupted_import_keeps_finished_books(tmp_path: Path) -> None:
+    paths = RepoPaths(tmp_path)
+    fetch = FakeFetcher(missing={"/api/BSB/GEN/2.json"})  # a translation gap stops the import
+    with pytest.raises(NotFound):
+        import_sources(
+            books=["MRK", "GEN"],
+            sources=["bsb"],
+            bucket="b",
+            fetch=fetch,
+            paths=paths,
+            now=NOW,
+            echo=lambda _l: None,
+        )
+    manifest = SourceManifest.model_validate(read_json(paths.manifest))
+    assert set(manifest.sources["bsb"].books) == {"MRK"}
+
+
 class Response(io.BytesIO):
     def __enter__(self) -> "Response":
         return self
