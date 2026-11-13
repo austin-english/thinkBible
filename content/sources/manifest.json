@@ -1,0 +1,2734 @@
+{
+  "apiVersion": "V1.16.0",
+  "bucket": "thinkbible-sources-522779858032",
+  "sources": {
+    "adam-clarke": {
+      "apiId": "Clarke",
+      "books": {
+        "1CH": {
+          "bytes": 179703,
+          "file": "adam-clarke/1CH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/1CH.json",
+          "sha256": "b9c75a54e0d23d246a361b094fcf84652b3063775aba700b0ad3f7b0525a29e7",
+          "snapshotId": "2026-11-13"
+        },
+        "1CO": {
+          "bytes": 628656,
+          "file": "adam-clarke/1CO.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/1CO.json",
+          "sha256": "22f683b6dc49067904819d31111a7f9aade2d696af7b626bbe6ba07fec687ab7",
+          "snapshotId": "2026-11-13"
+        },
+        "1JN": {
+          "bytes": 169090,
+          "file": "adam-clarke/1JN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/1JN.json",
+          "sha256": "b749d4184934afc4c8db457f488e5181108e989db046fc6a61c722c6a37adab0",
+          "snapshotId": "2026-11-13"
+        },
+        "1KI": {
+          "bytes": 402762,
+          "file": "adam-clarke/1KI.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/1KI.json",
+          "sha256": "35cbddc8bec6f6144e065fad26ee6c9499640224ed359d414a344312f1e43140",
+          "snapshotId": "2026-11-13"
+        },
+        "1PE": {
+          "bytes": 217795,
+          "file": "adam-clarke/1PE.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/1PE.json",
+          "sha256": "5465c7e11728fd17557544f30d5b608ee4961b7c6de4b9acee5578fc7b9a07c3",
+          "snapshotId": "2026-11-13"
+        },
+        "1SA": {
+          "bytes": 425715,
+          "file": "adam-clarke/1SA.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/1SA.json",
+          "sha256": "649d9416f4aaa28f8e9124c469092a1a5e27d2a54fad4a1f2ab38bd4d477451b",
+          "snapshotId": "2026-11-13"
+        },
+        "1TH": {
+          "bytes": 102609,
+          "file": "adam-clarke/1TH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/1TH.json",
+          "sha256": "745cdf50b19763cfa10446edc84cfd9f09eb246dcf8f2bc39bcade009040c1ac",
+          "snapshotId": "2026-11-13"
+        },
+        "1TI": {
+          "bytes": 240417,
+          "file": "adam-clarke/1TI.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/1TI.json",
+          "sha256": "65a57a1092abba95263ec005a194ea55dd69e3a811ea0490fd21115777103fd7",
+          "snapshotId": "2026-11-13"
+        },
+        "2CH": {
+          "bytes": 236265,
+          "file": "adam-clarke/2CH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/2CH.json",
+          "sha256": "91f8cfb4f472690dfcfa32c551990580d7250970076a0155abbcd0423e6968e8",
+          "snapshotId": "2026-11-13"
+        },
+        "2CO": {
+          "bytes": 350083,
+          "file": "adam-clarke/2CO.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/2CO.json",
+          "sha256": "2e6481e6fccd91cdc389aeb5d978c502cba8a0e2c583d0b8f36dc68a33609cdc",
+          "snapshotId": "2026-11-13"
+        },
+        "2JN": {
+          "bytes": 22017,
+          "file": "adam-clarke/2JN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/2JN.json",
+          "sha256": "6933616dbd3b837a016223b17312cff9b8411cfd50be56f51085da54f89e0f45",
+          "snapshotId": "2026-11-13"
+        },
+        "2KI": {
+          "bytes": 351635,
+          "file": "adam-clarke/2KI.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/2KI.json",
+          "sha256": "94886e4b2ff7d6ae05f59cbf47c5efbd45ef86c378742184f552c8e2a6948243",
+          "snapshotId": "2026-11-13"
+        },
+        "2PE": {
+          "bytes": 122618,
+          "file": "adam-clarke/2PE.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/2PE.json",
+          "sha256": "49b0eb7c12dbcb768c6950705011bf53521fada7414b260d383dab50f81e9b1c",
+          "snapshotId": "2026-11-13"
+        },
+        "2SA": {
+          "bytes": 274590,
+          "file": "adam-clarke/2SA.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/2SA.json",
+          "sha256": "05905371fbf04cf75239b910af7ce09b9e67f0c83f199b47642e4a07942983ef",
+          "snapshotId": "2026-11-13"
+        },
+        "2TH": {
+          "bytes": 107995,
+          "file": "adam-clarke/2TH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/2TH.json",
+          "sha256": "bc0d670a1a6e1dd268b0e97cc379d57e0b32aff136a9023e1d93c9209601a4fe",
+          "snapshotId": "2026-11-13"
+        },
+        "2TI": {
+          "bytes": 105369,
+          "file": "adam-clarke/2TI.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/2TI.json",
+          "sha256": "2b4a4f7fea00101dc5ba8ba58d3d397dba5e9264665df6df110273d64f0e5c55",
+          "snapshotId": "2026-11-13"
+        },
+        "3JN": {
+          "bytes": 20015,
+          "file": "adam-clarke/3JN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/3JN.json",
+          "sha256": "f1c4ad2d5e3cddaf6c8dde140267ce4bda02b62f42a840921fb91fc712617557",
+          "snapshotId": "2026-11-13"
+        },
+        "ACT": {
+          "bytes": 1216436,
+          "file": "adam-clarke/ACT.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/ACT.json",
+          "sha256": "552bbb057efd1d7814d8a9a50b1a57531d66188422411b757b6c701c729108d7",
+          "snapshotId": "2026-11-13"
+        },
+        "AMO": {
+          "bytes": 100205,
+          "file": "adam-clarke/AMO.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/AMO.json",
+          "sha256": "d7a9958e1cb3d3d2695f84d28074f50a56a5576cdfd2f068291f6950ea9b17bb",
+          "snapshotId": "2026-11-13"
+        },
+        "COL": {
+          "bytes": 129861,
+          "file": "adam-clarke/COL.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/COL.json",
+          "sha256": "cd94833c8075daa9cf2a6dcacb67efd1c996f9169e87728589f0c688eb025e10",
+          "snapshotId": "2026-11-13"
+        },
+        "DAN": {
+          "bytes": 264868,
+          "file": "adam-clarke/DAN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/DAN.json",
+          "sha256": "149b2024928f93f6bc16f032f1d4544366777175b8411dae96a09c44a8722f68",
+          "snapshotId": "2026-11-13"
+        },
+        "DEU": {
+          "bytes": 426288,
+          "file": "adam-clarke/DEU.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/DEU.json",
+          "sha256": "440c28de8b10e9db46d9834e99d0f67e4a7326079d602b2a791019798d4503c8",
+          "snapshotId": "2026-11-13"
+        },
+        "ECC": {
+          "bytes": 191757,
+          "file": "adam-clarke/ECC.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/ECC.json",
+          "sha256": "45df8f857f9c739255821cf7049d78d64704ec8e344726cdad030910077310d3",
+          "snapshotId": "2026-11-13"
+        },
+        "EPH": {
+          "bytes": 262987,
+          "file": "adam-clarke/EPH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/EPH.json",
+          "sha256": "f0c818d4132deb3f71fd860326de9d69c2af4baac2425b1e069d99f7ec7d0cb5",
+          "snapshotId": "2026-11-13"
+        },
+        "EST": {
+          "bytes": 111055,
+          "file": "adam-clarke/EST.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/EST.json",
+          "sha256": "3d9aa0d9c4f6c9508b78e406b8f8ef1c3113c9939b06c62ca8fdf832457843a0",
+          "snapshotId": "2026-11-13"
+        },
+        "EXO": {
+          "bytes": 1039409,
+          "file": "adam-clarke/EXO.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/EXO.json",
+          "sha256": "956c75d52b8017cfb4b1c7cdbd9a460f927a1dbd92a674d49eb865627fecd572",
+          "snapshotId": "2026-11-13"
+        },
+        "EZK": {
+          "bytes": 498318,
+          "file": "adam-clarke/EZK.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/EZK.json",
+          "sha256": "43d909504b92cc3b6778d9b7c28df8dbe87c83f57a0464dcadc4528464a76ddb",
+          "snapshotId": "2026-11-13"
+        },
+        "EZR": {
+          "bytes": 126542,
+          "file": "adam-clarke/EZR.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/EZR.json",
+          "sha256": "ba46b939cac359fa8c64068a386f82b071ffe974b69b9364371631a5bcefb032",
+          "snapshotId": "2026-11-13"
+        },
+        "GAL": {
+          "bytes": 195516,
+          "file": "adam-clarke/GAL.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/GAL.json",
+          "sha256": "c735000409deb7530e1d846af80a05af785633ee198e03d22ae0568fccf29f72",
+          "snapshotId": "2026-11-13"
+        },
+        "GEN": {
+          "bytes": 1320492,
+          "file": "adam-clarke/GEN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/GEN.json",
+          "sha256": "ba283ccd8b70a55fdbdb8ad87d485569b0f3df4754e62d6ee3262c05828b8f39",
+          "snapshotId": "2026-11-13"
+        },
+        "HAB": {
+          "bytes": 51885,
+          "file": "adam-clarke/HAB.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/HAB.json",
+          "sha256": "16c76f7eb35ea1518c666299475ecaf385871c03ef6f316061d7a79ce90bff33",
+          "snapshotId": "2026-11-13"
+        },
+        "HAG": {
+          "bytes": 25951,
+          "file": "adam-clarke/HAG.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/HAG.json",
+          "sha256": "7d2e12bca139c529e6e1d70076e13339ca6fb6ee82d524372e9848a3d5536576",
+          "snapshotId": "2026-11-13"
+        },
+        "HEB": {
+          "bytes": 563676,
+          "file": "adam-clarke/HEB.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/HEB.json",
+          "sha256": "ac91a7acc32d29b0c686f5e80069301e654389b444f574841535d16f69b6f6c1",
+          "snapshotId": "2026-11-13"
+        },
+        "HOS": {
+          "bytes": 159947,
+          "file": "adam-clarke/HOS.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/HOS.json",
+          "sha256": "019c707748c80e0b3c20c0f17bbca60c9c70602efad3d6e5af666e5be1e1a3b5",
+          "snapshotId": "2026-11-13"
+        },
+        "ISA": {
+          "bytes": 1118930,
+          "file": "adam-clarke/ISA.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/ISA.json",
+          "sha256": "246b24512e356b81bfa670ea94fd6ae4defac67bd5cda21b10b44ea8dd26b08c",
+          "snapshotId": "2026-11-13"
+        },
+        "JAS": {
+          "bytes": 206455,
+          "file": "adam-clarke/JAS.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/JAS.json",
+          "sha256": "461af5bb1b6bd4874df1e514b25246800aace51c6e93cef93242e53afad67f9a",
+          "snapshotId": "2026-11-13"
+        },
+        "JDG": {
+          "bytes": 375880,
+          "file": "adam-clarke/JDG.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/JDG.json",
+          "sha256": "da3698e7eccd042fe439d56b6e0aab4da4e4c45cd87af0548907cdc476a4b4be",
+          "snapshotId": "2026-11-13"
+        },
+        "JER": {
+          "bytes": 538425,
+          "file": "adam-clarke/JER.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/JER.json",
+          "sha256": "6d6607891cda43922618c72acbdb493f6460e8c555d7d3c9a688bfdc93ceb385",
+          "snapshotId": "2026-11-13"
+        },
+        "JHN": {
+          "bytes": 846186,
+          "file": "adam-clarke/JHN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/JHN.json",
+          "sha256": "5e80479fa123a691d11e8ed5e103140cd9da2dfe3d7698cc1e7ca1072a24d619",
+          "snapshotId": "2026-11-13"
+        },
+        "JOB": {
+          "bytes": 936229,
+          "file": "adam-clarke/JOB.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/JOB.json",
+          "sha256": "00fa16d2ebeb0af00d84cb932a419b09de1c5d33e3f35b62fa9707a8114d5e0b",
+          "snapshotId": "2026-11-13"
+        },
+        "JOL": {
+          "bytes": 52323,
+          "file": "adam-clarke/JOL.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/JOL.json",
+          "sha256": "fdbb19e4d91704db46c345f15dd445e76117528451a49154b716982e24fedcd3",
+          "snapshotId": "2026-11-13"
+        },
+        "JON": {
+          "bytes": 47713,
+          "file": "adam-clarke/JON.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/JON.json",
+          "sha256": "f5d55ebb80154f332aeef9830cf3f6c458c3eb55eb042b7b70195dfb6868d939",
+          "snapshotId": "2026-11-13"
+        },
+        "JOS": {
+          "bytes": 436028,
+          "file": "adam-clarke/JOS.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/JOS.json",
+          "sha256": "04e504b621bf2558507c015522350893e92f2578851ea7717164df73107661dd",
+          "snapshotId": "2026-11-13"
+        },
+        "JUD": {
+          "bytes": 69752,
+          "file": "adam-clarke/JUD.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/JUD.json",
+          "sha256": "35c230a4b3cb7c35ad428c4837c45653724ba526104eab2345392c6c911dd900",
+          "snapshotId": "2026-11-13"
+        },
+        "LAM": {
+          "bytes": 70776,
+          "file": "adam-clarke/LAM.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/LAM.json",
+          "sha256": "74c75a1438166dfbc55084a7d16e778473633bd767088062a34a0934f79dbb88",
+          "snapshotId": "2026-11-13"
+        },
+        "LEV": {
+          "bytes": 424224,
+          "file": "adam-clarke/LEV.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/LEV.json",
+          "sha256": "dbfaa83cca007c2e769bf8bea4a88f27de103625fbdcda5423433d7318873931",
+          "snapshotId": "2026-11-13"
+        },
+        "LUK": {
+          "bytes": 718500,
+          "file": "adam-clarke/LUK.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/LUK.json",
+          "sha256": "6d417676bc0b5865b0c269db86867829485e5c32ced1e4ca0402899e1d1a4726",
+          "snapshotId": "2026-11-13"
+        },
+        "MAL": {
+          "bytes": 36253,
+          "file": "adam-clarke/MAL.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/MAL.json",
+          "sha256": "08a848ea2b89aec41e238e3c7fd74f628c26c7c8ab34f15b1d228ea9d551cc43",
+          "snapshotId": "2026-11-13"
+        },
+        "MAT": {
+          "bytes": 1398894,
+          "file": "adam-clarke/MAT.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/MAT.json",
+          "sha256": "c1ba120b200c128c4bcf36b272e2022ff063c940f43277f90bd004b50273464d",
+          "snapshotId": "2026-11-13"
+        },
+        "MIC": {
+          "bytes": 92702,
+          "file": "adam-clarke/MIC.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/MIC.json",
+          "sha256": "463fc27f297867a1ad45e1bf42e4acfd109a6ecb7ff2b8b0368c7347487d199d",
+          "snapshotId": "2026-11-13"
+        },
+        "MRK": {
+          "bytes": 238185,
+          "file": "adam-clarke/MRK.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/MRK.json",
+          "sha256": "1b468a94685aebb59c5d51c21816c91de30a4bbe63a3fb0dde00e8a83f1153c6",
+          "snapshotId": "2026-11-13"
+        },
+        "NAM": {
+          "bytes": 38212,
+          "file": "adam-clarke/NAM.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/NAM.json",
+          "sha256": "6975b1ea952ff96e3c9444ebebd1ccbd6640663f6936521a4263470cd55cb68f",
+          "snapshotId": "2026-11-13"
+        },
+        "NEH": {
+          "bytes": 157110,
+          "file": "adam-clarke/NEH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/NEH.json",
+          "sha256": "f07f85401eb5dcafb13fc07de331bd817e4e4c0c6e29f4fbfaf8296046d7416b",
+          "snapshotId": "2026-11-13"
+        },
+        "NUM": {
+          "bytes": 482152,
+          "file": "adam-clarke/NUM.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/NUM.json",
+          "sha256": "3096a6b43394a986392e440b10a2ae059ad3b5edfd0fb2cd2135967c4149a711",
+          "snapshotId": "2026-11-13"
+        },
+        "OBA": {
+          "bytes": 14953,
+          "file": "adam-clarke/OBA.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/OBA.json",
+          "sha256": "5686bd9cc68682c8bdd40cc757a18c5bd7c09008b7de965e83da56b09a97321c",
+          "snapshotId": "2026-11-13"
+        },
+        "PHM": {
+          "bytes": 41824,
+          "file": "adam-clarke/PHM.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/PHM.json",
+          "sha256": "208ae16385b4675bf256d8701cbb675d7e5ddff79aa51eca16f259a59415863e",
+          "snapshotId": "2026-11-13"
+        },
+        "PHP": {
+          "bytes": 115256,
+          "file": "adam-clarke/PHP.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/PHP.json",
+          "sha256": "5ddb3f37561384f41260f6faca1330428e1a25d8753659ce82ac1d1d303e63c6",
+          "snapshotId": "2026-11-13"
+        },
+        "PRO": {
+          "bytes": 459459,
+          "file": "adam-clarke/PRO.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/PRO.json",
+          "sha256": "de793ef0d91dd340d2cb8459f99a0912ad824bb92223dc720c1fd326182842ce",
+          "snapshotId": "2026-11-13"
+        },
+        "PSA": {
+          "bytes": 1725998,
+          "file": "adam-clarke/PSA.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/PSA.json",
+          "sha256": "3b65737d4ab55a81ee0c57ada4079368991fae456067920d9b0a17ff1cef84c6",
+          "snapshotId": "2026-11-13"
+        },
+        "REV": {
+          "bytes": 532055,
+          "file": "adam-clarke/REV.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/REV.json",
+          "sha256": "755be4089f1907ce8bf1d167d91efeed16f5e119adeec239820972302bb48642",
+          "snapshotId": "2026-11-13"
+        },
+        "ROM": {
+          "bytes": 796341,
+          "file": "adam-clarke/ROM.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/ROM.json",
+          "sha256": "bbba5950ea52cd8dcceae70bd437ac2b6bff863c0f8ff5926d4ddb0c10da82b6",
+          "snapshotId": "2026-11-13"
+        },
+        "RUT": {
+          "bytes": 53239,
+          "file": "adam-clarke/RUT.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/RUT.json",
+          "sha256": "b3ccfbe8e4155dac7b33a39a9a8295f0908cae4f7ba58b8c71e7ecf2852292c2",
+          "snapshotId": "2026-11-13"
+        },
+        "SNG": {
+          "bytes": 119799,
+          "file": "adam-clarke/SNG.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/SNG.json",
+          "sha256": "627ad18e74c9e7d6bc974f869413b9f64af843b25fbb79ecea4ea66498f09821",
+          "snapshotId": "2026-11-13"
+        },
+        "TIT": {
+          "bytes": 91055,
+          "file": "adam-clarke/TIT.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/TIT.json",
+          "sha256": "9af38ca9a8292f525b83b329bca03874c317edfeb4c4eedce255273c291ce990",
+          "snapshotId": "2026-11-13"
+        },
+        "ZEC": {
+          "bytes": 125298,
+          "file": "adam-clarke/ZEC.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/ZEC.json",
+          "sha256": "d59769c0be9b264cb2ed3064324228b1b9db6060874047b7134182c5f09bc139",
+          "snapshotId": "2026-11-13"
+        },
+        "ZEP": {
+          "bytes": 30032,
+          "file": "adam-clarke/ZEP.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/adam-clarke/ZEP.json",
+          "sha256": "96f9a6b03e7bf4348f1d598953fbf8b847e8fa8718b46dfdb8f7f8e02261fb0e",
+          "snapshotId": "2026-11-13"
+        }
+      },
+      "kind": "commentary",
+      "license": "Public Domain",
+      "module": {
+        "bytes": 8627265,
+        "file": "adam-clarke/_module/Clarke-2.0.zip",
+        "name": "Clarke",
+        "retrievedAt": "2026-11-13T18:45:06+00:00",
+        "s3Key": "snapshots/2026-11-13/adam-clarke/_module/Clarke-2.0.zip",
+        "sha256": "56bb33d3bf0f50c1609f4dd10ac81e7450bb0e8aae93bf340074ccb5e207a44f",
+        "snapshotId": "2026-11-13",
+        "url": "https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip/Clarke.zip",
+        "version": "2.0"
+      },
+      "name": "Adam Clarke's Commentary",
+      "origin": "crosswire:Clarke@2.0",
+      "tradition": "Wesleyan (Methodist)",
+      "upstreamSha256": "56bb33d3bf0f50c1609f4dd10ac81e7450bb0e8aae93bf340074ccb5e207a44f"
+    },
+    "bsb": {
+      "apiId": "BSB",
+      "books": {
+        "1CH": {
+          "bytes": 398485,
+          "file": "bsb/1CH.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/1CH.json",
+          "sha256": "f603398ea27b4ceb5f5eaf289c4efafebe7c60a696d1fdd2f238793eb4d051af",
+          "snapshotId": "2026-11-13"
+        },
+        "1CO": {
+          "bytes": 135666,
+          "file": "bsb/1CO.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/1CO.json",
+          "sha256": "c66c40735fac4b931e50f0b99c255f0f887ef383482977617e5e2898b6b4983f",
+          "snapshotId": "2026-11-13"
+        },
+        "1JN": {
+          "bytes": 35866,
+          "file": "bsb/1JN.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/1JN.json",
+          "sha256": "b351f3cff2d7db744f1504fa4823c05a42f467134014213a94954dbbc686cb24",
+          "snapshotId": "2026-11-13"
+        },
+        "1KI": {
+          "bytes": 338787,
+          "file": "bsb/1KI.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/1KI.json",
+          "sha256": "bbcef2a2cd3f663db567bd5b2a8f75057fe01a982de28e25d42723306486d6b9",
+          "snapshotId": "2026-11-13"
+        },
+        "1PE": {
+          "bytes": 44833,
+          "file": "bsb/1PE.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/1PE.json",
+          "sha256": "ba22342075488c6b5763ae704011b05d55e087bc18bd9d1d57636f38f072ded3",
+          "snapshotId": "2026-11-13"
+        },
+        "1SA": {
+          "bytes": 339642,
+          "file": "bsb/1SA.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/1SA.json",
+          "sha256": "1a4fa6168e17fd2c6aa666b52afa3b47c08c6c987fb74fb9ad68a6e7239f025a",
+          "snapshotId": "2026-11-13"
+        },
+        "1TH": {
+          "bytes": 27399,
+          "file": "bsb/1TH.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/1TH.json",
+          "sha256": "c4be8f0f4c49e9780f64489b695658d792fe6035d92e035fad4af7f3d5596319",
+          "snapshotId": "2026-11-13"
+        },
+        "1TI": {
+          "bytes": 38050,
+          "file": "bsb/1TI.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/1TI.json",
+          "sha256": "d85d75ab0f4a7250028e62f3ec1a43e65d21b75b02c62c88ef26bbf98edb8d34",
+          "snapshotId": "2026-11-13"
+        },
+        "2CH": {
+          "bytes": 342755,
+          "file": "bsb/2CH.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/2CH.json",
+          "sha256": "c7218eb36cf12c39bd81d0dceb6b1d9a2949aee0179d6b684a78859cf47097bd",
+          "snapshotId": "2026-11-13"
+        },
+        "2CO": {
+          "bytes": 83653,
+          "file": "bsb/2CO.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/2CO.json",
+          "sha256": "f429470edc5b4461e2f52bb2ccb1909ac59390aec43d4e0dc4f548243ea15755",
+          "snapshotId": "2026-11-13"
+        },
+        "2JN": {
+          "bytes": 5037,
+          "file": "bsb/2JN.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/2JN.json",
+          "sha256": "7d2c6b314be6c923b55ae9964fef31fb5c18a72c53f78759195cd35dbd55dd45",
+          "snapshotId": "2026-11-13"
+        },
+        "2KI": {
+          "bytes": 326543,
+          "file": "bsb/2KI.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/2KI.json",
+          "sha256": "b04b4a4db551f659e0ea68414909d01e97b2995f557f73ca91c410bc217592fc",
+          "snapshotId": "2026-11-13"
+        },
+        "2PE": {
+          "bytes": 23474,
+          "file": "bsb/2PE.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/2PE.json",
+          "sha256": "e793008ef3900b229f84eb332ebc119a3b55788ef32ce55c76c8869024b678de",
+          "snapshotId": "2026-11-13"
+        },
+        "2SA": {
+          "bytes": 318168,
+          "file": "bsb/2SA.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/2SA.json",
+          "sha256": "0c4ea3e063549b3614efb7478fbe92e472738196368c34650ea0c8c09e6b620d",
+          "snapshotId": "2026-11-13"
+        },
+        "2TH": {
+          "bytes": 15085,
+          "file": "bsb/2TH.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/2TH.json",
+          "sha256": "ef3068a0e44af903760b9d9c0314f220381e0ed3f9e3f9b9c3db333e29dc4f14",
+          "snapshotId": "2026-11-13"
+        },
+        "2TI": {
+          "bytes": 27744,
+          "file": "bsb/2TI.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/2TI.json",
+          "sha256": "9ef1fd08e9fc97d61b8bcdc56a00c70774fd8bd77ef25fd20b40c13977e11454",
+          "snapshotId": "2026-11-13"
+        },
+        "3JN": {
+          "bytes": 5624,
+          "file": "bsb/3JN.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/3JN.json",
+          "sha256": "ed404ff959507a3efadb1ff9b0e135004595f9579f0a44683b1caaf5d244118a",
+          "snapshotId": "2026-11-13"
+        },
+        "ACT": {
+          "bytes": 347989,
+          "file": "bsb/ACT.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/ACT.json",
+          "sha256": "38353a63b9c5cc097e7a486fac70da7a7b176fb89bca76e8a74b7977974d8b73",
+          "snapshotId": "2026-11-13"
+        },
+        "AMO": {
+          "bytes": 116933,
+          "file": "bsb/AMO.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/AMO.json",
+          "sha256": "91b43f60306d2a35ed09b3c990679c15dcce0467829beabe5284f2b5e3f735de",
+          "snapshotId": "2026-11-13"
+        },
+        "COL": {
+          "bytes": 30451,
+          "file": "bsb/COL.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/COL.json",
+          "sha256": "2cdda36e80fc9caf58e4a1838455d7d3ce6a2911d5aa27fd4c8f4d194fb744b1",
+          "snapshotId": "2026-11-13"
+        },
+        "DAN": {
+          "bytes": 153639,
+          "file": "bsb/DAN.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/DAN.json",
+          "sha256": "7d2ae472edb2d79612acd7d2464a664729fc1722cddec01850c0a8fe7237a502",
+          "snapshotId": "2026-11-13"
+        },
+        "DEU": {
+          "bytes": 369511,
+          "file": "bsb/DEU.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/DEU.json",
+          "sha256": "ce52e5e9e50fcb19363ef4a07442a17d77f9429b8051313f7ae5bd579e63fcc4",
+          "snapshotId": "2026-11-13"
+        },
+        "ECC": {
+          "bytes": 97509,
+          "file": "bsb/ECC.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/ECC.json",
+          "sha256": "a18372a0c46e654dd5fed3585da18d2e4b828cabee003ed9cdca52a9cba95de8",
+          "snapshotId": "2026-11-13"
+        },
+        "EPH": {
+          "bytes": 46107,
+          "file": "bsb/EPH.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/EPH.json",
+          "sha256": "043d6965bf4659ef5182338e0a88a05c0b5b7d8d5a7932c5988e060af44ee1a9",
+          "snapshotId": "2026-11-13"
+        },
+        "EST": {
+          "bytes": 69959,
+          "file": "bsb/EST.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/EST.json",
+          "sha256": "2038e2602d13d73425bae362cb7355436a1282082346994216b451d205e01c66",
+          "snapshotId": "2026-11-13"
+        },
+        "EXO": {
+          "bytes": 444617,
+          "file": "bsb/EXO.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/EXO.json",
+          "sha256": "7f89f6f42864f8a0ca606e44d7d2230439727ed3d19aeb414644dd12bb5dc00f",
+          "snapshotId": "2026-11-13"
+        },
+        "EZK": {
+          "bytes": 571372,
+          "file": "bsb/EZK.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/EZK.json",
+          "sha256": "ef08755e94a6d9a3b918b7b08dfc2f38f947501f5d495699d9301b5d5f45588e",
+          "snapshotId": "2026-11-13"
+        },
+        "EZR": {
+          "bytes": 127029,
+          "file": "bsb/EZR.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/EZR.json",
+          "sha256": "f48d698eb1cf4f6c3a058ca1ac020660dfda9ff4fde13e06705848c46601729e",
+          "snapshotId": "2026-11-13"
+        },
+        "GAL": {
+          "bytes": 46621,
+          "file": "bsb/GAL.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/GAL.json",
+          "sha256": "73608de7bfec75411a9fce530a09ed0f1ef59d62cd3c866d11797e80928e7c71",
+          "snapshotId": "2026-11-13"
+        },
+        "GEN": {
+          "bytes": 568412,
+          "file": "bsb/GEN.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/GEN.json",
+          "sha256": "e4562f148dfea64cdaef1ff086d91584805d1f74ae647c616dd4c1c08f6be928",
+          "snapshotId": "2026-11-13"
+        },
+        "HAB": {
+          "bytes": 44734,
+          "file": "bsb/HAB.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/HAB.json",
+          "sha256": "658b9c2b36e01d4e43d9a5f4c9125e99356cdf4501830f68c897bf676d40abf6",
+          "snapshotId": "2026-11-13"
+        },
+        "HAG": {
+          "bytes": 24116,
+          "file": "bsb/HAG.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/HAG.json",
+          "sha256": "26dea6f04e3b880c74766e8e82e847287827a2e0cea45b097799cbfb9b475e54",
+          "snapshotId": "2026-11-13"
+        },
+        "HEB": {
+          "bytes": 121821,
+          "file": "bsb/HEB.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/HEB.json",
+          "sha256": "237caf2167b9681ed957c2c9124d78aca06a39fef418044761f0dcffc74d1eb1",
+          "snapshotId": "2026-11-13"
+        },
+        "HOS": {
+          "bytes": 158526,
+          "file": "bsb/HOS.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/HOS.json",
+          "sha256": "a160973d9452368aa9481d0d8cbf451476e5ae9a9d2ce98019b3beef69e6f44a",
+          "snapshotId": "2026-11-13"
+        },
+        "ISA": {
+          "bytes": 986855,
+          "file": "bsb/ISA.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/ISA.json",
+          "sha256": "9d3ecd3212c9282db69eb4bdb4c144f9bcb32ff670f35de49e618894ec8b35dc",
+          "snapshotId": "2026-11-13"
+        },
+        "JAS": {
+          "bytes": 35812,
+          "file": "bsb/JAS.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/JAS.json",
+          "sha256": "a54d09fdbedc2015c2dbfee2f268ca817be71ec8a1c3d98bf4ebfabce2851714",
+          "snapshotId": "2026-11-13"
+        },
+        "JDG": {
+          "bytes": 257374,
+          "file": "bsb/JDG.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/JDG.json",
+          "sha256": "056a0a2f23d57e097c16a8edb11b215b3eb3e833200a4d7bde2310962f5caa09",
+          "snapshotId": "2026-11-13"
+        },
+        "JER": {
+          "bytes": 819692,
+          "file": "bsb/JER.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/JER.json",
+          "sha256": "4e3fbb834ac516ed0333b41c940f893ea22c418833e5146cdf7c0025080200ee",
+          "snapshotId": "2026-11-13"
+        },
+        "JHN": {
+          "bytes": 297048,
+          "file": "bsb/JHN.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/JHN.json",
+          "sha256": "e680c4fb3ae1958f5e793947b2b663bd5f9657a778a5829438a87df2ac33534f",
+          "snapshotId": "2026-11-13"
+        },
+        "JOB": {
+          "bytes": 538545,
+          "file": "bsb/JOB.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/JOB.json",
+          "sha256": "6221780148b4251df0b16a8168fe7e2cdda86a653865c15f4781f87509736151",
+          "snapshotId": "2026-11-13"
+        },
+        "JOL": {
+          "bytes": 59373,
+          "file": "bsb/JOL.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/JOL.json",
+          "sha256": "2d5cb9bb84016a636e0e484e61de7ba66d7aef079d93996631560d8a92578265",
+          "snapshotId": "2026-11-13"
+        },
+        "JON": {
+          "bytes": 22519,
+          "file": "bsb/JON.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/JON.json",
+          "sha256": "b53c64b7471aa83f696d4a90518348108b9bc8bc0b1e72986e5678090f276d17",
+          "snapshotId": "2026-11-13"
+        },
+        "JOS": {
+          "bytes": 237909,
+          "file": "bsb/JOS.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/JOS.json",
+          "sha256": "c6c7fe55d937ef76f02879188a5f4fc8d1f08c1e42b0a089a23e46fa626c1dff",
+          "snapshotId": "2026-11-13"
+        },
+        "JUD": {
+          "bytes": 10563,
+          "file": "bsb/JUD.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/JUD.json",
+          "sha256": "d01d9a9df6cb1a815a435f5a1ec684945342a7f68aa35ba38afff3e04acd1bb4",
+          "snapshotId": "2026-11-13"
+        },
+        "LAM": {
+          "bytes": 112141,
+          "file": "bsb/LAM.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/LAM.json",
+          "sha256": "dbf37eacc317262bcba04f07859266114ea54a23ba8f17dfee533cf4d2dde33f",
+          "snapshotId": "2026-11-13"
+        },
+        "LEV": {
+          "bytes": 285616,
+          "file": "bsb/LEV.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/LEV.json",
+          "sha256": "44a1a3d10e9b6c4311161451052b97538262c7fabc4b8cd2dc49d282ee60401c",
+          "snapshotId": "2026-11-13"
+        },
+        "LUK": {
+          "bytes": 397219,
+          "file": "bsb/LUK.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/LUK.json",
+          "sha256": "4acb0f9a988d07534b9ac4bc35717c0aa0c1ff89c4019d7463e328c118bcb167",
+          "snapshotId": "2026-11-13"
+        },
+        "MAL": {
+          "bytes": 26375,
+          "file": "bsb/MAL.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/MAL.json",
+          "sha256": "7def3071b553ce7ab703b7ba5099797f9e6df2151f1fc70522566d9eae361402",
+          "snapshotId": "2026-11-13"
+        },
+        "MAT": {
+          "bytes": 386788,
+          "file": "bsb/MAT.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/MAT.json",
+          "sha256": "0a7af5154cb4f42d32b3a4577f6e254d0c8b400971f929ff4d68c151877e425e",
+          "snapshotId": "2026-11-13"
+        },
+        "MIC": {
+          "bytes": 91728,
+          "file": "bsb/MIC.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/MIC.json",
+          "sha256": "2f2ae244ba42e67b01b6c9c62eb9751879d23d3383815ecaa426629e68f0efb2",
+          "snapshotId": "2026-11-13"
+        },
+        "MRK": {
+          "bytes": 240122,
+          "file": "bsb/MRK.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/MRK.json",
+          "sha256": "19bc7dfdc3c1794d645ad0f00ecc0dc280a940d51951a0a9148e81d9845aa357",
+          "snapshotId": "2026-11-13"
+        },
+        "NAM": {
+          "bytes": 39227,
+          "file": "bsb/NAM.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/NAM.json",
+          "sha256": "68c47486490a9dc5ca6d115186361a6bbaf48ea393c06a7d8b773366dce477f8",
+          "snapshotId": "2026-11-13"
+        },
+        "NEH": {
+          "bytes": 190804,
+          "file": "bsb/NEH.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/NEH.json",
+          "sha256": "c5354e5557ca6d3cf119cb653239347c721176bd2a62db60fbf61fd4ee221760",
+          "snapshotId": "2026-11-13"
+        },
+        "NUM": {
+          "bytes": 439593,
+          "file": "bsb/NUM.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/NUM.json",
+          "sha256": "39e97b639593013bbb54c14f5627eb36d9c66e1c37eacdaa68e06c4e6cc3c884",
+          "snapshotId": "2026-11-13"
+        },
+        "OBA": {
+          "bytes": 18946,
+          "file": "bsb/OBA.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/OBA.json",
+          "sha256": "e235eadf9c3e2a3ebacc05b6f4facd667be9ad7b4dc0bfb2f96dea53698528b1",
+          "snapshotId": "2026-11-13"
+        },
+        "PHM": {
+          "bytes": 7994,
+          "file": "bsb/PHM.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/PHM.json",
+          "sha256": "3bd07cce97209265a5bd89485d16c5486ad83a5455ad8d4286c93cd90800abc6",
+          "snapshotId": "2026-11-13"
+        },
+        "PHP": {
+          "bytes": 34279,
+          "file": "bsb/PHP.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/PHP.json",
+          "sha256": "7889aa5f58b073618b55e77f17f5869acc511326022493e2fcdc18d8b5f0ee97",
+          "snapshotId": "2026-11-13"
+        },
+        "PRO": {
+          "bytes": 507548,
+          "file": "bsb/PRO.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/PRO.json",
+          "sha256": "dcf026714827be66300cf265af191f5eed36a421d37862c6f0a3e80af2d9221c",
+          "snapshotId": "2026-11-13"
+        },
+        "PSA": {
+          "bytes": 1417975,
+          "file": "bsb/PSA.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/PSA.json",
+          "sha256": "600523cc45a16f3cb900c947887a43856382a4a087181659a812383842886101",
+          "snapshotId": "2026-11-13"
+        },
+        "REV": {
+          "bytes": 183724,
+          "file": "bsb/REV.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/REV.json",
+          "sha256": "3ce93ac2a70dfe0ea8eb27b2aea7d06baa1aeac739760c8209dd83a66ff46e51",
+          "snapshotId": "2026-11-13"
+        },
+        "ROM": {
+          "bytes": 158781,
+          "file": "bsb/ROM.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/ROM.json",
+          "sha256": "355fa2f2f9dcfd2b7b0a708f1a78d638c59deba46c18937fbf3955b9dc3845a4",
+          "snapshotId": "2026-11-13"
+        },
+        "RUT": {
+          "bytes": 38779,
+          "file": "bsb/RUT.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/RUT.json",
+          "sha256": "fe26f473fd0a2e069828de41087281bfef1ce50ff007a5b9f0a3de6425112970",
+          "snapshotId": "2026-11-13"
+        },
+        "SNG": {
+          "bytes": 88736,
+          "file": "bsb/SNG.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/SNG.json",
+          "sha256": "797746dae7c917c496e7a8dbd7606389b061fef08deff77b68884a4bd3ebbd7e",
+          "snapshotId": "2026-11-13"
+        },
+        "TIT": {
+          "bytes": 15439,
+          "file": "bsb/TIT.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/TIT.json",
+          "sha256": "9eca069a81b2507df72e05ac411d90d0aa09403a64c01ed4b22d4a3f2a853caa",
+          "snapshotId": "2026-11-13"
+        },
+        "ZEC": {
+          "bytes": 104021,
+          "file": "bsb/ZEC.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/ZEC.json",
+          "sha256": "9035968dfa2ca7842d9ea3b55fdeac1e96bf4f5e7bfa0ce525aa9ebec2065166",
+          "snapshotId": "2026-11-13"
+        },
+        "ZEP": {
+          "bytes": 48965,
+          "file": "bsb/ZEP.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/bsb/ZEP.json",
+          "sha256": "669e619cc5052da099dd77b3364f04c41595954c5d832dafc72f571aeb9c2949",
+          "snapshotId": "2026-11-13"
+        }
+      },
+      "kind": "translation",
+      "license": "Public domain",
+      "licenseUrl": "https://berean.bible/",
+      "name": "Berean Standard Bible",
+      "origin": "helloao:BSB",
+      "upstreamSha256": "788081b7dabf8ec026509b367254d8f2ba112314f2e8eaaeec8d96fa23a00fc9"
+    },
+    "jamieson-fausset-brown": {
+      "apiId": "JFB",
+      "books": {
+        "1CH": {
+          "bytes": 157658,
+          "file": "jamieson-fausset-brown/1CH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/1CH.json",
+          "sha256": "0c7813870c1d31e79e01b29f0201afae40bbfe98f2e281364a7079b0dcca00a5",
+          "snapshotId": "2026-11-13"
+        },
+        "1CO": {
+          "bytes": 403176,
+          "file": "jamieson-fausset-brown/1CO.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/1CO.json",
+          "sha256": "23737ce2c235303c1c62b462fec3a8b022dcbf575aa2656d577861e902f3e10e",
+          "snapshotId": "2026-11-13"
+        },
+        "1JN": {
+          "bytes": 142832,
+          "file": "jamieson-fausset-brown/1JN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/1JN.json",
+          "sha256": "2cffa8d30a4c134770ff5b775a2f63cabebfbb230af5296ba706c48035608ef8",
+          "snapshotId": "2026-11-13"
+        },
+        "1KI": {
+          "bytes": 181336,
+          "file": "jamieson-fausset-brown/1KI.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/1KI.json",
+          "sha256": "73de8ff2e588b13bb0e80e92284c3a5b312c7de7aff0919b2f274e0c773c9198",
+          "snapshotId": "2026-11-13"
+        },
+        "1PE": {
+          "bytes": 200466,
+          "file": "jamieson-fausset-brown/1PE.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/1PE.json",
+          "sha256": "6c0ee60911193a79ee1a7cc1448017fa2f29928000d9348f62194d335e0252d1",
+          "snapshotId": "2026-11-13"
+        },
+        "1SA": {
+          "bytes": 191401,
+          "file": "jamieson-fausset-brown/1SA.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/1SA.json",
+          "sha256": "c432025cf24dc04fcf90a8308d19d449e15264afb1ff9794d6fc93dd21637119",
+          "snapshotId": "2026-11-13"
+        },
+        "1TH": {
+          "bytes": 105907,
+          "file": "jamieson-fausset-brown/1TH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/1TH.json",
+          "sha256": "1da1e789695374fcf79d9f3df7293c88ce2dd44813df436eb1b130e17c90c94d",
+          "snapshotId": "2026-11-13"
+        },
+        "1TI": {
+          "bytes": 201917,
+          "file": "jamieson-fausset-brown/1TI.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/1TI.json",
+          "sha256": "50997e53225fcafb7a8b02463ef0231c13361b00812599afd72a97437a89e63d",
+          "snapshotId": "2026-11-13"
+        },
+        "2CH": {
+          "bytes": 206804,
+          "file": "jamieson-fausset-brown/2CH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/2CH.json",
+          "sha256": "54cf04ae0617d5bca69f65dad54f7c29fb60e21a8b542dc9b75d8ca96e09652a",
+          "snapshotId": "2026-11-13"
+        },
+        "2CO": {
+          "bytes": 246732,
+          "file": "jamieson-fausset-brown/2CO.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/2CO.json",
+          "sha256": "9f2053fcf9bcadf8c6ab40e1d9a2051bf8f9422856a6e219f4e03bf740883d97",
+          "snapshotId": "2026-11-13"
+        },
+        "2JN": {
+          "bytes": 17374,
+          "file": "jamieson-fausset-brown/2JN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/2JN.json",
+          "sha256": "4a9299cb6076ef0a6190551b8a0e8978f66d56d5c60f9db54e229c6b4e1c3410",
+          "snapshotId": "2026-11-13"
+        },
+        "2KI": {
+          "bytes": 181506,
+          "file": "jamieson-fausset-brown/2KI.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/2KI.json",
+          "sha256": "0f6d19be0ef3fcbb484471a0da54703e6e73cff72a77b167fd06408bcd54073a",
+          "snapshotId": "2026-11-13"
+        },
+        "2PE": {
+          "bytes": 89379,
+          "file": "jamieson-fausset-brown/2PE.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/2PE.json",
+          "sha256": "72ccb845831cbca3346c74700502234fd1b4bc4e27d4c60accface4c582094da",
+          "snapshotId": "2026-11-13"
+        },
+        "2SA": {
+          "bytes": 154268,
+          "file": "jamieson-fausset-brown/2SA.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/2SA.json",
+          "sha256": "459c4c1aa1d85d1246b2bd636440af1ed6570d8930a5596992400a84cf8dfdea",
+          "snapshotId": "2026-11-13"
+        },
+        "2TH": {
+          "bytes": 76429,
+          "file": "jamieson-fausset-brown/2TH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/2TH.json",
+          "sha256": "516d001096ed759544576d4679b74d168eb725fbaa59b949e2375a24c245cd69",
+          "snapshotId": "2026-11-13"
+        },
+        "2TI": {
+          "bytes": 108085,
+          "file": "jamieson-fausset-brown/2TI.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/2TI.json",
+          "sha256": "8c07af189c4414257f9de6206610f73ca69661469b33b18426c48361a2a2b3ad",
+          "snapshotId": "2026-11-13"
+        },
+        "3JN": {
+          "bytes": 8699,
+          "file": "jamieson-fausset-brown/3JN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/3JN.json",
+          "sha256": "6fe088696caeffb30c2930ec082c4fa1bc2d2a82ba9c3e02a87e2147d7a29040",
+          "snapshotId": "2026-11-13"
+        },
+        "ACT": {
+          "bytes": 303333,
+          "file": "jamieson-fausset-brown/ACT.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/ACT.json",
+          "sha256": "67acb3e89aa70b1550c823e28cb920868ef42911702ff3dc9511a4a126d94849",
+          "snapshotId": "2026-11-13"
+        },
+        "AMO": {
+          "bytes": 120743,
+          "file": "jamieson-fausset-brown/AMO.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/AMO.json",
+          "sha256": "3a2fa7a3df1e62070ef32cba1cc4b38a4c97479be64c2cbe121a3f7c0b00a5d8",
+          "snapshotId": "2026-11-13"
+        },
+        "COL": {
+          "bytes": 142305,
+          "file": "jamieson-fausset-brown/COL.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/COL.json",
+          "sha256": "cf0bc5a074b98c3096d7d03a6a4e9ae37b6a77ec331ae01648112100b054087e",
+          "snapshotId": "2026-11-13"
+        },
+        "DAN": {
+          "bytes": 325041,
+          "file": "jamieson-fausset-brown/DAN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/DAN.json",
+          "sha256": "4805ffebb74560a063efa93cbec5674d2025b297d7421d184b23499395082143",
+          "snapshotId": "2026-11-13"
+        },
+        "DEU": {
+          "bytes": 199326,
+          "file": "jamieson-fausset-brown/DEU.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/DEU.json",
+          "sha256": "c58556435709a90902802077db3fe3723032efbf53fd29ebaaf122934d5c2cee",
+          "snapshotId": "2026-11-13"
+        },
+        "ECC": {
+          "bytes": 135809,
+          "file": "jamieson-fausset-brown/ECC.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/ECC.json",
+          "sha256": "47c23d6737c98a10c26e099f4924b33ecf82f9676ee8f461c2bef280c59b172d",
+          "snapshotId": "2026-11-13"
+        },
+        "EPH": {
+          "bytes": 205758,
+          "file": "jamieson-fausset-brown/EPH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/EPH.json",
+          "sha256": "377ba0035471563ba54e92e5d011fa46c97595a440dbd6204c0bc2f58ba66d0c",
+          "snapshotId": "2026-11-13"
+        },
+        "EST": {
+          "bytes": 48399,
+          "file": "jamieson-fausset-brown/EST.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/EST.json",
+          "sha256": "22be65db9b2b593613114a6bab1546627ae1f91e4b888d6a5d4f53b358ccbffa",
+          "snapshotId": "2026-11-13"
+        },
+        "EXO": {
+          "bytes": 256350,
+          "file": "jamieson-fausset-brown/EXO.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/EXO.json",
+          "sha256": "876619e8104f72493739274e0b9e2692c2fb7d2b6c46e9438e2306ffd655c5d5",
+          "snapshotId": "2026-11-13"
+        },
+        "EZK": {
+          "bytes": 596300,
+          "file": "jamieson-fausset-brown/EZK.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/EZK.json",
+          "sha256": "1acdc5be5e4143b51a7393e615612f8357f685d2341d82ce042efb96b1295860",
+          "snapshotId": "2026-11-13"
+        },
+        "EZR": {
+          "bytes": 59048,
+          "file": "jamieson-fausset-brown/EZR.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/EZR.json",
+          "sha256": "5429510e2046f63704d4171e987e537b0656c79a37b785ecd38687a1261ff2bd",
+          "snapshotId": "2026-11-13"
+        },
+        "GAL": {
+          "bytes": 174528,
+          "file": "jamieson-fausset-brown/GAL.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/GAL.json",
+          "sha256": "ab2c4f95cc9b9be53e245f2ae08741b1ed74d7f619f4680ca4476d47671e750d",
+          "snapshotId": "2026-11-13"
+        },
+        "GEN": {
+          "bytes": 406011,
+          "file": "jamieson-fausset-brown/GEN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/GEN.json",
+          "sha256": "ab48d4aea0e003ba62d13701c270cb2cb923f1b606bd6290d3a5cb8edba7d112",
+          "snapshotId": "2026-11-13"
+        },
+        "HAB": {
+          "bytes": 58777,
+          "file": "jamieson-fausset-brown/HAB.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/HAB.json",
+          "sha256": "57bb056d49ee022725ff21c940335f1f6202c3345da8ee64e16c3f42d4421a1e",
+          "snapshotId": "2026-11-13"
+        },
+        "HAG": {
+          "bytes": 45203,
+          "file": "jamieson-fausset-brown/HAG.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/HAG.json",
+          "sha256": "d1a52ae7f066854cfc443973addaaf5035b779403ba0942b4a882e6013f1fd2a",
+          "snapshotId": "2026-11-13"
+        },
+        "HEB": {
+          "bytes": 448746,
+          "file": "jamieson-fausset-brown/HEB.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/HEB.json",
+          "sha256": "d22e214622ad9457358d1a7213c3306db33e4e50c25debff791aa1605a0ada65",
+          "snapshotId": "2026-11-13"
+        },
+        "HOS": {
+          "bytes": 162856,
+          "file": "jamieson-fausset-brown/HOS.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/HOS.json",
+          "sha256": "1a9aaf66be1f9265d6b65b69047cfc55dbfebd7acd3fe05a772f58409411fe55",
+          "snapshotId": "2026-11-13"
+        },
+        "ISA": {
+          "bytes": 897626,
+          "file": "jamieson-fausset-brown/ISA.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/ISA.json",
+          "sha256": "4230d452382b8494cc8e3e0fd43e43d566233c937d5e31de04cb448fe4ccbaef",
+          "snapshotId": "2026-11-13"
+        },
+        "JAS": {
+          "bytes": 127554,
+          "file": "jamieson-fausset-brown/JAS.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/JAS.json",
+          "sha256": "855c5dc981af6906fbcab7142e56cf7c32b258d079fc487582028c8760ae386c",
+          "snapshotId": "2026-11-13"
+        },
+        "JDG": {
+          "bytes": 139998,
+          "file": "jamieson-fausset-brown/JDG.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/JDG.json",
+          "sha256": "9a18be1de0321a71574511ed940527e79e70508120f98e83f6f7719e14a29bd1",
+          "snapshotId": "2026-11-13"
+        },
+        "JER": {
+          "bytes": 663279,
+          "file": "jamieson-fausset-brown/JER.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/JER.json",
+          "sha256": "786c928894644a2d8ecff602860aac12d381f9cd18d77e0504b9ccf8e638ba1b",
+          "snapshotId": "2026-11-13"
+        },
+        "JHN": {
+          "bytes": 231902,
+          "file": "jamieson-fausset-brown/JHN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/JHN.json",
+          "sha256": "65a7c73b851587e7bb0d7e98a405c63544e4dcaf93dc8a2a161a0043c26d1893",
+          "snapshotId": "2026-11-13"
+        },
+        "JOB": {
+          "bytes": 418691,
+          "file": "jamieson-fausset-brown/JOB.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/JOB.json",
+          "sha256": "b9f4fa655ff94854ba87f942dbf7110976a9ccbf364bd4939d1a103922c381b6",
+          "snapshotId": "2026-11-13"
+        },
+        "JOL": {
+          "bytes": 55212,
+          "file": "jamieson-fausset-brown/JOL.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/JOL.json",
+          "sha256": "aad3a497e8dc87c424379ea9c24a73a80c558594ad926c203e52b3ede586d4a7",
+          "snapshotId": "2026-11-13"
+        },
+        "JON": {
+          "bytes": 51962,
+          "file": "jamieson-fausset-brown/JON.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/JON.json",
+          "sha256": "795ad7cb762afbb239d65021c0a9038d0a68d582aac4ae63b9abe424a85486e0",
+          "snapshotId": "2026-11-13"
+        },
+        "JOS": {
+          "bytes": 126737,
+          "file": "jamieson-fausset-brown/JOS.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/JOS.json",
+          "sha256": "57596befec562ad9262e41d93bc35a855a9ac23b1f4a6b5c82d31d7d8f01e305",
+          "snapshotId": "2026-11-13"
+        },
+        "JUD": {
+          "bytes": 45867,
+          "file": "jamieson-fausset-brown/JUD.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/JUD.json",
+          "sha256": "1e451e90e11881ab35d52ee8e4795511624f7d77ae2f8634a7dd8da936e32fe6",
+          "snapshotId": "2026-11-13"
+        },
+        "LAM": {
+          "bytes": 56101,
+          "file": "jamieson-fausset-brown/LAM.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/LAM.json",
+          "sha256": "e465badd5b96ccc5828117fc4b86aacccd4d72e703f5cfe976124f668210abab",
+          "snapshotId": "2026-11-13"
+        },
+        "LEV": {
+          "bytes": 192392,
+          "file": "jamieson-fausset-brown/LEV.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/LEV.json",
+          "sha256": "6c6751eb5c04aaca28cd9c1968506f00917314cef7b5a909f1312161c552e144",
+          "snapshotId": "2026-11-13"
+        },
+        "LUK": {
+          "bytes": 270018,
+          "file": "jamieson-fausset-brown/LUK.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/LUK.json",
+          "sha256": "9c6473601e5aacfd103e7d1995915c8d9b7198b864c61e377bef40d0842a1f79",
+          "snapshotId": "2026-11-13"
+        },
+        "MAL": {
+          "bytes": 50960,
+          "file": "jamieson-fausset-brown/MAL.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/MAL.json",
+          "sha256": "cd981060fea80e51ddd382d5816b16dccd89f01a28b9287371fe7753dab89ef9",
+          "snapshotId": "2026-11-13"
+        },
+        "MAT": {
+          "bytes": 608033,
+          "file": "jamieson-fausset-brown/MAT.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/MAT.json",
+          "sha256": "bec03802f961313bc99a229da3a317ff473dea20fb7994baf5758c5d2eb9b1bc",
+          "snapshotId": "2026-11-13"
+        },
+        "MIC": {
+          "bytes": 95858,
+          "file": "jamieson-fausset-brown/MIC.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/MIC.json",
+          "sha256": "dfafb6b5488d15ac906b6e10b78005f003cc6230997397fd299136d93d999184",
+          "snapshotId": "2026-11-13"
+        },
+        "MRK": {
+          "bytes": 312193,
+          "file": "jamieson-fausset-brown/MRK.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/MRK.json",
+          "sha256": "cf94aef2061a0edb4ce58499253dd89d1183d5d2beac354c44e374bafacc5f21",
+          "snapshotId": "2026-11-13"
+        },
+        "NAM": {
+          "bytes": 47897,
+          "file": "jamieson-fausset-brown/NAM.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/NAM.json",
+          "sha256": "393e8323c1622abdac0c2c086722f57f3a5fe562914d9acd788bd1e3ff861b74",
+          "snapshotId": "2026-11-13"
+        },
+        "NEH": {
+          "bytes": 75605,
+          "file": "jamieson-fausset-brown/NEH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/NEH.json",
+          "sha256": "4ea4add4b8c338381961c00aed7e01050d13ec62d35cdf18107c6728a7ddf511",
+          "snapshotId": "2026-11-13"
+        },
+        "NUM": {
+          "bytes": 244996,
+          "file": "jamieson-fausset-brown/NUM.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/NUM.json",
+          "sha256": "ed5afc5ce71d7efbac32d27f82bb6c771ffac50c9a194333eeb58ce7f7300e24",
+          "snapshotId": "2026-11-13"
+        },
+        "OBA": {
+          "bytes": 23897,
+          "file": "jamieson-fausset-brown/OBA.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/OBA.json",
+          "sha256": "8d867689ac53576a5d4a0d6b64e3617eae8dbf4167c81eac6d57f5a4d2a7a524",
+          "snapshotId": "2026-11-13"
+        },
+        "PHM": {
+          "bytes": 17700,
+          "file": "jamieson-fausset-brown/PHM.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/PHM.json",
+          "sha256": "efb29109c19094e6713c87b9ee1ce1dc15b68925badabe209505c83e4a63de78",
+          "snapshotId": "2026-11-13"
+        },
+        "PHP": {
+          "bytes": 120163,
+          "file": "jamieson-fausset-brown/PHP.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/PHP.json",
+          "sha256": "3b1110922efb2a6b859839f652b7c1dad51a38424746fe34c726600d5ed540b2",
+          "snapshotId": "2026-11-13"
+        },
+        "PRO": {
+          "bytes": 192459,
+          "file": "jamieson-fausset-brown/PRO.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/PRO.json",
+          "sha256": "d4b48a6e0c6457c4d618843e3ce7e6dbe2528bf3016fce309130cbe7e29ab5f8",
+          "snapshotId": "2026-11-13"
+        },
+        "PSA": {
+          "bytes": 528342,
+          "file": "jamieson-fausset-brown/PSA.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/PSA.json",
+          "sha256": "f6a3241117870aab02c6ad62aa01c4d0df9b734020bea708b58a41776c69d625",
+          "snapshotId": "2026-11-13"
+        },
+        "REV": {
+          "bytes": 599145,
+          "file": "jamieson-fausset-brown/REV.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/REV.json",
+          "sha256": "6c96ca57e0308989e5e3806b1ed93712bbe9c88c16b41f56e18f0b6df15e7df7",
+          "snapshotId": "2026-11-13"
+        },
+        "ROM": {
+          "bytes": 293264,
+          "file": "jamieson-fausset-brown/ROM.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/ROM.json",
+          "sha256": "6466112bab16f41862a759bc22db9f9155193ea1ae608caa2d9e5f85da2e39d1",
+          "snapshotId": "2026-11-13"
+        },
+        "RUT": {
+          "bytes": 19314,
+          "file": "jamieson-fausset-brown/RUT.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/RUT.json",
+          "sha256": "c062e51ee5b130d5feecd840da8b02981358d46c8228be64073b9b39345488a7",
+          "snapshotId": "2026-11-13"
+        },
+        "SNG": {
+          "bytes": 159388,
+          "file": "jamieson-fausset-brown/SNG.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/SNG.json",
+          "sha256": "ae25111c86579090c26aa0d2e152c2097c835f4d415801f4aa3e3d07d79d6f05",
+          "snapshotId": "2026-11-13"
+        },
+        "TIT": {
+          "bytes": 58578,
+          "file": "jamieson-fausset-brown/TIT.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/TIT.json",
+          "sha256": "47ff5e322d0bd086fac232ebc00a1365c1703a67427dcc6c4aa197ed006bfa8f",
+          "snapshotId": "2026-11-13"
+        },
+        "ZEC": {
+          "bytes": 218215,
+          "file": "jamieson-fausset-brown/ZEC.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/ZEC.json",
+          "sha256": "85c1a9927f0c668a2fbe989ff3991255dca777275c228d63fe82aeb7d9e5de04",
+          "snapshotId": "2026-11-13"
+        },
+        "ZEP": {
+          "bytes": 47543,
+          "file": "jamieson-fausset-brown/ZEP.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/ZEP.json",
+          "sha256": "fe04a49d9eede9ef8798c00041925dd85d7e15c59a023d69c7b3051e1d0d8bd3",
+          "snapshotId": "2026-11-13"
+        }
+      },
+      "kind": "commentary",
+      "license": "Public Domain",
+      "module": {
+        "bytes": 5687741,
+        "file": "jamieson-fausset-brown/_module/JFB-3.0.zip",
+        "name": "JFB",
+        "retrievedAt": "2026-11-13T18:45:06+00:00",
+        "s3Key": "snapshots/2026-11-13/jamieson-fausset-brown/_module/JFB-3.0.zip",
+        "sha256": "78eae01d4e4cea96aec496b4d4f149b582d6d7316c56c0b1f9ef07f8f784b2a6",
+        "snapshotId": "2026-11-13",
+        "url": "https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip/JFB.zip",
+        "version": "3.0"
+      },
+      "name": "Jamieson-Fausset-Brown",
+      "origin": "crosswire:JFB@3.0",
+      "tradition": "Reformed-leaning",
+      "upstreamSha256": "78eae01d4e4cea96aec496b4d4f149b582d6d7316c56c0b1f9ef07f8f784b2a6"
+    },
+    "kjv": {
+      "apiId": "eng_kjv",
+      "books": {
+        "1CH": {
+          "bytes": 291049,
+          "file": "kjv/1CH.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/1CH.json",
+          "sha256": "04eaac00ef2f05a75b8c6832ba40257b7970ff373fcbe9ddc20ae48bb6dd7ced",
+          "snapshotId": "2026-11-13"
+        },
+        "1CO": {
+          "bytes": 104398,
+          "file": "kjv/1CO.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/1CO.json",
+          "sha256": "0b5146d6aa1f58db282acab54fc20f930c7fd0606887325f6df047a5db1c8cf3",
+          "snapshotId": "2026-11-13"
+        },
+        "1JN": {
+          "bytes": 26450,
+          "file": "kjv/1JN.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/1JN.json",
+          "sha256": "06de8f48f997f55b022c1c6a6c27b477f449a26d8ec8ee365ec3b396dae24469",
+          "snapshotId": "2026-11-13"
+        },
+        "1KI": {
+          "bytes": 283432,
+          "file": "kjv/1KI.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/1KI.json",
+          "sha256": "3714b58602db4e391d4e81b31f038d3f0045bbaf9fd416047643d18109bbfa62",
+          "snapshotId": "2026-11-13"
+        },
+        "1PE": {
+          "bytes": 27463,
+          "file": "kjv/1PE.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/1PE.json",
+          "sha256": "51949bf49df192978725991000ee80c9b14815d5770c0d9720beba95f3a4323e",
+          "snapshotId": "2026-11-13"
+        },
+        "1SA": {
+          "bytes": 291293,
+          "file": "kjv/1SA.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/1SA.json",
+          "sha256": "088255ee94766fbb945ff66d7a5587c4c5f5006e690cfef0e4070ef5a1bd13d5",
+          "snapshotId": "2026-11-13"
+        },
+        "1TH": {
+          "bytes": 21614,
+          "file": "kjv/1TH.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/1TH.json",
+          "sha256": "4147116629e614968b2de9f5aeef6a324caed7fde02728f1813836a7cb99793d",
+          "snapshotId": "2026-11-13"
+        },
+        "1TI": {
+          "bytes": 27468,
+          "file": "kjv/1TI.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/1TI.json",
+          "sha256": "9ccc39bac3bceadc84dbfdfffe86d9e61aefe5f4c22a490553275a2dec2de99b",
+          "snapshotId": "2026-11-13"
+        },
+        "2CH": {
+          "bytes": 309567,
+          "file": "kjv/2CH.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/2CH.json",
+          "sha256": "2ffeeae7669fe8e6fbf22a9a8f5dbf20149befa424ab555bf5c924950d97bfde",
+          "snapshotId": "2026-11-13"
+        },
+        "2CO": {
+          "bytes": 65648,
+          "file": "kjv/2CO.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/2CO.json",
+          "sha256": "2b1e29e42e3198f367e2b8c763049e9ba938b026f54df84a8d27e638a0140a1b",
+          "snapshotId": "2026-11-13"
+        },
+        "2JN": {
+          "bytes": 3489,
+          "file": "kjv/2JN.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/2JN.json",
+          "sha256": "4db4290f7a1129536bc1d8e5e4bd211e7e9450b6e01b9a7f92a8b15b780f55ac",
+          "snapshotId": "2026-11-13"
+        },
+        "2KI": {
+          "bytes": 262343,
+          "file": "kjv/2KI.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/2KI.json",
+          "sha256": "64a726b21a98fed1f25d2eb32fd462f3d9ce3e43d2d5f1548c4a3ea32e0cfcfa",
+          "snapshotId": "2026-11-13"
+        },
+        "2PE": {
+          "bytes": 16493,
+          "file": "kjv/2PE.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/2PE.json",
+          "sha256": "84b44668c487c7430918da72502665744f637b26f86bb4d6f3893623b2ac1ef3",
+          "snapshotId": "2026-11-13"
+        },
+        "2SA": {
+          "bytes": 248316,
+          "file": "kjv/2SA.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/2SA.json",
+          "sha256": "45694a191419fd1ec1eb9e4953ce39555eecfc1b031bd47f1dbb5cd183d5dd8b",
+          "snapshotId": "2026-11-13"
+        },
+        "2TH": {
+          "bytes": 12035,
+          "file": "kjv/2TH.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/2TH.json",
+          "sha256": "d957272dfbff76877d6bb5651a7328f0cc1e2cc207408273fcf7355e4e7f4653",
+          "snapshotId": "2026-11-13"
+        },
+        "2TI": {
+          "bytes": 20070,
+          "file": "kjv/2TI.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/2TI.json",
+          "sha256": "a0ab712dc76b21fee9079a0c718dd47380b5868dae223c74808012ec1c2bfc36",
+          "snapshotId": "2026-11-13"
+        },
+        "3JN": {
+          "bytes": 3848,
+          "file": "kjv/3JN.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/3JN.json",
+          "sha256": "7d01e9143baa1c5e5225851ceb02576305c70d003567cd9b523dfac62f574d2a",
+          "snapshotId": "2026-11-13"
+        },
+        "ACT": {
+          "bytes": 260260,
+          "file": "kjv/ACT.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/ACT.json",
+          "sha256": "352719598b009b0c5d31e380b4e877840710f9cb2a5e1b0378f286cccd547d0b",
+          "snapshotId": "2026-11-13"
+        },
+        "AMO": {
+          "bytes": 55330,
+          "file": "kjv/AMO.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/AMO.json",
+          "sha256": "43dffae5b4ae01453806d8634a9327901fdadc66e3a4b84ddc521666643aed09",
+          "snapshotId": "2026-11-13"
+        },
+        "COL": {
+          "bytes": 23406,
+          "file": "kjv/COL.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/COL.json",
+          "sha256": "a58303a23befe7674be9621f86dfeed47c42205eaefb1f36da36aeecd10e420f",
+          "snapshotId": "2026-11-13"
+        },
+        "DAN": {
+          "bytes": 141832,
+          "file": "kjv/DAN.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/DAN.json",
+          "sha256": "f149a69422dc709889f69d046f76225cf8b65a911cca36ffcc106590575b8756",
+          "snapshotId": "2026-11-13"
+        },
+        "DEU": {
+          "bytes": 311978,
+          "file": "kjv/DEU.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/DEU.json",
+          "sha256": "932d1a2c67ad07a3dc5e1ec70dca55d76e93a43e167b3cc9535dea6792cb9d1d",
+          "snapshotId": "2026-11-13"
+        },
+        "ECC": {
+          "bytes": 73877,
+          "file": "kjv/ECC.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/ECC.json",
+          "sha256": "30bc39d658ac9b78bff6d30414d6401cde7359e9e33a795ec5b5890be981c7bc",
+          "snapshotId": "2026-11-13"
+        },
+        "EPH": {
+          "bytes": 36516,
+          "file": "kjv/EPH.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/EPH.json",
+          "sha256": "f9821a1db9d642684117394cd60034823643434161ef0e1f2b2624ecf609cb07",
+          "snapshotId": "2026-11-13"
+        },
+        "EST": {
+          "bytes": 67851,
+          "file": "kjv/EST.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/EST.json",
+          "sha256": "ff502865f2647eb184204a2f48b72702dbe867b9b65fd8298f43472527cd2e52",
+          "snapshotId": "2026-11-13"
+        },
+        "EXO": {
+          "bytes": 374804,
+          "file": "kjv/EXO.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/EXO.json",
+          "sha256": "a4a107bc825ca8aaaf652b6ff7595505eb8030113e68d0c23de7f2ad20c69ebc",
+          "snapshotId": "2026-11-13"
+        },
+        "EZK": {
+          "bytes": 454613,
+          "file": "kjv/EZK.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/EZK.json",
+          "sha256": "35125b9cfa4374b080db34577a3c4ed8f7834518d9b88198fee03d588ba4e936",
+          "snapshotId": "2026-11-13"
+        },
+        "EZR": {
+          "bytes": 95331,
+          "file": "kjv/EZR.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/EZR.json",
+          "sha256": "4c0a343f82a9f89da3b40d1d214accaf320185302d395aedbcebe14f1f6f8ef9",
+          "snapshotId": "2026-11-13"
+        },
+        "GAL": {
+          "bytes": 35668,
+          "file": "kjv/GAL.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/GAL.json",
+          "sha256": "bff9172aec81c498caacbb5d63d00fbe9d4e8fab975453b02bee6206d66a4c28",
+          "snapshotId": "2026-11-13"
+        },
+        "GEN": {
+          "bytes": 479784,
+          "file": "kjv/GEN.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/GEN.json",
+          "sha256": "23a5b14de08b54838563f225e9785719c8c6f527d4d5719799e55874921805a1",
+          "snapshotId": "2026-11-13"
+        },
+        "HAB": {
+          "bytes": 23903,
+          "file": "kjv/HAB.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/HAB.json",
+          "sha256": "626eea5fc1137d4734676986de1b4928a53ac24c66e83c6f94aa4cfbe155e1c6",
+          "snapshotId": "2026-11-13"
+        },
+        "HAG": {
+          "bytes": 12183,
+          "file": "kjv/HAG.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/HAG.json",
+          "sha256": "4c9db990d2d742f82204fa23ff28c2b93208f7b3244fc25360b7982931dcfaf3",
+          "snapshotId": "2026-11-13"
+        },
+        "HEB": {
+          "bytes": 75559,
+          "file": "kjv/HEB.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/HEB.json",
+          "sha256": "1694aed4fd53348d6e6934b9cd880c37cdf26b3e082b089664c18dddefe25040",
+          "snapshotId": "2026-11-13"
+        },
+        "HOS": {
+          "bytes": 73520,
+          "file": "kjv/HOS.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/HOS.json",
+          "sha256": "fae67921e512bcad0206511df2ed890bf5d7f8bb6a52472f4c8006a3e3c48853",
+          "snapshotId": "2026-11-13"
+        },
+        "ISA": {
+          "bytes": 474842,
+          "file": "kjv/ISA.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/ISA.json",
+          "sha256": "38a4e216d0117a16d188250ac6d7f02565a325ba0601dffb382ceaaddb716e58",
+          "snapshotId": "2026-11-13"
+        },
+        "JAS": {
+          "bytes": 26076,
+          "file": "kjv/JAS.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/JAS.json",
+          "sha256": "83bb20deab23cad133a3804cc14a30186dab6af531931db61da01802f5c03132",
+          "snapshotId": "2026-11-13"
+        },
+        "JDG": {
+          "bytes": 222391,
+          "file": "kjv/JDG.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/JDG.json",
+          "sha256": "537f97142270c4db35d0af66d3091e72dc44e6f923dda9ae23bc709f976973b0",
+          "snapshotId": "2026-11-13"
+        },
+        "JER": {
+          "bytes": 481943,
+          "file": "kjv/JER.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/JER.json",
+          "sha256": "53f35ca2e6af37e629ed696d43f7a1fcd983bba1c51d7d825bf6f3f9fca44409",
+          "snapshotId": "2026-11-13"
+        },
+        "JHN": {
+          "bytes": 211882,
+          "file": "kjv/JHN.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/JHN.json",
+          "sha256": "99cc07e364b2c84e1ca519283aff1eda7850399c573476ecc06cab3251f9b183",
+          "snapshotId": "2026-11-13"
+        },
+        "JOB": {
+          "bytes": 305245,
+          "file": "kjv/JOB.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/JOB.json",
+          "sha256": "df2dc5ca50632b4c2808e5b96de59a9ac00ef96a56282a31bd11284198741dfa",
+          "snapshotId": "2026-11-13"
+        },
+        "JOL": {
+          "bytes": 25117,
+          "file": "kjv/JOL.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/JOL.json",
+          "sha256": "7db96b3530eeea5dea54ee4c0357c2512c9e3f7ffb5724b77a01066e561e7a8a",
+          "snapshotId": "2026-11-13"
+        },
+        "JON": {
+          "bytes": 18550,
+          "file": "kjv/JON.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/JON.json",
+          "sha256": "b2269053b7ce4fd63d0f29efd7d0ac3939395b843b6f3598bf81a0ee0bfc2567",
+          "snapshotId": "2026-11-13"
+        },
+        "JOS": {
+          "bytes": 210839,
+          "file": "kjv/JOS.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/JOS.json",
+          "sha256": "b88b3fc1d2918a300c0595c4f999538b2a3754412702313250f9e99251f9fb95",
+          "snapshotId": "2026-11-13"
+        },
+        "JUD": {
+          "bytes": 6964,
+          "file": "kjv/JUD.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/JUD.json",
+          "sha256": "d43e0ac5736d2aa47374241f4119402c053b4ff61a7d7ff9d01b1e19779c5d9d",
+          "snapshotId": "2026-11-13"
+        },
+        "LAM": {
+          "bytes": 46784,
+          "file": "kjv/LAM.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/LAM.json",
+          "sha256": "44d2890652660e440f9c1575d5d8fb767390a636595acc52c8fa8ad4744fbcf3",
+          "snapshotId": "2026-11-13"
+        },
+        "LEV": {
+          "bytes": 264332,
+          "file": "kjv/LEV.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/LEV.json",
+          "sha256": "61d1b2f45061c0b6748308f32fee42ce31e062675e1cae59a8f073c88d9cd066",
+          "snapshotId": "2026-11-13"
+        },
+        "LUK": {
+          "bytes": 285252,
+          "file": "kjv/LUK.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/LUK.json",
+          "sha256": "1e45044a710cd0312ed9df7dfa04dabfa3a47fac07966a9b881eac53ddbc0908",
+          "snapshotId": "2026-11-13"
+        },
+        "MAL": {
+          "bytes": 22472,
+          "file": "kjv/MAL.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/MAL.json",
+          "sha256": "91e5de1fc2bf03d727ab36936d937034fcae796a882c9f13f9c0000013a39fea",
+          "snapshotId": "2026-11-13"
+        },
+        "MAT": {
+          "bytes": 268092,
+          "file": "kjv/MAT.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/MAT.json",
+          "sha256": "98670badae453bf688a66f54cb902fbbe5bf53cbf875337dcfdc83dc9085a2f4",
+          "snapshotId": "2026-11-13"
+        },
+        "MIC": {
+          "bytes": 42729,
+          "file": "kjv/MIC.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/MIC.json",
+          "sha256": "f74e2fe007abd6c6053af3e9b602cd4eec62e23f1c90b5c747ec97e0c5019719",
+          "snapshotId": "2026-11-13"
+        },
+        "MRK": {
+          "bytes": 167408,
+          "file": "kjv/MRK.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/MRK.json",
+          "sha256": "4536f80251cea5a46daf28f995d48da3889dd84b991fb7aad489882b20627ff7",
+          "snapshotId": "2026-11-13"
+        },
+        "NAM": {
+          "bytes": 18693,
+          "file": "kjv/NAM.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/NAM.json",
+          "sha256": "181ed235af076ee7ec55fe8f8702f558d68042dd2a4e9623a932472f39c1b52d",
+          "snapshotId": "2026-11-13"
+        },
+        "NEH": {
+          "bytes": 129622,
+          "file": "kjv/NEH.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/NEH.json",
+          "sha256": "b082a99958dc0b2be2e68ec42a1201441ae436f54fd6f482b4a38a2558da2b29",
+          "snapshotId": "2026-11-13"
+        },
+        "NUM": {
+          "bytes": 382202,
+          "file": "kjv/NUM.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/NUM.json",
+          "sha256": "e9d49b1a1a0e583df909b0f11fe68442276c674aa090b27660bea58047cd7087",
+          "snapshotId": "2026-11-13"
+        },
+        "OBA": {
+          "bytes": 8580,
+          "file": "kjv/OBA.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/OBA.json",
+          "sha256": "dd297acc8e37e81d5f55ca9e33963d36d869e9d996e07c59d204f6b5cb2ab326",
+          "snapshotId": "2026-11-13"
+        },
+        "PHM": {
+          "bytes": 5886,
+          "file": "kjv/PHM.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/PHM.json",
+          "sha256": "549f885d684d616b831f5451e5441e43f6410c73ca945a418e4957df780479b8",
+          "snapshotId": "2026-11-13"
+        },
+        "PHP": {
+          "bytes": 25191,
+          "file": "kjv/PHP.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/PHP.json",
+          "sha256": "eed4da576e696a2d63ad1efc254f9d1bc05f8e78c73dddad99339d2288c4371b",
+          "snapshotId": "2026-11-13"
+        },
+        "PRO": {
+          "bytes": 250763,
+          "file": "kjv/PRO.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/PRO.json",
+          "sha256": "1822137f6c8380bdc363bd31a23d415ff26409bfa319aec27342e536590074fb",
+          "snapshotId": "2026-11-13"
+        },
+        "PSA": {
+          "bytes": 1196154,
+          "file": "kjv/PSA.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/PSA.json",
+          "sha256": "351cedd912f402f1007ec41bb8b8acfd1687f675c8dcd724376d558903327728",
+          "snapshotId": "2026-11-13"
+        },
+        "REV": {
+          "bytes": 114788,
+          "file": "kjv/REV.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/REV.json",
+          "sha256": "1f583540ea8b8657f31d1e484f892fd4cba0b7fdd6671c0231e8b73e8492cdac",
+          "snapshotId": "2026-11-13"
+        },
+        "ROM": {
+          "bytes": 106281,
+          "file": "kjv/ROM.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/ROM.json",
+          "sha256": "ce18a658568d48eb0dce4bd9c02463af46b698a312137ed6d61c1b91b525e19d",
+          "snapshotId": "2026-11-13"
+        },
+        "RUT": {
+          "bytes": 29904,
+          "file": "kjv/RUT.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/RUT.json",
+          "sha256": "ecf6bc5b1898ce3c972134e58a56c92a66a4ebfc84f92935f8e64ad0432fc584",
+          "snapshotId": "2026-11-13"
+        },
+        "SNG": {
+          "bytes": 38850,
+          "file": "kjv/SNG.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/SNG.json",
+          "sha256": "f6ba84008dfa1e51b1de32a4b0e37243c94508dedeeb6d216051ee6069fafd3e",
+          "snapshotId": "2026-11-13"
+        },
+        "TIT": {
+          "bytes": 11452,
+          "file": "kjv/TIT.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/TIT.json",
+          "sha256": "a7f7c203b3f33cd696088753308813f600780474db7f53e5042f43792c06f8bc",
+          "snapshotId": "2026-11-13"
+        },
+        "ZEC": {
+          "bytes": 79203,
+          "file": "kjv/ZEC.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/ZEC.json",
+          "sha256": "ea20e0fc2507eb79578d0f04b8bf1804217dc82f52c22a660681a7c98e6d5fd0",
+          "snapshotId": "2026-11-13"
+        },
+        "ZEP": {
+          "bytes": 20226,
+          "file": "kjv/ZEP.json",
+          "retrievedAt": "2026-11-13T16:21:13+00:00",
+          "s3Key": "snapshots/2026-11-13/kjv/ZEP.json",
+          "sha256": "ae18fa49813b0017acefcf543d01a97b03346d1abbd586614232e12c90aac40a",
+          "snapshotId": "2026-11-13"
+        }
+      },
+      "kind": "translation",
+      "license": "Public domain",
+      "licenseUrl": "https://ebible.org/Scriptures/details.php?id=eng-kjv2006",
+      "name": "King James Version",
+      "origin": "helloao:eng_kjv",
+      "upstreamSha256": "053f30b1a3d642ce1693243ccb31261cc44f285a0c05175f473be8005d0b2874"
+    },
+    "matthew-henry": {
+      "apiId": "MHC",
+      "books": {
+        "1CH": {
+          "bytes": 427147,
+          "file": "matthew-henry/1CH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/1CH.json",
+          "sha256": "b164c90cffc792af1ef5085a7a25a6d9ced1e5df4012f488a13a8819bb23651f",
+          "snapshotId": "2026-11-13"
+        },
+        "1CO": {
+          "bytes": 590677,
+          "file": "matthew-henry/1CO.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/1CO.json",
+          "sha256": "9ef17c05ce17ab097ad9e5b896f6234a33cb5a2ee635319f22b1273db2dd1a23",
+          "snapshotId": "2026-11-13"
+        },
+        "1JN": {
+          "bytes": 231347,
+          "file": "matthew-henry/1JN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/1JN.json",
+          "sha256": "02c7a45d997a5360692b9bee9590c1ff1bd6512c5a86286facf82e3ddcec9b91",
+          "snapshotId": "2026-11-13"
+        },
+        "1KI": {
+          "bytes": 740586,
+          "file": "matthew-henry/1KI.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/1KI.json",
+          "sha256": "f610f00a10d68102b12ab8bb8336392f6a6a05175f782318805c2fc1fe312185",
+          "snapshotId": "2026-11-13"
+        },
+        "1PE": {
+          "bytes": 205799,
+          "file": "matthew-henry/1PE.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/1PE.json",
+          "sha256": "e6e5ca95814fde27aece25070eb574f387ce6d1059608db43cfcc5ddda1b43eb",
+          "snapshotId": "2026-11-13"
+        },
+        "1SA": {
+          "bytes": 980005,
+          "file": "matthew-henry/1SA.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/1SA.json",
+          "sha256": "5f25c97ff5e5700ed8b8588af4396ff2db8f8049f9ece36ee30b0d5f4db7482c",
+          "snapshotId": "2026-11-13"
+        },
+        "1TH": {
+          "bytes": 127163,
+          "file": "matthew-henry/1TH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/1TH.json",
+          "sha256": "39bde73469825aad1b7c37238ae677185a284f085f86828d94288272850a4865",
+          "snapshotId": "2026-11-13"
+        },
+        "1TI": {
+          "bytes": 153197,
+          "file": "matthew-henry/1TI.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/1TI.json",
+          "sha256": "49fa657f6ee02d43dd9aab515ca6b7c836a8b7d9f9bb33e8d78be8240d002db8",
+          "snapshotId": "2026-11-13"
+        },
+        "2CH": {
+          "bytes": 635938,
+          "file": "matthew-henry/2CH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/2CH.json",
+          "sha256": "a6dcbc4530cf6755304168be674ae2dde38a105c01ffe33c0cb2b80dbec6653a",
+          "snapshotId": "2026-11-13"
+        },
+        "2CO": {
+          "bytes": 237755,
+          "file": "matthew-henry/2CO.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/2CO.json",
+          "sha256": "3e2c9461352e10becfd1562286f399f2416795a0943274639bd109e0674ee42c",
+          "snapshotId": "2026-11-13"
+        },
+        "2JN": {
+          "bytes": 24703,
+          "file": "matthew-henry/2JN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/2JN.json",
+          "sha256": "f7b6055325a72426bcdd97ae9308797d4c02803e3f16fc89b7982d8f0880203c",
+          "snapshotId": "2026-11-13"
+        },
+        "2KI": {
+          "bytes": 736234,
+          "file": "matthew-henry/2KI.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/2KI.json",
+          "sha256": "ad49cf1671c77757ff5fc1435435b5f6a781259ca3eace9fbe8f44742bd570d6",
+          "snapshotId": "2026-11-13"
+        },
+        "2PE": {
+          "bytes": 127106,
+          "file": "matthew-henry/2PE.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/2PE.json",
+          "sha256": "9aebd8fc53d4e9cdf1b08918260da88bc55eea2e367f39d72deed075a4cbb9ee",
+          "snapshotId": "2026-11-13"
+        },
+        "2SA": {
+          "bytes": 739447,
+          "file": "matthew-henry/2SA.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/2SA.json",
+          "sha256": "a237fb6dfdb1ea62a83efc1b510921e0231b1890d5a4353bc1ab2b0e746dc262",
+          "snapshotId": "2026-11-13"
+        },
+        "2TH": {
+          "bytes": 64126,
+          "file": "matthew-henry/2TH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/2TH.json",
+          "sha256": "32233266b252061dd51d9ef50645b390587b8518e8093d612f3688c86335a916",
+          "snapshotId": "2026-11-13"
+        },
+        "2TI": {
+          "bytes": 118021,
+          "file": "matthew-henry/2TI.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/2TI.json",
+          "sha256": "bd6f4bb505af167f7e4e4d2af947349f528b24602c0456a5df438640bd721430",
+          "snapshotId": "2026-11-13"
+        },
+        "3JN": {
+          "bytes": 19200,
+          "file": "matthew-henry/3JN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/3JN.json",
+          "sha256": "7c98a23168f42c14d4ed7ee8aa887e45d4e3e78634a79c26bc636d369f2411c6",
+          "snapshotId": "2026-11-13"
+        },
+        "ACT": {
+          "bytes": 2132121,
+          "file": "matthew-henry/ACT.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/ACT.json",
+          "sha256": "3d062cb2d8df06f1ff235c4c3d20effa79e0e6239c080c4a4c4801913bbb5d1a",
+          "snapshotId": "2026-11-13"
+        },
+        "AMO": {
+          "bytes": 267691,
+          "file": "matthew-henry/AMO.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/AMO.json",
+          "sha256": "c40afa6fedd7819f655c7c65b509eba5dfbf44611ddf6152de353066886db756",
+          "snapshotId": "2026-11-13"
+        },
+        "COL": {
+          "bytes": 132983,
+          "file": "matthew-henry/COL.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/COL.json",
+          "sha256": "11ed2701dae8ed8554acc743c42b4d5c99e91ced5724e7f01e6bc4b8a1ab9b3e",
+          "snapshotId": "2026-11-13"
+        },
+        "DAN": {
+          "bytes": 581983,
+          "file": "matthew-henry/DAN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/DAN.json",
+          "sha256": "8407f603709f717e7d81dde892a81772fa0cd8e59c01dc3a9d4287fec1653229",
+          "snapshotId": "2026-11-13"
+        },
+        "DEU": {
+          "bytes": 940851,
+          "file": "matthew-henry/DEU.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/DEU.json",
+          "sha256": "7dc64e0be5783c000fb30f9eacb680382c6daf645d07e0b2ffb5ee85740eb36b",
+          "snapshotId": "2026-11-13"
+        },
+        "ECC": {
+          "bytes": 442246,
+          "file": "matthew-henry/ECC.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/ECC.json",
+          "sha256": "4b253417ff2e911d9822aab7b32655e53e20a87567dd8e88a22f514f7e6d560f",
+          "snapshotId": "2026-11-13"
+        },
+        "EPH": {
+          "bytes": 219241,
+          "file": "matthew-henry/EPH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/EPH.json",
+          "sha256": "b3ca03193eeca482e556359088779814bd078bbc642ec36d8fa652337318806a",
+          "snapshotId": "2026-11-13"
+        },
+        "EST": {
+          "bytes": 185945,
+          "file": "matthew-henry/EST.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/EST.json",
+          "sha256": "0ed10e310a3143ea66f648fb6c8d123b55b075c172a63cf6c39f4f1568dc6801",
+          "snapshotId": "2026-11-13"
+        },
+        "EXO": {
+          "bytes": 1030784,
+          "file": "matthew-henry/EXO.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/EXO.json",
+          "sha256": "a5308379da95b9f87bebee7ed543a841970a6e81af97d867fc9cce65689944ac",
+          "snapshotId": "2026-11-13"
+        },
+        "EZK": {
+          "bytes": 1559833,
+          "file": "matthew-henry/EZK.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/EZK.json",
+          "sha256": "f6e5bf72ebe9347359f43531a0c5e750a924675ca908b10209a5eebcf86651df",
+          "snapshotId": "2026-11-13"
+        },
+        "EZR": {
+          "bytes": 218430,
+          "file": "matthew-henry/EZR.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/EZR.json",
+          "sha256": "29ae33bf240b336b7ca5e8e8b29d688b5bd60b5d7c55476ce2821014d46a4dc9",
+          "snapshotId": "2026-11-13"
+        },
+        "GAL": {
+          "bytes": 222092,
+          "file": "matthew-henry/GAL.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/GAL.json",
+          "sha256": "8ec6e168721732091a29460364918a9d9a94a97885f5f0bfb17d1d9673ab8c7f",
+          "snapshotId": "2026-11-13"
+        },
+        "GEN": {
+          "bytes": 1602887,
+          "file": "matthew-henry/GEN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/GEN.json",
+          "sha256": "d547d5cdbaf73afb3ab1d74113e96ff677ac3cf8cedc444e525ff01fbc34eb35",
+          "snapshotId": "2026-11-13"
+        },
+        "HAB": {
+          "bytes": 114573,
+          "file": "matthew-henry/HAB.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/HAB.json",
+          "sha256": "bfaa287a359c8e4dc762e45f313bcb9dba43893c363994f3b7e747838c6da2a2",
+          "snapshotId": "2026-11-13"
+        },
+        "HAG": {
+          "bytes": 68419,
+          "file": "matthew-henry/HAG.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/HAG.json",
+          "sha256": "1996e7facfc54b6725f7b68b90bdcb2417876300913067406095f4c927efd73d",
+          "snapshotId": "2026-11-13"
+        },
+        "HEB": {
+          "bytes": 452590,
+          "file": "matthew-henry/HEB.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/HEB.json",
+          "sha256": "9c92994b78bb8bf9d30f64a816bcbe4376e8989b18d10d537c1e455caca079ca",
+          "snapshotId": "2026-11-13"
+        },
+        "HOS": {
+          "bytes": 505869,
+          "file": "matthew-henry/HOS.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/HOS.json",
+          "sha256": "22d64aa96099dc1fe8dc25d7eb67e5116b3d09824a89bb294afdec978fc097f8",
+          "snapshotId": "2026-11-13"
+        },
+        "ISA": {
+          "bytes": 2379949,
+          "file": "matthew-henry/ISA.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/ISA.json",
+          "sha256": "42b62ce80287fbba40ca0fe2a533b6fedd047fcf06638961b3d15fb3943bba75",
+          "snapshotId": "2026-11-13"
+        },
+        "JAS": {
+          "bytes": 204235,
+          "file": "matthew-henry/JAS.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/JAS.json",
+          "sha256": "bc8e4ee7ee3227bb2848b67322976952ac88735b6cc3d559441b0d6137e76a9a",
+          "snapshotId": "2026-11-13"
+        },
+        "JDG": {
+          "bytes": 755308,
+          "file": "matthew-henry/JDG.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/JDG.json",
+          "sha256": "3d80d3b215200853d936f4194c418ecfd2430e1ac7a3f6f475a9ddfee6a59b62",
+          "snapshotId": "2026-11-13"
+        },
+        "JER": {
+          "bytes": 1802763,
+          "file": "matthew-henry/JER.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/JER.json",
+          "sha256": "94d5190e176e08e0e21ecf245b41c8c7efd496ff8e02c050642c8c5deea50ce5",
+          "snapshotId": "2026-11-13"
+        },
+        "JHN": {
+          "bytes": 2290355,
+          "file": "matthew-henry/JHN.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/JHN.json",
+          "sha256": "9424eb3966f8f6b31df05271a96525c97942fdba7052e2a780b58d654d6badf5",
+          "snapshotId": "2026-11-13"
+        },
+        "JOB": {
+          "bytes": 1448793,
+          "file": "matthew-henry/JOB.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/JOB.json",
+          "sha256": "0d1824196cd0db79b12dce06998a29c2b0cf5c094b3619186bd98907d80cb9e2",
+          "snapshotId": "2026-11-13"
+        },
+        "JOL": {
+          "bytes": 126372,
+          "file": "matthew-henry/JOL.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/JOL.json",
+          "sha256": "6c86cb54cd0e6c65fd76b14c3a8bb2587a316987fc6f8cd3a039f859852912be",
+          "snapshotId": "2026-11-13"
+        },
+        "JON": {
+          "bytes": 141971,
+          "file": "matthew-henry/JON.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/JON.json",
+          "sha256": "1faed6d64a21cb62b59fdb27e60f5247d258390a4e8242a4a76a50519a3d0e71",
+          "snapshotId": "2026-11-13"
+        },
+        "JOS": {
+          "bytes": 699887,
+          "file": "matthew-henry/JOS.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/JOS.json",
+          "sha256": "4ebcbf3d8239e741a169d9d03a4dc9ade39774007df66fb1c47b3cc83ae3ab60",
+          "snapshotId": "2026-11-13"
+        },
+        "JUD": {
+          "bytes": 65635,
+          "file": "matthew-henry/JUD.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/JUD.json",
+          "sha256": "ce6be338bb6167e413cffe690d48e1fd18db3c5306467c3c628a2415fda34aef",
+          "snapshotId": "2026-11-13"
+        },
+        "LAM": {
+          "bytes": 202514,
+          "file": "matthew-henry/LAM.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/LAM.json",
+          "sha256": "f5ccd3e1956f8e205011d18f1f74c06e9b61a581bc9d8b52329142d819ef527d",
+          "snapshotId": "2026-11-13"
+        },
+        "LEV": {
+          "bytes": 663173,
+          "file": "matthew-henry/LEV.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/LEV.json",
+          "sha256": "74492931421425bdce4643bae6333ced2f3a94305962ee36d4450caa4d84dd03",
+          "snapshotId": "2026-11-13"
+        },
+        "LUK": {
+          "bytes": 1578915,
+          "file": "matthew-henry/LUK.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/LUK.json",
+          "sha256": "d39c507cfff74e08ee963341b97bac564f1498aad7ef5b3e83e8c9d9a44cb577",
+          "snapshotId": "2026-11-13"
+        },
+        "MAL": {
+          "bytes": 183876,
+          "file": "matthew-henry/MAL.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/MAL.json",
+          "sha256": "b05220980cab8b122bc739b8ea0787a9f56bfdfce2c6a8ba31efae9daa861ba3",
+          "snapshotId": "2026-11-13"
+        },
+        "MAT": {
+          "bytes": 2680119,
+          "file": "matthew-henry/MAT.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/MAT.json",
+          "sha256": "b84c91bee739feebd3fbb82aba3d91485ee03a3124198604be1245760595f2f0",
+          "snapshotId": "2026-11-13"
+        },
+        "MIC": {
+          "bytes": 215637,
+          "file": "matthew-henry/MIC.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/MIC.json",
+          "sha256": "60dfa35146b313674faac0de6a3ae44cb425ef7f6543f00e7eab336bb0e934a9",
+          "snapshotId": "2026-11-13"
+        },
+        "MRK": {
+          "bytes": 714628,
+          "file": "matthew-henry/MRK.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/MRK.json",
+          "sha256": "f240b22b2a97d44c2f90f4c0d95ad1e7e682b4e36debb0f7f6b81c3adeb9b15e",
+          "snapshotId": "2026-11-13"
+        },
+        "NAM": {
+          "bytes": 71646,
+          "file": "matthew-henry/NAM.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/NAM.json",
+          "sha256": "b82bed11e8021a4662656584ff7cdae6bf7340d74508f4088229d989d3e82a16",
+          "snapshotId": "2026-11-13"
+        },
+        "NEH": {
+          "bytes": 302168,
+          "file": "matthew-henry/NEH.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/NEH.json",
+          "sha256": "9c4adefb784a470657cc0f616d7e8010fe1f933262cddf3fa220877fccaa9239",
+          "snapshotId": "2026-11-13"
+        },
+        "NUM": {
+          "bytes": 924622,
+          "file": "matthew-henry/NUM.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/NUM.json",
+          "sha256": "c0d9b99a178fbe87cd003845cae3b25ca0703f3db989c8e0c61359a252db3c32",
+          "snapshotId": "2026-11-13"
+        },
+        "OBA": {
+          "bytes": 45824,
+          "file": "matthew-henry/OBA.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/OBA.json",
+          "sha256": "eea32a7182bc250086eda532358f10fdcea6567bb1607d677ca24f1834c79b40",
+          "snapshotId": "2026-11-13"
+        },
+        "PHM": {
+          "bytes": 57657,
+          "file": "matthew-henry/PHM.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/PHM.json",
+          "sha256": "3cf2a5b21e2e8561e0c51deec72232b731abe302d6ced606f96abcce651c0994",
+          "snapshotId": "2026-11-13"
+        },
+        "PHP": {
+          "bytes": 149749,
+          "file": "matthew-henry/PHP.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/PHP.json",
+          "sha256": "720750d21290226b6712eafb2d67a96c11685e17f1a45e9fd997f15ce13c5027",
+          "snapshotId": "2026-11-13"
+        },
+        "PRO": {
+          "bytes": 1146055,
+          "file": "matthew-henry/PRO.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/PRO.json",
+          "sha256": "bc5fdb6b2258a8325e7066c84f82275eb6555c45f9026a54eae63da0c5caf359",
+          "snapshotId": "2026-11-13"
+        },
+        "PSA": {
+          "bytes": 3393526,
+          "file": "matthew-henry/PSA.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/PSA.json",
+          "sha256": "64e421d2bc44e1f46d5dcfabb35a1d65cec014200c7eaa07f785f9dd8f3fca0f",
+          "snapshotId": "2026-11-13"
+        },
+        "REV": {
+          "bytes": 392886,
+          "file": "matthew-henry/REV.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/REV.json",
+          "sha256": "195427cf62ec4f3b6773b9c48d867a26d57e485d363d6f6d8d88985b912c6541",
+          "snapshotId": "2026-11-13"
+        },
+        "ROM": {
+          "bytes": 812106,
+          "file": "matthew-henry/ROM.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/ROM.json",
+          "sha256": "5afcf5867b153563f89aade359678d4d37fd4c4ee320f8f43c6d6d89361f8842",
+          "snapshotId": "2026-11-13"
+        },
+        "RUT": {
+          "bytes": 133199,
+          "file": "matthew-henry/RUT.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/RUT.json",
+          "sha256": "3873cdd28e4ba7963cd98492a26778d4ce8fb26800b3b047eb0c0b44fb880161",
+          "snapshotId": "2026-11-13"
+        },
+        "SNG": {
+          "bytes": 298820,
+          "file": "matthew-henry/SNG.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/SNG.json",
+          "sha256": "d64e67b2ce5c5a4d0db0c60935d67782cc082c0812d0181fd7f8b9d2061592bb",
+          "snapshotId": "2026-11-13"
+        },
+        "TIT": {
+          "bytes": 147809,
+          "file": "matthew-henry/TIT.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/TIT.json",
+          "sha256": "f4efbdd05c6c8c04d2e47b346639f22caba2d72954a75bad0d240d1b96250081",
+          "snapshotId": "2026-11-13"
+        },
+        "ZEC": {
+          "bytes": 443471,
+          "file": "matthew-henry/ZEC.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/ZEC.json",
+          "sha256": "5bdee117efb71a648c5c5857d31e95fe6c8a0f24264b210c70da70eea1f31235",
+          "snapshotId": "2026-11-13"
+        },
+        "ZEP": {
+          "bytes": 98142,
+          "file": "matthew-henry/ZEP.json",
+          "retrievedAt": "2026-11-13T18:45:06+00:00",
+          "s3Key": "snapshots/2026-11-13/matthew-henry/ZEP.json",
+          "sha256": "3f945f75f65794134f7b4d1328ccc311f17100ef99dbbc62c00beba2eface96d",
+          "snapshotId": "2026-11-13"
+        }
+      },
+      "kind": "commentary",
+      "license": "Public Domain",
+      "module": {
+        "bytes": 15195123,
+        "file": "matthew-henry/_module/MHC-2.2.zip",
+        "name": "MHC",
+        "retrievedAt": "2026-11-13T18:45:06+00:00",
+        "s3Key": "snapshots/2026-11-13/matthew-henry/_module/MHC-2.2.zip",
+        "sha256": "6bcb936873ca144e317805e5c1677940fd86e2403f7c14517752e44f25c8882b",
+        "snapshotId": "2026-11-13",
+        "url": "https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip/MHC.zip",
+        "version": "2.2"
+      },
+      "name": "Matthew Henry's Commentary",
+      "origin": "crosswire:MHC@2.2",
+      "tradition": "Reformed (Presbyterian)",
+      "upstreamSha256": "6bcb936873ca144e317805e5c1677940fd86e2403f7c14517752e44f25c8882b"
+    }
+  }
+}

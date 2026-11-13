@@ -1,8 +1,8 @@
-"""Turn Free Use Bible API chapter JSON into the normalised book files (research R2, data-model §3).
+"""Turn Free Use Bible API chapter JSON into normalised translation books (R2, data-model §3).
 
-Kept: verses, headings, psalm titles, paragraph breaks, poetry lines with their indent,
-footnotes, commentary introductions and items. Dropped: audio links, navigation links,
-red-letter markup and other presentation-only fields.
+Kept: verses, headings, psalm titles, paragraph breaks, poetry lines with their indent and
+footnotes. Dropped: audio links, navigation links, red-letter markup and other presentation-only
+fields. Commentaries come from CrossWire modules instead and are read by ``sword.py``.
 """
 
 from __future__ import annotations
@@ -13,12 +13,9 @@ from typing import Any
 
 from thinkbible_pipeline.sources.models import (
     BreakItem,
-    CommentaryChapter,
-    CommentaryItem,
     Footnote,
     HeadingItem,
     Line,
-    NormalizedCommentaryBook,
     NormalizedTranslationBook,
     SubtitleItem,
     TranslationChapter,
@@ -29,7 +26,6 @@ from thinkbible_pipeline.sources.models import (
 Json = dict[str, Any]
 
 _SPACES = re.compile(r"\s+")
-_BLANK_LINES = re.compile(r"\n{3,}")
 
 
 class NormalizeError(ValueError):
@@ -124,37 +120,3 @@ def normalize_translation_book(book: str, chapters: Iterable[Json]) -> Normalize
         (normalize_translation_chapter(c) for c in chapters), key=lambda c: c.number
     )
     return NormalizedTranslationBook(book=book, chapters=normalized)
-
-
-def _clean(text: str | None) -> str | None:
-    """Strip a commentary text block, keeping its paragraph breaks."""
-    if text is None:
-        return None
-    cleaned = _BLANK_LINES.sub("\n\n", text.replace("\r\n", "\n")).strip()
-    return cleaned or None
-
-
-def normalize_commentary_chapter(raw: Json) -> CommentaryChapter:
-    """One ``/api/c/{commentary}/{BOOK}/{ch}.json`` response → a normalised chapter."""
-    chapter = raw["chapter"]
-    items: list[CommentaryItem] = []
-    for item in chapter.get("content", []):
-        if item.get("type") != "verse":
-            raise NormalizeError(f"unknown commentary content type {item.get('type')!r}")
-        text = _clean("\n".join(p for p in item.get("content", []) if isinstance(p, str)))
-        if text:
-            items.append(CommentaryItem(verse=int(item["number"]), text=text))
-    return CommentaryChapter(
-        number=int(chapter["number"]),
-        introduction=_clean(chapter.get("introduction")),
-        items=items,
-    )
-
-
-def normalize_commentary_book(
-    book: str, introduction: str | None, chapters: Iterable[Json]
-) -> NormalizedCommentaryBook:
-    normalized = sorted((normalize_commentary_chapter(c) for c in chapters), key=lambda c: c.number)
-    return NormalizedCommentaryBook(
-        book=book, introduction=_clean(introduction), chapters=normalized
-    )

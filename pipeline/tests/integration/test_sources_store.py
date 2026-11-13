@@ -11,7 +11,7 @@ from moto import mock_aws
 
 from thinkbible_pipeline.jsonio import sha256_hex
 from thinkbible_pipeline.paths import RepoPaths
-from thinkbible_pipeline.sources.models import BookFile, SourceEntry, SourceManifest
+from thinkbible_pipeline.sources.models import BookFile, ModuleFile, SourceEntry, SourceManifest
 from thinkbible_pipeline.sources.store import PushRefused, pull, push
 
 BUCKET = "sources-test"
@@ -85,3 +85,24 @@ def test_pull_restores_byte_identical_files(tmp_path: Path, s3: Any) -> None:
     assert not (paths.sources / "bsb/GEN.json").exists()  # not requested
     again = pull(manifest, paths=paths, client=s3)
     assert (again.downloaded, again.present) == (1, 2)
+
+
+def test_module_zips_are_pushed_and_pulled_with_the_books(tmp_path: Path, s3: Any) -> None:
+    paths, manifest = cache(tmp_path, {"adam-clarke/MRK.json": b'{"c":1}'})
+    zip_bytes = b"PK\x03\x04 module"
+    rel = "adam-clarke/_module/Clarke-2.0.zip"
+    (paths.sources / rel).parent.mkdir(parents=True)
+    (paths.sources / rel).write_bytes(zip_bytes)
+    bf = book_file("adam-clarke", "MRK", zip_bytes)
+    manifest.sources["adam-clarke"].module = ModuleFile(
+        **{**bf.model_dump(), "file": rel, "s3_key": f"snapshots/2026-11-12/{rel}"},
+        name="Clarke",
+        version="2.0",
+        url="https://example.invalid/Clarke.zip",
+    )
+    assert push(manifest, paths=paths, client=s3).uploaded == 2
+    head = s3.head_object(Bucket=BUCKET, Key=f"snapshots/2026-11-12/{rel}")
+    assert head["ContentType"] == "application/zip"
+    (paths.sources / rel).unlink()
+    assert pull(manifest, paths=paths, client=s3).downloaded == 1
+    assert (paths.sources / rel).read_bytes() == zip_bytes

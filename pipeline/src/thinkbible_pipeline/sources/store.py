@@ -1,8 +1,9 @@
 """``sources push`` and ``sources pull``: the local cache ↔ the write-once sources bucket (R2).
 
-Push uploads each manifest file with ``If-None-Match: *`` and its sha256 as object metadata, so
-an object is never overwritten. Pull downloads what the cache is missing and checks every file
-against the manifest before writing it.
+Files are the normalised books and, for the commentaries, the CrossWire module zip they were made
+from (archived so the snapshot never depends on CrossWire again). Push uploads each file with
+``If-None-Match: *`` and its sha256 as object metadata, so an object is never overwritten. Pull
+downloads what the cache is missing and checks every file against the manifest before writing it.
 """
 
 from __future__ import annotations
@@ -46,12 +47,17 @@ class PullResult:
 def _files(
     manifest: SourceManifest, books: set[str] | None = None
 ) -> list[tuple[str, str, BookFile]]:
+    """(source, book or "module", file) for every manifest file; ``books`` limits to those."""
     return [
         (source, book, bf)
         for source, entry in sorted(manifest.sources.items())
-        for book, bf in sorted(entry.books.items())
+        for book, bf in entry.files()
         if books is None or book in books
     ]
+
+
+def _content_type(bf: BookFile) -> str:
+    return "application/zip" if bf.file.endswith(".zip") else "application/json"
 
 
 def _client(client: S3Client | None) -> S3Client:
@@ -81,7 +87,7 @@ def push(
                 Bucket=bucket,
                 Key=bf.s3_key,
                 Body=data,
-                ContentType="application/json",
+                ContentType=_content_type(bf),
                 Metadata={"sha256": bf.sha256},
                 IfNoneMatch="*",
             )

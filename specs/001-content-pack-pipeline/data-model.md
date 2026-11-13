@@ -214,10 +214,15 @@ labelled, so a later regeneration doesn't change what was graded.
              "books": { "MRK": { "file": "bsb/MRK.json",
                                  "s3Key": "snapshots/2026-11-05/bsb/MRK.json",
                                  "sha256", "bytes", "retrievedAt", "snapshotId": "2026-11-05" } } },
-    "kjv": { "apiId": "eng_kjv", ... },
-    "matthew-henry": { "kind": "commentary", "tradition": "Reformed (Presbyterian)", ... },
-    "jamieson-fausset-brown": { "tradition": "Reformed-leaning", ... },
-    "adam-clarke": { "tradition": "Wesleyan (Methodist)", ... } } }
+    "kjv": { "apiId": "eng_kjv", "origin": "helloao:eng_kjv", ... },
+    "matthew-henry": { "kind": "commentary", "apiId": "MHC", "origin": "crosswire:MHC@2.2",
+                       "tradition": "Reformed (Presbyterian)", "license": "Public Domain",
+                       "module": { "file": "matthew-henry/_module/MHC-2.2.zip",
+                                   "s3Key": "snapshots/2026-11-13/matthew-henry/_module/MHC-2.2.zip",
+                                   "name": "MHC", "version": "2.2", "url", "sha256", ... },
+                       "books": { ... } },
+    "jamieson-fausset-brown": { "apiId": "JFB", "origin": "crosswire:JFB@3.0", ... },
+    "adam-clarke": { "apiId": "Clarke", "origin": "crosswire:Clarke@2.0", ... } } }
 ```
 
 Rules:
@@ -225,6 +230,10 @@ Rules:
 - An entry is added only together with its upload, or before the upload when you work offline,
   with `sources push` still to run.
 - Every read is checked against `sha256`.
+- `origin` names the upstream edition. A different origin re-imports every book of that source.
+- `module` is the CrossWire zip the commentary books were converted from, archived with them
+  (research R2a). `verify`, `sources push` and `sources pull` treat it like a book file.
+- `apiVersion` describes the HelloAO translations only.
 
 ### Normalised translation book (`{tr}/{BOOK}.json`)
 
@@ -238,7 +247,18 @@ the psalm includes it.
 
 ### Normalised commentary book (`{commentator}/{BOOK}.json`)
 
-`{book, introduction?, chapters: [{number, introduction?, items: [{verse, text}]}]}`
+`{book, introduction?: Note, chapters: [{number, introduction?: Note, items: [{verse, verseEnd?,
+text, refs[]}]}]}` where `Note = {text, refs[]}`.
+
+- `text` is plain text: paragraphs separated by a blank line, poetry lines by a newline. Bold,
+  italics and the publisher's footnotes are dropped.
+- `verseEnd` is set when one note covers a range (Henry's passages: 1:1 to 1:8). Items are in
+  verse order and never overlap; no range crosses a chapter.
+- `refs` are the Scripture references the note cites, as compact strings: `MAT 12`, `MAT 12:9`,
+  `MAT 12:9-21`, `MAT 12:9-13:2` (`sources/refs.py`). They drive the cross-reference step (R4).
+- A chapter `introduction` is the commentator's note on the whole chapter. For JFB on Mark 3 and
+  15 that note is the whole commentary: a pointer to the parallel passage ("See on Mt 12:9-21").
+- Chapters with no notes at all are left out; `sources check` reports them.
 
 ---
 

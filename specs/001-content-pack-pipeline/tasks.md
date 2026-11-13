@@ -410,8 +410,8 @@ confirm `verify` passes.
   - **Translations**: convert API chapter JSON (`chapter.content[]` items of type `heading`,
     `verse`, `line_break`; verse content strings, `{noteId}`, `{text, poem}`, `{lineBreak}`;
     `chapter.footnotes[]`) into `NormalizedTranslationBook`. Drop audio and navigation links.
-  - **Commentaries**: convert to `NormalizedCommentaryBook` (book `introduction`, chapter
-    `introduction`, `items[{verse, text}]`).
+  - **Commentaries**: superseded by T034a (CrossWire modules, `sources/sword.py`).
+  - Psalm titles (`hebrew_subtitle`) become a `subtitle` item before verse 1 (2026-11-13).
 - [X] T034 [US4] Implement `pipeline/src/thinkbible_pipeline/sources/importer.py`, the only network
   code:
   - **Sources**: `bsb→BSB`, `kjv→eng_kjv`, `matthew-henry`, `jamieson-fausset-brown`,
@@ -426,9 +426,24 @@ confirm `verify` passes.
     `s3Key = snapshots/{snapshotId}/{source}/{BOOK}.json`.
   - **Traditions**: Henry "Reformed (Presbyterian)", JFB "Reformed-leaning", Clarke "Wesleyan
     (Methodist)".
-  - **Gaps**: books a commentary lacks (for example, Clarke has 57) are recorded as absent, not
-    as errors.
-  - **Flags**: `--books` and `--all`.
+  - **Gaps**: books a commentary lacks are recorded as absent, not as errors.
+  - **Flags**: `--books`, `--all`, and `--refresh` (2026-11-13).
+  - **Resumable** (2026-11-13): the manifest is saved after every book, and a re-run skips books
+    already imported from the same `origin` whose cached file still matches.
+  - The commentary part (HelloAO `/api/c/...`) is superseded by T034a.
+- [X] T034a [US4] Commentaries from CrossWire (research R2a, 2026-11-13):
+  - `sources/versification.py`: the KJV versification (1,189 chapters, 31,102 verses).
+  - `sources/sword.py`: read a `zCom`/`zCom4` module zip offline; refuse non-OSIS, non-KJV or
+    mis-sized indexes; linked entries become `verse`…`verseEnd`; OSIS → text with paragraphs.
+  - `sources/refs.py`: `osisRef` → compact references (`MAT 12:9-21`), with Clarke's and Henry's
+    abbreviations and shorthand.
+  - `importer.py`: download `MHC`, `JFB`, `Clarke` from CrossWire's `packages/rawzip/`, archive
+    the zip as the source's `module` file, record `origin` (`crosswire:JFB@3.0`); re-runs read
+    the archive. `store.py` and `verify` include module files.
+  - Tests: `test_sword.py` (synthetic modules from `tests/conftest.py` and real JFB/MHC
+    entries), importer tests for archive reuse and edition changes.
+- [X] T034b [US4] `sources check` (`sources/check.py`, CLI): versification, order and coverage
+  checks with exit 2 on errors; `test_sources_check.py`.
 - [X] T035 [US4] Implement `pipeline/src/thinkbible_pipeline/sources/store.py`:
   - **`push`**: for each manifest file missing from S3, `put_object` with
     `IfNoneMatch="*"` and metadata `sha256`. On 412, compare the remote metadata: equal → skip,
@@ -449,14 +464,18 @@ confirm `verify` passes.
     - provider `aws` with region `us-west-2`;
     - `module "sources"` named `thinkbible-sources-522779858032`.
 - [ ] T038 [US4] **Owner run** (AWS, no Bedrock needed):
-  1. `export AWS_PROFILE=admin-thinkbible`, then `cd infra/envs/dev && terraform init && terraform apply`.
-  2. `thinkbible-pipeline import --all`, then `verify`, then `sources push`.
-  3. Check Mark: BSB has no 7:16 and has the "BYZ and TR include 16" footnote, and KJV has 7:16.
-     Note which of 9:44, 9:46, 11:26 and 15:28 BSB omits. (A trial import on 2026-11-12 found
-     BSB 673 verses, KJV 678; BSB omits all five: 7:16, 9:44, 9:46, 11:26, 15:28. JFB has no
-     Mark 15, which the importer records as a missing chapter.)
-  4. Commit **only** `content/sources/manifest.json` as
-     `content: import source snapshot (Free Use Bible API V…)`.
+  1. `thinkbible-pipeline import --all` (done 2026-11-13: translations from HelloAO V1.16.0,
+     commentaries re-imported from CrossWire MHC 2.2, JFB 3.0, Clarke 2.0), then
+     `sources check` and `verify` (both pass: 333 files).
+  2. `export AWS_PROFILE=admin-thinkbible`, `make lambda-bundle`, then
+     `cd infra/envs/dev && terraform init && terraform apply`; copy the outputs into
+     `pipeline/config/envs/dev.toml`.
+  3. `sources push`.
+  4. Check Mark: BSB has no 7:16 and has the "BYZ and TR include 16" footnote, and KJV has 7:16.
+     (`sources check` lists the BSB's 16 omitted verses, including Mark 7:16, 9:44, 9:46, 11:26
+     and 15:28.)
+  5. Commit **only** `content/sources/manifest.json` and `dev.toml` as
+     `content: import source snapshot (BSB/KJV HelloAO V1.16.0, commentaries CrossWire)`.
 
 **Checkpoint**: The snapshot is in S3, the manifest is in git, and quickstart §2 passes.
 

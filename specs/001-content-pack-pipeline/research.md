@@ -8,21 +8,23 @@ against the live API on 2026-11-04: docs, `available_translations.json`,
 
 ## R1. Where the source text comes from, and how it is fetched
 
-**Decision**: a one-time `import` command fetches per-chapter JSON from the Free Use Bible API
-(`https://bible.helloao.org/api/...`) for five sources, for the whole Bible:
+**Decision** (commentaries revised 2026-11-13, see R2a): a one-time `import` command fetches the
+whole Bible for five sources. The two translations come from the Free Use Bible API
+(`https://bible.helloao.org/api/...`, run by HelloAO) as per-chapter JSON. The three commentaries
+come from CrossWire's SWORD modules, one zip each:
 
-| Source | API id | URL pattern | License (as stated by the API) |
+| Source | Upstream | Fetched as | License |
 |---|---|---|---|
-| Berean Standard Bible | `BSB` | `/api/BSB/{BOOK}/{ch}.json` | Public domain (CC0), `https://berean.bible/` |
-| King James Version | `eng_kjv` | `/api/eng_kjv/{BOOK}/{ch}.json` | Public domain in the US (eBible `eng-kjv2006`) |
-| Matthew Henry | `matthew-henry` | `/api/c/matthew-henry/{BOOK}/{ch}.json` | Public Domain Mark 1.0 |
-| Jamieson-Fausset-Brown | `jamieson-fausset-brown` | `/api/c/jamieson-fausset-brown/{BOOK}/{ch}.json` | Public Domain Mark 1.0 |
-| Adam Clarke | `adam-clarke` | `/api/c/adam-clarke/{BOOK}/{ch}.json` | Public Domain Mark 1.0 |
+| Berean Standard Bible | HelloAO `BSB` | `/api/BSB/{BOOK}/{ch}.json` | Public domain (CC0), `https://berean.bible/` |
+| King James Version | HelloAO `eng_kjv` | `/api/eng_kjv/{BOOK}/{ch}.json` | Public domain in the US (eBible `eng-kjv2006`) |
+| Matthew Henry | CrossWire `MHC` 2.2 | `…/packages/rawzip/MHC.zip` | Public Domain (from CCEL) |
+| Jamieson-Fausset-Brown | CrossWire `JFB` 3.0 | `…/packages/rawzip/JFB.zip` | Public Domain (from CCEL) |
+| Adam Clarke | CrossWire `Clarke` 2.0 | `…/packages/rawzip/Clarke.zip` | Public Domain (from Wikisource) |
 
 - Book IDs are USFM codes (`MRK`, `MAT`, `GEN`).
 - Requests run one at a time at about 2 per second, with a generic User-Agent. The API states it
   has no rate limits, but the brief asks for a polite rate.
-- That is about 5,600 requests, which takes under an hour.
+- That is about 2,400 translation requests (under 25 minutes) and three module downloads.
 - `eng_kja` (KJV with Apocrypha) is ignored.
 - `import` is the only code path allowed to make network requests for text (constitution II).
 
@@ -69,6 +71,75 @@ manifest records it for provenance.
 - Git LFS. Rejected because it adds tooling and storage quotas, and still ties the text to the
   git host.
 - S3 with no manifest in git. Rejected because source changes would no longer be reviewed.
+
+## R2a. Commentaries from CrossWire, and `sources check` (2026-11-13)
+
+**Finding**: HelloAO's commentary data is unreliable. The first full import (snapshot 2026-11-13)
+showed:
+- JFB on Mark from chapter 3 on: every chapter filed one number off (the chapter labelled 3 held
+  Mark 4, and so on up to 14, which held Mark 16). Mark 3 and 15 were missing, and what was left
+  was 0.1 to 2.5k characters per chapter, against 7 to 20k from the other commentators.
+- JFB Matthew 24–26 shifted the same way, and Psalm 146 missing.
+- Henry: no Song of Songs, and several chapters shifted or misfiled (Isaiah 58's introduction
+  filed as "Isaiah 68").
+- Clarke: no Judges, Malachi or Matthew.
+
+The raw API responses had the same problems, so the normaliser wasn't the cause. HelloAO's
+maintainer explains in their issue #131 that the commentaries "were copied by hand into an excel
+spreadsheet and so it has many issues". Their own Clarke fix (PR #122) points to CrossWire's
+module as the complete text, and an open PR (#133) adds support for reading SWORD modules.
+
+**Decision**: take all three commentaries from CrossWire's SWORD modules, and keep HelloAO only
+for the BSB and KJV, which passed every check (31,102 KJV verses; the BSB's 31,086 omit exactly
+the 16 verses modern translations leave out; 116 psalm titles each).
+
+- **Upstream**: CrossWire (crosswire.org), the open-source Bible software project. Its modules are
+  the standard digital editions: MHC 2.2 and JFB 3.0 are prepared from CCEL, Clarke 2.0 from
+  Wikisource, all marked Public Domain. This matches the brief's plan to spot-check against CCEL.
+- **Format**: `zCom`/`zCom4`, zlib-compressed OSIS, indexed by verse in the KJV versification
+  (1,189 chapters, 31,102 verses). `sources/sword.py` reads the zip offline. It refuses any module
+  whose index doesn't match the KJV scheme entry for entry, so a note can't land on the wrong
+  verse the way HelloAO's did.
+- **Linked notes**: a note on a range of verses (Henry's passages, e.g. Mark 1:1–8) is stored once
+  with every verse pointing at it. It becomes one item with `verse` and `verseEnd`. No note spans
+  two chapters in any of the three modules.
+- **References**: every Scripture reference is tagged (`osisRef`), so notes carry them as compact
+  `refs` (`MAT 12:9-21`). JFB deliberately covers parallel passages once ("See on Mt 12:9-21" for
+  Mark 3), and those pointers now arrive tagged for the cross-reference step (R4). Clarke uses
+  older abbreviations (`Psa`, `Joh`) and Henry some shorthand lists; `sources/refs.py` handles
+  both. Rare tagging slips upstream exist (JFB tags a bare "2" in Mark 4:1 as 2 Cor 13:2). They
+  affect only the reference list, not the text.
+- **Archived, not re-fetched**: each module zip is stored in the snapshot next to the books made
+  from it (`{source}/_module/{Name}-{Version}.zip`, pushed to S3 and checksummed like the books).
+  Re-runs read the archived zip, so the snapshot never depends on CrossWire being online again,
+  and a parser fix can be re-applied offline with `import --refresh`.
+- **Editions are recorded**: each manifest source has an `origin` (`helloao:BSB`,
+  `crosswire:JFB@3.0`). A new module version changes the origin, which re-imports every book of
+  that source.
+- **`sources check`**: `verify` proves files haven't changed since import; `sources check` proves
+  they were right to begin with. It checks every book against the KJV versification and fails on
+  out-of-range or overlapping notes, missing translation books, chapters or duplicate verses. It
+  reports omitted verses and each commentary's coverage. The snapshot of 2026-11-13 passes:
+  Henry 4,249 notes covering 100% of verses (39.0M characters), JFB 16,882 notes covering 80%
+  (10.2M), Clarke 21,051 notes covering 68% (20.0M); every commentator has all 66 books.
+
+**Alternatives considered**:
+- Keep HelloAO's commentaries and exclude the bad chapters. Rejected: Mark, the launch book,
+  would lose JFB for 13 of 16 chapters, and the defects are in the data itself, not one parse.
+- CrossWire for the translations too. Not now: HelloAO's translations are generated from the
+  publishers' files and pass every check, and CrossWire's main KJV module is GPL-licensed (its
+  Strong's markup), while its public-domain KJV (`kjvpce`) has no paragraphs. CrossWire's BSB (CC0,
+  third printing) and `sword.py`'s shared index reader keep that move small if it's ever needed.
+- API.Bible. Rejected: a live, key-based API whose terms limit stored text, and it doesn't carry
+  these commentaries.
+
+**Other public-domain commentaries CrossWire offers** (for later; adding one is a `SOURCES`
+entry plus the commentator list in the pack schema): Calvin's Collected Commentaries, Barnes'
+Notes (NT), Keil & Delitzsch (OT), Spurgeon's Treasury of David (Psalms), the Catena Aurea
+(Gospels, the Church Fathers via Aquinas), Wesley's Notes, Matthew Henry's Concise Commentary,
+the People's New Testament and the Treasury of Scripture Knowledge (cross-references only).
+Robertson's Word Pictures and Kingcomments are copyrighted. Barnes, Wesley and the People's NT are
+ThML, not OSIS, and would need a small second converter.
 
 ## R3. Verse numbering, omitted verses and manuscript notes
 

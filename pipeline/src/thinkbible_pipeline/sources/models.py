@@ -20,15 +20,35 @@ class BookFile(JsonModel):
     snapshot_id: str
 
 
+class ModuleFile(BookFile):
+    """The upstream file a source was converted from, archived next to its books (CrossWire
+    module zips), so the snapshot never depends on the upstream site again."""
+
+    name: str  # e.g. "JFB"
+    version: str  # the module's Version, e.g. "3.0"
+    url: str  # where it was downloaded from
+
+
 class SourceEntry(JsonModel):
     kind: SourceKind
-    api_id: str
+    api_id: str  # the upstream ID: HelloAO translation ID, or CrossWire module name
     name: str
     license: str
     license_url: str | None = None
     upstream_sha256: str | None = None
     tradition: str | None = None  # commentaries only, e.g. "Wesleyan (Methodist)"
+    # Which upstream edition the books were made from, e.g. "helloao:BSB" or "crosswire:JFB@3.0".
+    # When it changes, every book of the source is imported again.
+    origin: str | None = None
+    module: ModuleFile | None = None
     books: dict[str, BookFile] = Field(default_factory=dict)  # keyed by USFM code
+
+    def files(self) -> list[tuple[str, BookFile]]:
+        """Every file of this source: its books, then the archived module if there is one."""
+        out: list[tuple[str, BookFile]] = sorted(self.books.items())
+        if self.module is not None:
+            out.append(("module", self.module))
+        return out
 
 
 class SourceManifest(JsonModel):
@@ -105,18 +125,28 @@ class NormalizedTranslationBook(JsonModel):
 # --- Normalised commentary book ({commentator}/{BOOK}.json) ---
 
 
-class CommentaryItem(JsonModel):
-    verse: Annotated[int, Field(ge=1)]
+class CommentaryText(JsonModel):
+    """A commentator's note: paragraphs separated by blank lines, and the Scripture it cites
+    as compact references (``MAT 12:9-21``, see ``sources/refs.py``)."""
+
     text: str
+    refs: list[str] = Field(default_factory=list)
+
+
+class CommentaryItem(CommentaryText):
+    """A note on one verse, or on ``verse`` to ``verseEnd`` when the commentator covers a range."""
+
+    verse: Annotated[int, Field(ge=1)]
+    verse_end: Annotated[int, Field(ge=1)] | None = None
 
 
 class CommentaryChapter(JsonModel):
     number: Annotated[int, Field(ge=1)]
-    introduction: str | None = None
+    introduction: CommentaryText | None = None  # the commentator's notes on the whole chapter
     items: list[CommentaryItem]
 
 
 class NormalizedCommentaryBook(JsonModel):
     book: str
-    introduction: str | None = None
+    introduction: CommentaryText | None = None
     chapters: list[CommentaryChapter]

@@ -12,7 +12,6 @@ from thinkbible_pipeline.sources.models import (
     VerseItem,
 )
 from thinkbible_pipeline.sources.normalize import (
-    normalize_commentary_book,
     normalize_translation_book,
     normalize_translation_chapter,
 )
@@ -91,20 +90,3 @@ def test_presentation_fields_are_dropped() -> None:
     sixteen = book.chapters[1]
     note = next(f for f in sixteen.footnotes if f.verse == 8)
     assert note.text.startswith("Some early manuscripts end the Gospel of Mark after verse 8")
-
-
-def test_commentary_book_introductions_and_items() -> None:
-    henry = normalize_commentary_book(
-        "MRK", raw("matthew-henry_MRK_1")["book"]["introduction"], [raw("matthew-henry_MRK_1")]
-    )
-    assert henry.book == "MRK"
-    assert henry.introduction and henry.introduction.startswith("An Exposition")
-    ch = henry.chapters[0]
-    assert ch.number == 1 and ch.introduction and ch.introduction.startswith("Mark's narrative")
-    assert [i.verse for i in ch.items] == [1, 9, 14]  # Henry: one item per division
-    assert ch.items[0].text.startswith("We may observe here")
-    jfb = normalize_commentary_book("MRK", None, [raw("jamieson-fausset-brown_MRK_1")])
-    intro = jfb.chapters[0].introduction
-    assert intro and intro.startswith("PREACHING AND BAPTISM OF JOHN")  # leading newlines stripped
-    assert jfb.chapters[0].items[0].verse == 2
-    assert not jfb.chapters[0].items[0].text.endswith("\n")

@@ -26,7 +26,8 @@ Functions execution whose input carries the same request as JSON:
 
 | Command | Purpose | Network | Model calls |
 |---|---|---|---|
-| `import [--books MRK,MAT,…\|--all] [--sources bsb,kjv,matthew-henry,…]` | Fetch and normalise source text into the local cache `content/sources/` under a new snapshot ID, and update `manifest.json`. **The only command that fetches text from the web.** | Free Use Bible API | No |
+| `import [--books MRK,MAT,…\|--all] [--sources bsb,kjv,matthew-henry,…] [--refresh]` | Fetch and normalise source text into the local cache `content/sources/` under today's snapshot ID, and update `manifest.json` after every book. Translations come from the Free Use Bible API; commentaries from CrossWire module zips, archived in the snapshot (R2a). A re-run skips books already imported from the same edition and reads archived zips instead of downloading; `--refresh` redoes everything. **The only command that fetches text from the web.** | Free Use Bible API, CrossWire | No |
+| `sources check [--verbose]` | Check the cached snapshot is complete and in place: every book against the KJV versification, commentary notes in range, in order and not overlapping; report omitted verses and coverage. Exit 2 on errors | No | No |
 | `sources push` | Upload cache files listed in the manifest but missing from S3. Write-once (`If-None-Match: *`); refuses if an existing object's checksum differs | S3 (sources bucket) | No |
 | `sources pull [--books …]` | Download manifest files missing from the local cache, then verify them | S3 (sources bucket) | No |
 | `verify` | Re-check every cached file against `manifest.json` | No | No |

@@ -179,8 +179,9 @@ grader's calibration is missing or stale.
 ### User Story 4 - Frozen source snapshot (Priority: P2)
 
 The owner imports the BSB and KJV texts and the Matthew Henry, Jamieson-Fausset-Brown and Adam
-Clarke commentaries once, from the Free Use Bible API. The result is frozen files with checksums and
-the retrieval date. From then on every pipeline step reads only that snapshot.
+Clarke commentaries once: the translations from the Free Use Bible API, the commentaries from
+CrossWire's public-domain SWORD modules (revised 2026-11-13, research R2a). The result is frozen
+files with checksums and the retrieval date, checked for completeness with `sources check`. From then on every pipeline step reads only that snapshot.
 
 **Why this priority**: Required before Story 1 can run for real. Ranked P2 only because it runs
 once and is simple. It can be done first in practice.
@@ -461,8 +462,10 @@ place and confirm the publish check refuses the version.
 
 - Launch book is Mark. BSB is the default translation, KJV the alternate (brief open question;
   treated as decided for this spec).
-- The Free Use Bible API provides the BSB, KJV and the three commentaries under the licenses noted
-  in the brief. Spot verification against a printed or CCEL edition happens for Mark.
+- The Free Use Bible API provides the BSB and KJV, and CrossWire's SWORD modules (prepared from CCEL
+  and Wikisource) provide the three commentaries, under the licenses noted in the brief. The
+  API's own commentary data was hand-copied and has shifted and missing chapters, so it isn't used
+  (research R2a). Spot verification against a printed or CCEL edition happens for Mark.
 - Runs execute in the cloud (Step Functions and Lambda in the dev environment), using on-demand
   model calls while prompts are tuned (revised 2026-11-10). The same stages can run on the owner's
   machine for a few sections at a time. Bedrock batch inference follows when later books are

@@ -22,7 +22,9 @@ app = typer.Typer(
     help="ThinkBible content pipeline: frozen sources -> reviewed, versioned content packs.",
     no_args_is_help=True,
 )
-sources_app = typer.Typer(help="Push or pull the frozen source snapshot (S3 <-> content/sources/).")
+sources_app = typer.Typer(
+    help="Check, push or pull the frozen source snapshot (S3 <-> content/sources/)."
+)
 app.add_typer(sources_app, name="sources")
 
 BookOpt = Annotated[str, typer.Option("--book", help="Book name (mark) or USFM code (MRK).")]
@@ -103,10 +105,13 @@ def import_(
         f"{len(result.written)} files written, {len(result.skipped)} already imported"
     )
     if result.absent:
-        typer.echo(f"  not covered by the source (expected): {', '.join(result.absent)}")
-    if result.missing_chapters:
-        typer.echo(f"  chapters the source lacks: {', '.join(result.missing_chapters)}")
-    typer.echo("next: `thinkbible-pipeline verify`, then `thinkbible-pipeline sources push`")
+        typer.echo(f"  not covered by the source: {', '.join(result.absent)}")
+    if result.modules:
+        typer.echo(f"  CrossWire modules: {', '.join(result.modules)}")
+    typer.echo(
+        "next: `thinkbible-pipeline sources check`, `thinkbible-pipeline verify`, "
+        "then `thinkbible-pipeline sources push`"
+    )
     _exit(ExitCode.OK)
 
 
@@ -170,6 +175,33 @@ def sources_pull(
     _exit(ExitCode.SOURCE_CHECKSUM if result.problems else ExitCode.OK)
 
 
+@sources_app.command("check")
+def sources_check(
+    verbose: Annotated[bool, typer.Option("--verbose", "-v", help="List every warning.")] = False,
+) -> None:
+    """Check the cached snapshot is complete and in place (versification, coverage, order)."""
+    from thinkbible_pipeline.sources.check import check_sources
+    from thinkbible_pipeline.sources.snapshot import SourceStore
+
+    report = check_sources(store=SourceStore.local(), manifest=_manifest_or_exit())
+    for r in report.sources:
+        status = "FAIL" if r.errors else "ok"
+        typer.echo(f"{r.source} [{r.origin or 'unknown origin'}]: {status}, {r.books} books")
+        typer.echo(f"  {r.summary}")
+        warnings = r.warnings if verbose else r.warnings[:5]
+        for w in warnings:
+            typer.echo(f"  warning: {w}")
+        if len(r.warnings) > len(warnings):
+            typer.echo(f"  … {len(r.warnings) - len(warnings)} more warnings (--verbose)")
+        for e in r.errors[:20]:
+            typer.echo(f"  error: {e}", err=True)
+        if len(r.errors) > 20:
+            typer.echo(f"  … {len(r.errors) - 20} more errors", err=True)
+    if not report.ok:
+        _exit(ExitCode.SOURCE_CHECKSUM, "sources check failed: fix or re-import before pushing")
+    _exit(ExitCode.OK)
+
+
 @app.command()
 def verify() -> None:
     """Re-check every cached source file against manifest.json."""
@@ -178,7 +210,7 @@ def verify() -> None:
 
     manifest = _manifest_or_exit()
     problems = verify_sources(store=SourceStore.local(), manifest=manifest)
-    total = sum(len(e.books) for e in manifest.sources.values())
+    total = sum(len(e.files()) for e in manifest.sources.values())
     for p in problems:
         typer.echo(f"{p.source}/{p.book}: {p.message}", err=True)
     if problems:

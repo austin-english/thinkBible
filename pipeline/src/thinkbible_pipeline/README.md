@@ -64,7 +64,11 @@ pipeline/
 │   └── sources/
 │       ├── models.py               # source manifest and normalised book formats (data-model §3)
 │       ├── importer.py             # `import`: the ONLY network code; fetches the five sources once
-│       ├── normalize.py            # API chapter JSON → normalised book files
+│       ├── normalize.py            # HelloAO chapter JSON → normalised translation books
+│       ├── sword.py                # CrossWire module zip → normalised commentary books (offline)
+│       ├── refs.py                 # tagged Scripture references → "MAT 12:9-21"
+│       ├── versification.py        # KJV verses per chapter (1,189 chapters, 31,102 verses)
+│       ├── check.py                # `sources check`: complete and in place?
 │       ├── snapshot.py             # reads source files and checks each against the manifest
 │       └── store.py                # `sources push` / `sources pull`: cache ↔ write-once S3 bucket
 └── tests/
@@ -130,11 +134,28 @@ Things to know:
 
 ## Freezing the sources (once)
 
+| Source | Upstream | How |
+|---|---|---|
+| BSB, KJV | Free Use Bible API (HelloAO) | one JSON request per chapter (~25 min) |
+| Matthew Henry, JFB, Adam Clarke | CrossWire SWORD modules MHC, JFB, Clarke (public domain, from CCEL and Wikisource) | one zip per commentary, read offline by `sword.py` |
+
+HelloAO also serves commentaries, but theirs were hand-copied and have shifted and missing
+chapters, so the commentaries come from CrossWire (research R2a).
+
 ```bash
-thinkbible-pipeline import --all        # ~47 min: 5 sources × 66 books, 2 requests a second
+thinkbible-pipeline import --all        # saves after every book; a re-run resumes
+thinkbible-pipeline sources check       # complete and in place? (versification, order, coverage)
 thinkbible-pipeline verify              # every cached file against content/sources/manifest.json
 thinkbible-pipeline sources push        # write-once upload to the sources bucket
 ```
+
+- **Nothing upstream can break the snapshot later.** Each file is checksummed and stored
+  write-once. Each commentary's module zip is archived next to its books, so re-runs (and parser
+  fixes, with `--refresh`) never need CrossWire again.
+- **Each source records its edition** as `origin` (`helloao:BSB`, `crosswire:JFB@3.0`). Importing
+  a new edition re-imports all of that source's books.
+- `verify` proves files haven't changed since import; `sources check` proves they were right to
+  begin with.
 
 Commit only `content/sources/manifest.json`. On a new machine, `sources pull` restores the cache.
 `import` is the only command that fetches text from the web, and it isn't run again unless a

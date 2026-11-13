@@ -1,4 +1,5 @@
-"""The importer (T034), driven by recorded API responses: no network in tests."""
+"""The importer (T034, T034a), driven by recorded API responses and synthetic CrossWire modules:
+no network in tests."""
 
 import io
 import json
@@ -10,19 +11,25 @@ from typing import Any
 
 import pytest
 
-from thinkbible_pipeline.jsonio import read_json
+from thinkbible_pipeline.jsonio import read_json, write_json
 from thinkbible_pipeline.paths import RepoPaths
 from thinkbible_pipeline.sources.importer import (
+    SOURCES,
     FetchError,
     HttpFetcher,
     NotFound,
     import_sources,
 )
-from thinkbible_pipeline.sources.models import NormalizedTranslationBook, SourceManifest
+from thinkbible_pipeline.sources.models import (
+    NormalizedCommentaryBook,
+    NormalizedTranslationBook,
+    SourceManifest,
+)
 from thinkbible_pipeline.sources.snapshot import SourceStore, load_book, verify
 
 API = Path(__file__).resolve().parents[1] / "fixtures" / "api"
 NOW = datetime(2026, 11, 12, 15, 0, tzinfo=UTC)
+COMMENTARIES = ("matthew-henry", "jamieson-fausset-brown", "adam-clarke")
 
 
 def fixture(name: str) -> Any:
@@ -30,11 +37,14 @@ def fixture(name: str) -> Any:
 
 
 class FakeFetcher:
-    """Serves the recorded fixtures; any other chapter gets a tiny synthetic one."""
+    """Serves recorded fixtures and synthetic CrossWire modules; other chapters are made up."""
 
-    def __init__(self, missing: set[str] | None = None) -> None:
+    def __init__(self, sword_zip: Any, missing: set[str] | None = None, version: str = "1.0"):
         self.missing = missing or set()
         self.paths: list[str] = []
+        self.downloads: list[str] = []
+        self._sword_zip = sword_zip
+        self.version = version
 
     def json(self, path: str) -> Any:
         self.paths.append(path)
@@ -42,23 +52,9 @@ class FakeFetcher:
             raise NotFound(path)
         if path == "/api/available_translations.json":
             return fixture("available_translations")
-        if path == "/api/available_commentaries.json":
-            return fixture("available_commentaries")
         if path in ("/api/BSB/books.json", "/api/eng_kjv/books.json"):
             return fixture("BSB_books")
-        if path.endswith("/books.json"):
-            return fixture("adam-clarke_books")
-        parts = path.removeprefix("/api/").removesuffix(".json").split("/")
-        if parts[0] == "c":
-            _, source, book, chapter = parts
-            name = f"{source}_{book}_{chapter}"
-            if (API / f"{name}.json").is_file():
-                return fixture(name)
-            return {
-                "book": {"introduction": "Intro"},
-                "chapter": {"number": int(chapter), "content": []},
-            }
-        source, book, chapter = parts
+        source, book, chapter = path.removeprefix("/api/").removesuffix(".json").split("/")
         name = f"{source}_{book}_{chapter}"
         if (API / f"{name}.json").is_file():
             return fixture(name)
@@ -73,138 +69,155 @@ class FakeFetcher:
     def text(self, url: str) -> str:
         return "# Changelog\n\n## V1.16.0\n\n### API Changes\n\n## V1.15.0\n"
 
+    def download(self, url: str) -> bytes:
+        self.downloads.append(url)
+        module = url.rsplit("/", 1)[-1].removesuffix(".zip")
+        entries = {
+            ("MRK", 1, 1): f"<hi>{module} on Mark 1:1</hi>",
+            ("MRK", 1, 2): f"{module} on Mark 1:2-3",
+            (
+                "MRK",
+                3,
+                0,
+            ): '<reference osisRef="Matt.12.9-Matt.12.21">See on Mt 12:9-21</reference>',
+        }
+        return bytes(
+            self._sword_zip(
+                entries, name=module, version=self.version, links={("MRK", 1, 3): ("MRK", 1, 2)}
+            )
+        )
 
-def test_imports_mark_from_all_five_sources(tmp_path: Path) -> None:
+
+def run(paths: RepoPaths, fetch: FakeFetcher, **kw: Any) -> Any:
+    return import_sources(bucket="b", fetch=fetch, paths=paths, now=NOW, echo=lambda _l: None, **kw)
+
+
+def test_imports_mark_from_all_five_sources(tmp_path: Path, sword_zip: Any) -> None:
     paths = RepoPaths(tmp_path)
-    fetch = FakeFetcher()
-    result = import_sources(
-        books=["MRK"],
-        bucket="thinkbible-sources-test",
-        fetch=fetch,
-        paths=paths,
-        now=NOW,
-        echo=lambda _l: None,
-    )
+    fetch = FakeFetcher(sword_zip)
+    result = run(paths, fetch, books=["MRK"])
     assert result.api_version == "V1.16.0" and result.snapshot_id == "2026-11-12"
-    assert sorted(result.written) == sorted(
-        f"{s}/MRK" for s in ("bsb", "kjv", "matthew-henry", "jamieson-fausset-brown", "adam-clarke")
-    )
+    assert sorted(result.written) == sorted(f"{s}/MRK" for s in ("bsb", "kjv", *COMMENTARIES))
     manifest = SourceManifest.model_validate(read_json(paths.manifest))
-    assert manifest.bucket == "thinkbible-sources-test" and manifest.api_version == "V1.16.0"
+    assert manifest.bucket == "b" and manifest.api_version == "V1.16.0"
     bsb = manifest.sources["bsb"]
     assert bsb.upstream_sha256 and bsb.upstream_sha256.startswith("788081b7")
-    assert bsb.license == "Public domain"
+    assert bsb.license == "Public domain" and bsb.origin == "helloao:BSB"
     bf = bsb.books["MRK"]
     assert bf.s3_key == "snapshots/2026-11-12/bsb/MRK.json" and bf.file == "bsb/MRK.json"
+    # Commentaries: one CrossWire module zip each, archived next to the books made from it.
+    assert sorted(fetch.downloads) == sorted(SOURCES[c].module_url for c in COMMENTARIES)
     clarke = manifest.sources["adam-clarke"]
-    assert clarke.tradition == "Wesleyan (Methodist)"
-    assert clarke.license == "Public Domain Mark 1.0"
-    # Every file written matches the manifest, and Mark 7 in BSB has no verse 16.
+    assert clarke.origin == "crosswire:Clarke@1.0" and clarke.api_id == "Clarke"
+    assert clarke.tradition == "Wesleyan (Methodist)" and clarke.license == "Public Domain"
+    assert clarke.module is not None and clarke.module.version == "1.0"
+    assert clarke.module.file == "adam-clarke/_module/Clarke-1.0.zip"
+    assert clarke.module.s3_key == "snapshots/2026-11-12/adam-clarke/_module/Clarke-1.0.zip"
+    # Every file written (books and modules) matches the manifest.
     store = SourceStore.local(paths)
     assert verify(store=store, manifest=manifest) == []
     book = load_book("bsb", "MRK", store=store, manifest=manifest)
     assert isinstance(book, NormalizedTranslationBook)
     seven = next(c for c in book.chapters if c.number == 7)
     assert 16 not in [v.number for v in seven.verses()]
-    assert len(book.chapters) == 16
-    # One chapter request per chapter: 16 per source.
-    assert sum(1 for p in fetch.paths if "/MRK/" in p) == 5 * 16
+    henry = load_book("matthew-henry", "MRK", store=store, manifest=manifest)
+    assert isinstance(henry, NormalizedCommentaryBook)
+    one = henry.chapters[0]
+    assert [(i.verse, i.verse_end) for i in one.items] == [(1, None), (2, 3)]
+    three = henry.chapters[1]
+    assert three.introduction is not None and three.introduction.refs == ["MAT 12:9-21"]
+    # One chapter request per chapter for the translations: 16 each.
+    assert sum(1 for p in fetch.paths if "/MRK/" in p) == 2 * 16
 
 
-def test_books_a_source_lacks_are_absent_not_errors(tmp_path: Path) -> None:
-    result = import_sources(
-        books=["MRK", "DEU"],
-        sources=["adam-clarke"],
-        bucket="b",
-        fetch=FakeFetcher(),
-        paths=RepoPaths(tmp_path),
-        now=NOW,
-        echo=lambda _l: None,
-    )
+def test_books_a_commentary_lacks_are_absent_not_errors(tmp_path: Path, sword_zip: Any) -> None:
+    result = run(RepoPaths(tmp_path), FakeFetcher(sword_zip), books=["MRK", "DEU"],
+                 sources=["adam-clarke"])  # fmt: skip
     assert result.written == ["adam-clarke/MRK"]
     assert result.absent == ["adam-clarke/DEU"]
 
 
-def test_missing_commentary_chapter_is_recorded(tmp_path: Path) -> None:
-    fetch = FakeFetcher(missing={"/api/c/adam-clarke/MRK/3.json"})
-    result = import_sources(
-        books=["MRK"],
-        sources=["adam-clarke"],
-        bucket="b",
-        fetch=fetch,
-        paths=RepoPaths(tmp_path),
-        now=NOW,
-        echo=lambda _l: None,
-    )
-    assert result.missing_chapters == ["adam-clarke/MRK/3"]
-
-
-def test_missing_translation_chapter_is_an_error(tmp_path: Path) -> None:
-    fetch = FakeFetcher(missing={"/api/BSB/MRK/3.json"})
+def test_missing_translation_chapter_is_an_error(tmp_path: Path, sword_zip: Any) -> None:
+    fetch = FakeFetcher(sword_zip, missing={"/api/BSB/MRK/3.json"})
     with pytest.raises(NotFound):
-        import_sources(
-            books=["MRK"],
-            sources=["bsb"],
-            bucket="b",
-            fetch=fetch,
-            paths=RepoPaths(tmp_path),
-            now=NOW,
-            echo=lambda _l: None,
-        )
+        run(RepoPaths(tmp_path), fetch, books=["MRK"], sources=["bsb"])
 
 
-def test_reimport_keeps_other_sources_in_the_manifest(tmp_path: Path) -> None:
+def test_reimport_keeps_other_sources_in_the_manifest(tmp_path: Path, sword_zip: Any) -> None:
     paths = RepoPaths(tmp_path)
-    kw: dict[str, Any] = {
-        "bucket": "b",
-        "fetch": FakeFetcher(),
-        "paths": paths,
-        "now": NOW,
-        "echo": lambda _l: None,
-    }
-    import_sources(books=["MRK"], sources=["bsb"], **kw)
-    import_sources(books=["MRK"], sources=["kjv"], **kw)
+    run(paths, FakeFetcher(sword_zip), books=["MRK"], sources=["bsb"])
+    run(paths, FakeFetcher(sword_zip), books=["MRK"], sources=["jamieson-fausset-brown"])
     manifest = SourceManifest.model_validate(read_json(paths.manifest))
-    assert set(manifest.sources) == {"bsb", "kjv"}
+    assert set(manifest.sources) == {"bsb", "jamieson-fausset-brown"}
+    assert manifest.api_version == "V1.16.0"  # a commentary-only import leaves it alone
 
 
-def test_rerun_skips_books_already_imported(tmp_path: Path) -> None:
+def test_rerun_skips_books_already_imported(tmp_path: Path, sword_zip: Any) -> None:
     paths = RepoPaths(tmp_path)
-    kw: dict[str, Any] = {"bucket": "b", "paths": paths, "now": NOW, "echo": lambda _l: None}
-    import_sources(books=["MRK"], sources=["bsb"], fetch=FakeFetcher(), **kw)
-    again = FakeFetcher()
-    result = import_sources(books=["MRK", "GEN"], sources=["bsb"], fetch=again, **kw)
+    run(paths, FakeFetcher(sword_zip), books=["MRK"], sources=["bsb"])
+    again = FakeFetcher(sword_zip)
+    result = run(paths, again, books=["MRK", "GEN"], sources=["bsb"])
     assert result.skipped == ["bsb/MRK"] and result.written == ["bsb/GEN"]
     assert not any("/MRK/" in p for p in again.paths)
     manifest = SourceManifest.model_validate(read_json(paths.manifest))
     assert set(manifest.sources["bsb"].books) == {"MRK", "GEN"}
 
 
-def test_changed_cache_file_or_refresh_fetches_again(tmp_path: Path) -> None:
+def test_commentary_rerun_uses_the_archived_module(tmp_path: Path, sword_zip: Any) -> None:
     paths = RepoPaths(tmp_path)
-    kw: dict[str, Any] = {"bucket": "b", "paths": paths, "now": NOW, "echo": lambda _l: None}
-    import_sources(books=["MRK"], sources=["bsb"], fetch=FakeFetcher(), **kw)
+    run(paths, FakeFetcher(sword_zip), books=["MRK"], sources=["adam-clarke"])
+    again = FakeFetcher(sword_zip)
+    result = run(paths, again, books=["MRK", "JHN"], sources=["adam-clarke"])
+    assert again.downloads == []  # no network: the archived zip is read
+    assert result.skipped == ["adam-clarke/MRK"] and result.modules == [
+        "Clarke 1.0 (archived copy)"
+    ]
+    refreshed = FakeFetcher(sword_zip)
+    result = run(paths, refreshed, books=["MRK"], sources=["adam-clarke"], refresh=True)
+    assert len(refreshed.downloads) == 1 and result.written == ["adam-clarke/MRK"]
+
+
+def test_new_module_version_reimports_every_book(tmp_path: Path, sword_zip: Any) -> None:
+    paths = RepoPaths(tmp_path)
+    run(paths, FakeFetcher(sword_zip), books=["MRK"], sources=["adam-clarke"])
+    newer = FakeFetcher(sword_zip, version="2.0")
+    result = run(paths, newer, books=["MRK"], sources=["adam-clarke"], refresh=True)
+    assert result.written == ["adam-clarke/MRK"]
+    entry = SourceManifest.model_validate(read_json(paths.manifest)).sources["adam-clarke"]
+    assert entry.origin == "crosswire:Clarke@2.0"
+    assert entry.module is not None and entry.module.file.endswith("Clarke-2.0.zip")
+
+
+def test_old_helloao_commentary_entries_are_replaced(tmp_path: Path, sword_zip: Any) -> None:
+    paths = RepoPaths(tmp_path)
+    run(paths, FakeFetcher(sword_zip), books=["MRK"], sources=["bsb"])
+    manifest = read_json(paths.manifest)
+    bsb = manifest["sources"]["bsb"]
+    del bsb["origin"]  # written before `origin` existed: adopted, not re-fetched
+    manifest["sources"]["adam-clarke"] = {**bsb, "kind": "commentary", "apiId": "adam-clarke"}
+    write_json(paths.manifest, manifest)
+    fetch = FakeFetcher(sword_zip)
+    result = run(paths, fetch, books=["MRK"], sources=["bsb", "adam-clarke"])
+    assert result.skipped == ["bsb/MRK"] and result.written == ["adam-clarke/MRK"]
+    after = SourceManifest.model_validate(read_json(paths.manifest)).sources
+    assert after["bsb"].origin == "helloao:BSB"
+    assert after["adam-clarke"].api_id == "Clarke"
+
+
+def test_changed_cache_file_or_refresh_fetches_again(tmp_path: Path, sword_zip: Any) -> None:
+    paths = RepoPaths(tmp_path)
+    run(paths, FakeFetcher(sword_zip), books=["MRK"], sources=["bsb"])
     (paths.sources / "bsb" / "MRK.json").write_text("{}")
-    assert import_sources(books=["MRK"], sources=["bsb"], fetch=FakeFetcher(), **kw).written
-    refreshed = import_sources(
-        books=["MRK"], sources=["bsb"], fetch=FakeFetcher(), refresh=True, **kw
-    )
+    assert run(paths, FakeFetcher(sword_zip), books=["MRK"], sources=["bsb"]).written
+    refreshed = run(paths, FakeFetcher(sword_zip), books=["MRK"], sources=["bsb"], refresh=True)
     assert refreshed.written == ["bsb/MRK"] and refreshed.skipped == []
 
 
-def test_interrupted_import_keeps_finished_books(tmp_path: Path) -> None:
+def test_interrupted_import_keeps_finished_books(tmp_path: Path, sword_zip: Any) -> None:
     paths = RepoPaths(tmp_path)
-    fetch = FakeFetcher(missing={"/api/BSB/GEN/2.json"})  # a translation gap stops the import
+    fetch = FakeFetcher(sword_zip, missing={"/api/BSB/GEN/2.json"})
     with pytest.raises(NotFound):
-        import_sources(
-            books=["MRK", "GEN"],
-            sources=["bsb"],
-            bucket="b",
-            fetch=fetch,
-            paths=paths,
-            now=NOW,
-            echo=lambda _l: None,
-        )
+        run(paths, fetch, books=["MRK", "GEN"], sources=["bsb"])
     manifest = SourceManifest.model_validate(read_json(paths.manifest))
     assert set(manifest.sources["bsb"].books) == {"MRK"}
 

@@ -127,10 +127,11 @@ def verify(
     manifest: SourceManifest,
     books: set[str] | None = None,
 ) -> list[VerifyProblem]:
-    """Check every file in the manifest (or only ``books``). Returns problems, not raises."""
+    """Check every file in the manifest (or only ``books``), including archived module zips.
+    Returns problems, not raises."""
     problems: list[VerifyProblem] = []
     for source, entry in sorted(manifest.sources.items()):
-        for book, bf in sorted(entry.books.items()):
+        for book, bf in entry.files():
             if books is not None and book not in books:
                 continue
             try:

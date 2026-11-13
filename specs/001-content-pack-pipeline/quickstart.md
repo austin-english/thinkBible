@@ -41,23 +41,28 @@ the packs bucket, the run ledger table, five pipeline Lambdas and the
 Before the first promotion, `infra/envs/prod` adds the production packs bucket and CloudFront
 (`pipeline/config/envs/prod.toml`).
 
-## 2. Freeze the sources (once, about 1 hour)
+## 2. Freeze the sources (once, about 25 minutes)
 
 ```bash
 uv run --package thinkbible-pipeline thinkbible-pipeline import --all
+uv run --package thinkbible-pipeline thinkbible-pipeline sources check
 uv run --package thinkbible-pipeline thinkbible-pipeline verify
 uv run --package thinkbible-pipeline thinkbible-pipeline sources push
 ```
 
 **Expected**:
 - The local cache `content/sources/{bsb,kjv,matthew-henry,jamieson-fausset-brown,adam-clarke}/*.json`
-  exists, and is gitignored.
+  exists, and is gitignored. Each commentary also has its CrossWire module zip in `_module/`.
+- `sources check` passes for all five sources with 66 books each. The KJV has 31,102 verses; the
+  BSB has 31,086 and lists its 16 omitted verses. Each commentary reports its coverage.
 - `manifest.json` lists every file with its S3 key and sha256, and `verify` reports all files OK.
 - `bsb/MRK.json` has no 7:16 and does have the "BYZ and TR include 16" footnote. `kjv/MRK.json`
   has 7:16.
 - `sources push` uploads every file. Running it again uploads nothing.
+- An interrupted import picks up where it stopped when run again.
 
-Commit **only the manifest** as `content: import source snapshot (Free Use Bible API V…)`.
+Commit **only the manifest** as
+`content: import source snapshot (BSB/KJV HelloAO V…, commentaries CrossWire)`.
 
 **Fresh clone test**: delete the cache, then pull it back.
 

@@ -114,7 +114,7 @@
         },
         "license": { "type": "string", "description": "e.g. Public domain (CC0)" },
         "licenseUrl": { "type": "string", "format": "uri" },
-        "origin": { "type": "string", "description": "e.g. Free Use Bible API (bible.helloao.org)" },
+        "origin": { "type": "string", "description": "e.g. Free Use Bible API (bible.helloao.org), or CrossWire SWORD module JFB 3.0 (crosswire.org)" },
         "apiVersion": { "type": "string" },
         "retrievedAt": { "type": "string", "format": "date" },
         "upstreamSha256": { "$ref": "#/$defs/sha256" },

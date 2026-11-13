@@ -1,6 +1,7 @@
 # Test fixtures
 
-- `api/`: small, trimmed copies of Free Use Bible API responses (US4 tests).
+- `api/`: small, trimmed copies of Free Use Bible API translation responses (US4 tests).
+  CrossWire commentary modules are built in memory by `tests/conftest.py` (`sword_zip`).
 - `model_outputs/{stage}/{section_id}.json`: recorded model outputs replayed by `FakeRunner`.
 
 Fixtures may contain short excerpts of public-domain text. Never put a full source book here; the
