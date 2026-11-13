@@ -174,6 +174,25 @@ Commit only `content/sources/manifest.json`. On a new machine, `sources pull` re
 `import` is the only command that fetches text from the web, and it isn't run again unless a
 source is deliberately added (constitution II).
 
+### Restoring, re-checking and redeploying
+
+Everything here is safe to re-run. `…` stands for
+`uv run --package thinkbible-pipeline thinkbible-pipeline`.
+
+| Situation | Run |
+|---|---|
+| New machine, or the local cache was deleted | `make sources-pull`: downloads the snapshot from S3 and checks each file against the manifest |
+| Check that everything is still right | `make sources-publish`: with nothing new, the push uploads 0 files and the other steps re-check the cache and S3 |
+| Check only S3, or only the cache | `… verify --remote`, or `… verify` and `… sources check` |
+| Changed pipeline code, config or prompts | `make deploy`: rebuilds the Lambda bundle and runs `terraform apply` |
+| Add a source, or move to a new edition of one (rare) | `… import --all --sources <source>` (add `--refresh` to redo existing books), then `make sources-publish`, then commit `content/sources/manifest.json` |
+
+- Every command needs `export AWS_PROFILE=admin-thinkbible` (and `aws sso login` if the session
+  has expired), except `import`, `sources check` and plain `verify`.
+- A re-import writes new files under that day's date in S3. Existing objects are never
+  overwritten, so if you re-import a source on the same day as an earlier push and the content
+  comes out different, `sources push` refuses. Re-import the next day instead.
+
 ## Running it
 
 ```bash
