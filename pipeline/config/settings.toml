@@ -23,7 +23,7 @@ refusal_fallback_model = "us.anthropic.claude-opus-4-6-v1"
 
 [prompts]
 shared_context = "v1"
-question_guide = "v1"
+question_guide = "v2"  # v2 (2026-11-16): guiding questions, levels by reach
 
 # Per stage: model; thinking ("adaptive" or "none"); effort (output_config.effort, omit for
 # models that don't accept it, such as Haiku 4.5); prompt version; and the default cost per
@@ -38,7 +38,7 @@ default_cost_usd = 0.02
 model = "us.anthropic.claude-sonnet-4-6"
 thinking = "adaptive"
 effort = "medium"
-prompt = "v1"
+prompt = "v3"  # extract/v3 and questions/v3 (v2 + single quotation marks)
 default_cost_usd = 0.09
 
 [stages.align]

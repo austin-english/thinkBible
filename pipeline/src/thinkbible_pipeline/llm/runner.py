@@ -109,7 +109,11 @@ class ModelRunner(Protocol):
         output_model: type[T],
         *,
         section_id: str,
-    ) -> tuple[T, Usage]: ...
+        call: str | None = None,
+    ) -> tuple[T, Usage]:
+        """One structured call. ``stage`` picks the model and settings; ``call`` names the call
+        when a stage makes more than one (``generate``: ``extract``, then ``questions``)."""
+        ...
 
 
 def assert_no_tools(params: Mapping[str, Any]) -> None:
@@ -172,8 +176,10 @@ class BedrockRunner:
         output_model: type[T],
         *,
         section_id: str,
+        call: str | None = None,
     ) -> tuple[T, Usage]:
         params = self.build_request(stage, system, user)
+        what = f"{stage}.{call}" if call else stage
         last_error = "no attempt made"
         attempts = self._settings.invalid_output_retries + 1
         for _ in range(attempts):
@@ -199,21 +205,25 @@ class BedrockRunner:
                 last_error = "no parsed output"
                 continue
             return parsed, Usage.from_api(resp.model, resp.usage)
-        raise InvalidOutput(f"{section_id} {stage}: {last_error} after {attempts} attempts")
+        raise InvalidOutput(f"{section_id} {what}: {last_error} after {attempts} attempts")
 
 
 @dataclass
 class FakeRunner:
     """Replays outputs from ``{fixtures}/{stage}/{section_id}.json`` or ``responses``.
 
-    A response that is an ``Exception`` is raised instead, to test failures. ``calls`` records every
-    request so tests can assert how many model calls were made.
+    Keys are ``(stage, section_id)``, or ``("stage.call", section_id)`` for a named call (so
+    ``("generate.extract", "mrk-1-1")`` and fixtures in ``generate.extract/``). A response that is
+    an ``Exception`` is raised instead, to test failures; a ``list`` is replayed one item per call,
+    to test regeneration. ``calls`` records every request so tests can count model calls, and
+    ``prompts`` the user turn of each.
     """
 
     fixtures_dir: Path | None = None
     responses: dict[tuple[str, str], Any] = field(default_factory=dict)
     usage: Usage = field(default_factory=lambda: Usage(model="fake"))
     calls: list[tuple[str, str]] = field(default_factory=list)
+    prompts: list[str] = field(default_factory=list)
 
     async def parse(
         self,
@@ -223,13 +233,20 @@ class FakeRunner:
         output_model: type[T],
         *,
         section_id: str,
+        call: str | None = None,
     ) -> tuple[T, Usage]:
-        self.calls.append((stage, section_id))
-        key = (stage, section_id)
+        name = f"{stage}.{call}" if call else stage
+        self.calls.append((name, section_id))
+        self.prompts.append(user)
+        key = (name, section_id)
         if key in self.responses:
             value = self.responses[key]
+            if isinstance(value, list):
+                if not value:
+                    raise ModelError(f"no more recorded outputs for {key}")
+                value = value.pop(0)
         elif self.fixtures_dir is not None:
-            path = self.fixtures_dir / stage / f"{section_id}.json"
+            path = self.fixtures_dir / name / f"{section_id}.json"
             if not path.is_file():
                 raise ModelError(f"no recorded output at {path}")
             value = json.loads(path.read_text(encoding="utf-8"))

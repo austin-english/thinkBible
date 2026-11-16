@@ -518,7 +518,7 @@ every key idea names a commentator. Then, with Bedrock, Mark 1–16 is fully dra
     and introduction sentences citing an overlapping range;
   - cross-reference targets are labelled "parallel passage note";
   - when the 8,000-token cap is exceeded, the excerpt is trimmed at an item boundary and flagged.
-- [ ] T042 [P] [US1] Write `pipeline/tests/unit/test_generate_postprocess.py`:
+- [X] T042 [P] [US1] Write `pipeline/tests/unit/test_generate_postprocess.py`:
   - **Evidence check (R10)**: a quote not found in that commentator's excerpt removes that source,
     and an idea left with no sources is rejected.
   - **Ideas**: `agreed = len(sources) ≥ 2`; agreed ideas rank first.
@@ -555,12 +555,12 @@ every key idea names a commentator. Then, with Bedrock, Mark 1–16 is fully dra
   of each commentary's `origin`, so the importer re-converts from the archived zips. The
   commentaries were re-imported as snapshot 2026-11-16 (owner: `make sources-publish`, then
   commit `content/sources/manifest.json`).
-- [ ] T048 [P] [US1] Implement the output models in
+- [X] T048 [P] [US1] Implement the output models in
   `pipeline/src/thinkbible_pipeline/llm/outputs.py`, as data-model.md §4:
   - `SummaryOut {summary ≤120}`;
   - `IdeasOut {keyIdeas[{title, body, sources, verseStart, verseEnd, evidence[{commentator, quote ≤30 words}]}], context, viewsDiffer?, noPrompt, noPromptReason?}`;
   - `QuestionsOut {questions[{text, type, verseStart, verseEnd, targets, answerDirectness, outsideKnowledge}]}`.
-- [ ] T049 [P] [US1] Write the prompts:
+- [X] T049 [P] [US1] Write the prompts:
   - **`pipeline/prompts/summaries/v1.md`**: one-line passage summary.
   - **`pipeline/prompts/extract/v1.md`**:
     - FR-006 and FR-007: 1–5 ideas, only what the commentators say, neutral modern English, no
@@ -575,16 +575,17 @@ every key idea names a commentator. Then, with Bedrock, Mark 1–16 is fully dra
     passage, not leading, no tradition-specific assumptions, targets ≥1 idea without giving it
     away), shape by passage kind (in genealogies, lists and laws, ask about the verses the
     commentaries single out), and the recorded features.
-- [ ] T050 [US1] Write `pipeline/prompts/question-guide/v1.md`: the brief's quality rules plus 15
+- [X] T050 [US1] Write `pipeline/prompts/question-guide/v1.md`: the brief's quality rules plus 15
   example questions, taken from the Mark 1 mockup questions (`docs/design/screens/*.png`, and the
   older `FeedHybrid.dc.html`: `git show c85bd1e:docs/design/screens/FeedHybrid.dc.html`). Start the
   file with "DRAFT: the owner must approve these examples before the first publish".
-- [ ] T051 [P] [US1] Implement `pipeline/src/thinkbible_pipeline/drafts/ids.py`: per-section `k`
-  and `q` counters in `book.json` `idCounters`, which only ever increase (R13).
+- [X] T051 [P] [US1] Implement `pipeline/src/thinkbible_pipeline/drafts/ids.py`: per-section `k`
+  and `q` counters, which only ever increase (R13). (Done 2026-11-16: kept in each section's
+  draft as `ids`, not in `book.json`, because sections run in parallel in the cloud.)
 - T052 (removed 2026-11-10, with T043).
-- [ ] T053 [US1] Implement `pipeline/src/thinkbible_pipeline/stages/summaries.py` (Haiku). It
+- [X] T053 [US1] Implement `pipeline/src/thinkbible_pipeline/stages/summaries.py` (Haiku). It
   stores `summary` per section; the next section's prompt uses the previous section's summary.
-- [ ] T054 [US1] Implement `pipeline/src/thinkbible_pipeline/stages/generate.py`. Per section:
+- [X] T054 [US1] Implement `pipeline/src/thinkbible_pipeline/stages/generate.py`. Per section:
   1. Gather the excerpts.
   2. Call 1 (`extract`).
   3. Post-process: the evidence check, `agreed`, ranking, allocating `k` IDs, `addedIn` unset
@@ -592,6 +593,13 @@ every key idea names a commentator. Then, with Bedrock, Mark 1–16 is fully dra
   4. If not `noPrompt`, call 2 (`questions`).
   5. Assign levels with the R11 rule, apply the pool rules, set alternates, allocate `q` IDs.
   6. Write `sections/{id}.json` (it replaces the previous machine output; IDs are never reused).
+
+  (Done 2026-11-16. The rules are in `stages/generate_rules.py`; extraction is retried once when
+  no idea passes the evidence check, and a pool that breaks a rule (no question at a level up to
+  the cap, no whole-passage question with 2+ levels) is regenerated once with the problem named,
+  then the section fails with its draft and ID counters saved. The runner takes a `call` name
+  (`generate.extract`, `generate.questions`) so FakeRunner fixtures can tell the calls apart.
+  `test_generate_postprocess.py` (T042) and `test_generate_stage.py`.)
 - [ ] T055 [US1] Implement `pipeline/src/thinkbible_pipeline/report/render.py` and
   `pipeline/src/thinkbible_pipeline/report/templates/review.html.j2` (R17): the read-only
   scorecard. It writes `scorecard.json` and one self-contained `review.html` to the draft store,

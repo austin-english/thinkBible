@@ -26,6 +26,8 @@ class BookRef(JsonModel):
 
 
 class IdCounter(JsonModel):
+    """The last key idea (``k``) and question (``q``) number given out in a section (R13)."""
+
     k: Annotated[int, Field(ge=0)] = 0
     q: Annotated[int, Field(ge=0)] = 0
 
@@ -35,8 +37,6 @@ class BookState(JsonModel):
     status: BookStatus
     draft_version: str | None = None  # the version currently on the draft channel
     last_promoted: str | None = None  # the last version promoted to the live channel
-    # Only ever increases (R13): IDs are never reused.
-    id_counters: dict[str, IdCounter] = Field(default_factory=dict)
 
 
 class SectionMapEntry(JsonModel):
@@ -86,7 +86,7 @@ class DroppedItem(JsonModel):
     """An item the quality gate removed, with why and the item as it was generated (R16)."""
 
     item_id: str
-    stage: Literal["check", "review", "levels", "align"]
+    stage: Literal["generate", "check", "review", "levels", "align"]
     reason: str
     item: dict[str, Any] = Field(default_factory=dict)
 
@@ -121,6 +121,9 @@ class SectionDraft(JsonModel):
     """
 
     section: dict[str, Any] = Field(default_factory=dict)
+    # Only ever increases, so IDs are never reused, even for items dropped before publishing
+    # (R13). Kept per section, not in book.json: sections run in parallel in the cloud.
+    ids: IdCounter = Field(default_factory=IdCounter)
     evidence: dict[str, list[Evidence]] = Field(default_factory=dict)
     excerpts: dict[str, ExcerptRecord] = Field(default_factory=dict)
     summary: str | None = None

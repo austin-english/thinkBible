@@ -103,3 +103,19 @@ def test_a_run_that_starts_with_sections_is_estimated_for_them(
     )
     assert len(model_plan.items) == expected > 16
     assert summary.estimate_usd > 0
+
+
+def test_estimating_real_stages_before_the_map_exists(tmp_path: Path, make_library: Any) -> None:
+    """Regression: summaries and generate read sections.json for their inputs, which a run that
+    starts with `sections` hasn't written yet when it is estimated."""
+    from thinkbible_pipeline.stages import registry
+
+    deps = make_deps(tmp_path, make_library, [])
+    deps.stages = registry()
+    request = RunRequest(
+        book="mark", stages=["sections", "summaries", "generate"], sections=["mrk-1-1"]
+    )
+    plans, summary = estimate_run(request, deps)
+    assert [len(p.items) for p in plans if not p.book_level] == [1, 1]
+    assert summary.estimate_usd > 0
+    assert deps.store.section_ids() == []  # estimating writes nothing

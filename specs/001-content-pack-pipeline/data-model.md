@@ -133,7 +133,6 @@ drafts/mrk/
 | `status` | See the state machine below |
 | `draftVersion` | semver or null: the version currently on the draft channel |
 | `lastPromoted` | semver or null: the last version promoted to live |
-| `idCounters` | `{sectionId: {k: n, q: n}}`. Only ever increases (R13), in both channels |
 
 **State machine**:
 
@@ -159,6 +158,7 @@ henryDivisions: [startVerse…]}`
 | Field | Notes |
 |---|---|
 | `section` | The publishable Section fields (as above). Items the gate drops are removed from it and listed in `dropped` |
+| `ids` | `{k: n, q: n}`: the last key idea and question number given out in this section. Only ever increases (R13), so IDs are never reused, even for dropped items. Kept per section, not in `book.json`, because sections run in parallel in the cloud |
 | `evidence` | `{keyIdeaId: [{commentator, quote}]}`. Not published (R10) |
 | `excerpts` | `{commentator: {sha256, tokens, items[], crossRefs[], trimmed}}`. A record of model inputs, not the text. `items` names the parts given (`MRK 1:1-8`, `MRK 3 intro`, `MAT 12:9-21` for a followed pointer) and `crossRefs` the pointer targets followed (R4) |
 | `summary` | One-line passage summary (from `summaries`) |
@@ -166,7 +166,7 @@ henryDivisions: [startVerse…]}`
 | `features` | `{questionId: {answerDirectness, outsideKnowledge, verseSpan, agreement}}` (R11) |
 | `checks` | `[{itemId, check, ok, detail}]` |
 | `grades` | `{itemId: {score: 1-5, notes}}` from the grader (`review`) |
-| `dropped` | `[{itemId, stage: "check"\|"review"\|"levels"\|"align", reason, item}]`: what the gate removed and why, with the item as generated (R16) |
+| `dropped` | `[{itemId, stage: "generate"\|"check"\|"review"\|"levels"\|"align", reason, item}]`: what the gate removed and why, with the item as generated (R16) |
 | `levelChanges` | `[{questionId, from, to, reason}]` from the level check (R11) |
 | `failed` | null, or the reason the section failed after one regeneration (FR-018) |
 | `stages` | `{stage: {promptVersion, model, inputHash, completedAt, costUsd, status: "done"\|"failed", error?}}` (R8) |

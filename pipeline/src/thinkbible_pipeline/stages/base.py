@@ -261,6 +261,12 @@ def plan_stage(
     model = stage.model(deps)
     plan = StagePlan(stage=stage.name, prompt_version=pv, model=model)
     for sid in _section_ids(request, deps, planned_sections):
+        if sid in assume_changed:
+            # An earlier stage of this run will (re)write this section, or create it: it will be
+            # processed whatever its inputs are, and they may not exist yet (no sections.json
+            # before the sections stage runs). The real hash is taken when the stage runs.
+            plan.items.append(PlanItem(section_id=sid, input_hash=""))
+            continue
         draft = deps.store.read_draft_or_new(sid)
         h = input_hash(stage.inputs(sid, draft, deps), pv, model)
         rec = draft.stages.get(stage.name)
@@ -269,7 +275,6 @@ def plan_stage(
             and rec.status == "done"
             and rec.prompt_version == pv
             and rec.input_hash == h
-            and sid not in assume_changed
         )
         if unchanged and not request.fresh and not stage.always_run:
             plan.skipped += 1

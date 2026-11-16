@@ -32,7 +32,11 @@ pipeline/
 │   ├── pricing.toml                # Bedrock USD per million tokens, per model
 │   └── aws.toml                    # buckets, ledger table, state machine ARN (from `terraform output`)
 ├── prompts/
-│   └── _shared/context-v1.md       # opening text of every system prompt; stages add {stage}/vN.md
+│   ├── _shared/context-v1.md       # opening text of every system prompt
+│   ├── summaries/v1.md             # one-line summary
+│   ├── extract/v1.md               # generate call 1: key ideas, context, views differ
+│   ├── questions/v1.md             # generate call 2: the question pool
+│   └── question-guide/v1.md        # quality rules + example questions (DRAFT: owner approves)
 ├── scripts/
 │   └── build_bundle.py             # `make lambda-bundle`: builds pipeline/out/lambda.zip
 ├── src/thinkbible_pipeline/
@@ -50,9 +54,13 @@ pipeline/
 │   ├── stages/
 │   │   ├── base.py                 # shared steps: estimate, plan, run one section, finish; local run()
 │   │   ├── sections.py             # `sections`: writes the book's section map (no model calls)
+│   │   ├── summaries.py            # `summaries`: one line per section (Haiku)
+│   │   ├── generate.py             # `generate`: key ideas, context, questions (Sonnet)
+│   │   ├── generate_rules.py       # evidence check, ranking, levels, pool rules (no model calls)
 │   │   └── __init__.py             # registry() of stage implementations
 │   ├── sections/
-│   │   └── builder.py              # BSB headings + Henry's divisions → 3-12 verse sections (R5)
+│   │   ├── builder.py              # BSB headings + Henry's divisions → 3-12 verse sections (R5)
+│   │   └── passage.py              # a section's verses as prompt text
 │   ├── commentary/
 │   │   ├── crossrefs.py            # "See on Mt 4:1-11", "( = Lu …)": pointers to another note
 │   │   └── gather.py               # each commentator's excerpt for a section (R4)
@@ -63,9 +71,11 @@ pipeline/
 │   ├── llm/
 │   │   ├── runner.py               # BedrockRunner (Claude on Bedrock) and FakeRunner (tests)
 │   │   ├── budget.py               # pricing, cost estimate, the Proceed? [y/N] prompt
+│   │   ├── outputs.py              # what each model call must return (structured output)
 │   │   └── prompts.py              # assembles the versioned system prompt for a stage
 │   ├── drafts/
 │   │   ├── models.py               # BookState, SectionDraft, RunRecord, … (data-model §2)
+│   │   ├── ids.py                  # permanent key-idea and question IDs, never reused
 │   │   └── store.py                # DraftStore: reads and writes {book}/… in a BlobStore
 │   └── sources/
 │       ├── models.py               # source manifest and normalised book formats (data-model §3)

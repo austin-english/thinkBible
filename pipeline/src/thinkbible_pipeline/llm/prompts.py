@@ -44,20 +44,24 @@ def system_prompt(
     stage: str,
     settings: Settings,
     *,
+    prompt: str | None = None,
     with_question_guide: bool = False,
     prompts_dir: Path | None = None,
 ) -> SystemPrompt:
     """Shared context first, then the stage prompt, then (optionally) the question guide.
 
-    All three are stable across sections, so the runner caches them as one prefix.
+    ``prompt`` names the prompt file when it differs from the stage (``generate`` uses
+    ``extract`` and ``questions``); its version is the stage's ``prompt`` setting. All parts are
+    stable across sections, so the runner caches them as one prefix.
     """
     shared_v = settings.prompts.shared_context
     stage_v = settings.stage(stage).prompt
+    name = prompt or stage
     parts = [
         load_prompt(SHARED_CONTEXT, shared_v, prompts_dir),
-        load_prompt(stage, stage_v, prompts_dir),
+        load_prompt(name, stage_v, prompts_dir),
     ]
-    versions = {SHARED_CONTEXT: shared_v, stage: stage_v}
+    versions = {SHARED_CONTEXT: shared_v, name: stage_v}
     if with_question_guide:
         guide_v = settings.prompts.question_guide
         parts.append(load_prompt(QUESTION_GUIDE, guide_v, prompts_dir))

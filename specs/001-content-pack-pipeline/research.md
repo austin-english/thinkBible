@@ -402,7 +402,9 @@ or after a live publish, retire and replace (US6).
 - For each key idea, the extraction output must include **evidence**: one short quote (≤ 30
   words) from each cited commentator's excerpt.
 - An automatic check confirms each quote appears in that commentator's excerpt, after normalising
-  whitespace and punctuation.
+  whitespace and punctuation and setting aside bracketed citations such as "(Mr 1:12)", which
+  models often leave out of a quote (revised 2026-11-16). A quote longer than 30 words is accepted
+  when it is found verbatim (up to 80 words), and stored cut to its first 30 words.
 - An idea with a cited commentator whose quote isn't found loses that source. If no sources
   remain, the idea is rejected.
 - Evidence stays in the drafts and the scorecard, and is **not** published.
@@ -416,11 +418,16 @@ risk.
 - **Features**: the model records `answerDirectness` (`stated`, `inferred` or `beyond`) and
   `outsideKnowledge` (`none`, `some` or `required`). Code computes verse span from the scope, and
   commentator agreement from the target ideas' sources.
-- **Rule**:
-  - **Level 1**: span ≤ 2 verses, `stated`, `none`.
-  - **Level 3**: `outsideKnowledge = required`, or `answerDirectness = beyond`, or type
-    `application`.
-  - **Level 2**: everything else.
+- **Rule** (revised 2026-11-16): levels differ by how far a question reaches, not by recall
+  versus thinking. Every question guides the reader into the passage's meaning; recall questions
+  ("What two things does Mark say…") are never written (`questions/v2.md`, question guide v2).
+  The first Mark run showed that a Level 1 limited to `stated` answers produces reading-quiz
+  questions, and Level 1 is the question every reader meets first.
+  - **Level 1** (a detail): span ≤ 2 verses and `outsideKnowledge = none`, whether the answer is
+    `stated` or `inferred`.
+  - **Level 3** (beyond it): `outsideKnowledge = required`, or `answerDirectness = beyond`, or
+    type `application`.
+  - **Level 2** (the passage, or a contrast across verses): everything else.
 - **Pool rules**:
   - Levels are capped by the number of key ideas (FR-009).
   - At most 2 questions per level. The second is `isAlternate: true`.
@@ -448,8 +455,9 @@ risk.
 **Decision**:
 - **IDs**:
   - Section: `mrk-1-1`. Key idea: `mrk-1-1-k3`. Question: `mrk-1-1-q4`.
-  - The number after `k` or `q` comes from a per-section counter stored in the drafts. It always
-    increases and is never reused, even for items you rejected before they were ever published.
+  - The number after `k` or `q` comes from a per-section counter stored in that section's draft
+    (`ids`; not in `book.json`, since sections run in parallel in the cloud). It always
+    increases and is never reused, even for items dropped before they were ever published.
 - **Pack version**: semver per book, recorded as `packVersion` (`1.0.0`) together with a separate
   `book` field.
   - Minor: content added or retired.
