@@ -438,7 +438,7 @@ confirm `verify` passes.
   - `sources/refs.py`: `osisRef` → compact references (`MAT 12:9-21`), with Clarke's and Henry's
     abbreviations and shorthand.
   - `importer.py`: download `MHC`, `JFB`, `Clarke` from CrossWire's `packages/rawzip/`, archive
-    the zip as the source's `module` file, record `origin` (`crosswire:JFB@3.0`); re-runs read
+    the zip as the source's `module` file, record `origin` (`crosswire:JFB@3.0/reader2`); re-runs read
     the archive. `store.py` and `verify` include module files.
   - Tests: `test_sword.py` (synthetic modules from `tests/conftest.py` and real JFB/MHC
     entries), importer tests for archive reuse and edition changes.
@@ -493,7 +493,7 @@ every key idea names a commentator. Then, with Bedrock, Mark 1–16 is fully dra
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T039 [P] [US1] Write `pipeline/tests/unit/test_sections_builder.py` (R5):
+- [X] T039 [P] [US1] Write `pipeline/tests/unit/test_sections_builder.py` (R5):
   - sections start at BSB headings and never cross a chapter;
   - ranges are contiguous, non-overlapping, and cover every verse in either translation
     (including KJV-only 7:16);
@@ -503,7 +503,7 @@ every key idea names a commentator. Then, with Bedrock, Mark 1–16 is fully dra
     nearest the middle;
   - IDs are `mrk-{C}-{V}`;
   - split pieces get the title "{heading} (cont.)" with `titleSource: "split"` and a flag.
-- [ ] T040 [P] [US1] Write `pipeline/tests/unit/test_crossrefs.py`. These parse into references:
+- [X] T040 [P] [US1] Write `pipeline/tests/unit/test_crossrefs.py`. These parse into references:
   - "See on Mat 3:1-3 (note)"
   - "See the note on Mat 3:4"
   - "See on Mat 7:28-29"
@@ -511,8 +511,9 @@ every key idea names a commentator. Then, with Bedrock, Mark 1–16 is fully dra
   - "which we had before, Mat 8:2-4"
 
   Abbreviations Mat/Mt/Matthew/Mar/Mr/Mark/Lu/Luke/Joh/John map to USFM. Only one hop is
-  followed.
-- [ ] T041 [P] [US1] Write `pipeline/tests/unit/test_gather.py` (R4):
+  followed. (Done 2026-11-16, adding Henry's "Matt. viii. 2-4", "parallel place (…)", JFB's
+  "= Lu …" broken across a paragraph, and tagged references making ranges exact.)
+- [X] T041 [P] [US1] Write `pipeline/tests/unit/test_gather.py` (R4):
   - for each commentator, the excerpt includes items in range, the overlapping Henry division,
     and introduction sentences citing an overlapping range;
   - cross-reference targets are labelled "parallel passage note";
@@ -538,14 +539,22 @@ every key idea names a commentator. Then, with Bedrock, Mark 1–16 is fully dra
 
 ### Implementation for User Story 1
 
-- [ ] T045 [US1] Implement `pipeline/src/thinkbible_pipeline/sections/builder.py` (R5). Write
+- [X] T045 [US1] Implement `pipeline/src/thinkbible_pipeline/sections/builder.py` (R5). Write
   `sections.json` to the draft store with `SectionMapEntry`
-  `{id, chapter, verseStart, verseEnd, title, titleSource, henryDivisions}`.
-- [ ] T046 [P] [US1] Implement `pipeline/src/thinkbible_pipeline/commentary/crossrefs.py`
+  `{id, chapter, verseStart, verseEnd, title, titleSource, henryDivisions}`. (Done 2026-11-16:
+  the `sections` stage is registered, frozen once the book is live, and a run that starts with
+  it is estimated for the sections it will write; `test_sections_stage.py`.)
+- [X] T046 [P] [US1] Implement `pipeline/src/thinkbible_pipeline/commentary/crossrefs.py`
   (patterns as in T040).
-- [ ] T047 [US1] Implement `pipeline/src/thinkbible_pipeline/commentary/gather.py` (R4). Estimate
+- [X] T047 [US1] Implement `pipeline/src/thinkbible_pipeline/commentary/gather.py` (R4). Estimate
   tokens as chars/4. Record `excerpts[commentator] = {sha256, tokens, items, crossRefs, trimmed}`
-  in the draft; the text itself is not stored.
+  in the draft; the text itself is not stored. (Done 2026-11-16 with blocks split at passage
+  headings, one part per followed pointer, and the `excerpts` CLI command to inspect a section.)
+- [X] T047a [US1] Recover notes the CrossWire index lost (research R2a, 2026-11-16):
+  `sword.py` reader 2 attaches unindexed text to the verse it numbers; `READER_VERSION` is part
+  of each commentary's `origin`, so the importer re-converts from the archived zips. The
+  commentaries were re-imported as snapshot 2026-11-16 (owner: `make sources-publish`, then
+  commit `content/sources/manifest.json`).
 - [ ] T048 [P] [US1] Implement the output models in
   `pipeline/src/thinkbible_pipeline/llm/outputs.py`, as data-model.md §4:
   - `SummaryOut {summary ≤120}`;

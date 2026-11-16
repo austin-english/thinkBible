@@ -32,7 +32,13 @@ from thinkbible_pipeline.drafts.store import DraftStore
 from thinkbible_pipeline.llm.runner import BedrockRunner, ModelRunner, Throttled
 from thinkbible_pipeline.paths import repo_paths
 from thinkbible_pipeline.requests import RunRequest
-from thinkbible_pipeline.sources.snapshot import SourceError, SourceStore, load_manifest, verify
+from thinkbible_pipeline.sources.snapshot import (
+    SourceError,
+    SourceLibrary,
+    SourceStore,
+    load_manifest,
+    verify,
+)
 from thinkbible_pipeline.stages import registry
 from thinkbible_pipeline.stages.base import (
     BookStage,
@@ -106,6 +112,7 @@ def cloud_deps(request: RunRequest, env: CloudEnv) -> Deps:
         preflight=preflight,
         echo=print,
         code_version=env.code_version,
+        library=SourceLibrary(sources, load_manifest(paths)),
     )
 
 

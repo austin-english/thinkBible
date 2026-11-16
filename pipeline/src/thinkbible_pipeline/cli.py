@@ -133,11 +133,13 @@ def sources_push() -> None:
 
     envcfg = load_aws()
     manifest = _manifest_or_exit()
+    typer.echo(f"uploading files missing from s3://{envcfg.sources_bucket} (one line per file) …")
     try:
         result = push(
             manifest,
             client=boto3.client("s3", region_name=envcfg.region),
             bucket=envcfg.sources_bucket,
+            progress=typer.echo,
         )
     except (PushRefused, SourceError) as e:
         _exit(ExitCode.SOURCE_CHECKSUM, str(e))
@@ -165,6 +167,7 @@ def sources_pull(
         client=boto3.client("s3", region_name=envcfg.region),
         bucket=envcfg.sources_bucket,
         books=set(codes) if codes else None,
+        progress=typer.echo,
     )
     typer.echo(f"{result.downloaded} downloaded, {result.present} already present and verified")
     for problem in result.problems:
@@ -225,7 +228,11 @@ def verify(
         )
     else:
         store = SourceStore.local()
-    problems = verify_sources(store=store, manifest=manifest)
+    if remote:
+        typer.echo(f"downloading and checking every file in {store.label} …")
+    problems = verify_sources(
+        store=store, manifest=manifest, progress=typer.echo if remote else None
+    )
     total = sum(len(e.files()) for e in manifest.sources.values())
     for p in problems:
         typer.echo(f"{p.source}/{p.book}: {p.message}", err=True)
@@ -300,6 +307,58 @@ def run(
         _print_stages([StageResult.model_validate(s) for s in output.get("stages", [])])
         typer.echo(f"spent ${float(output.get('spentUsd', 0)):.3f}")
     _exit(code)
+
+
+@app.command()
+def excerpts(
+    book: BookOpt,
+    section: Annotated[str, typer.Option("--section", help="Section ID, e.g. mrk-1-1.")],
+    commentator: Annotated[
+        str | None, typer.Option(help="Only this commentator (e.g. jamieson-fausset-brown).")
+    ] = None,
+    full: Annotated[bool, typer.Option("--full", help="Print every part in full.")] = False,
+) -> None:
+    """Show what each commentator contributes to a section: exactly what the model is given."""
+    from thinkbible_pipeline.commentary.gather import COMMENTATORS, gather
+    from thinkbible_pipeline.config import load_settings
+    from thinkbible_pipeline.sections.builder import build_sections
+    from thinkbible_pipeline.sources.snapshot import SourceError, SourceLibrary
+
+    try:
+        request = PublishRequest(book=book)
+    except ValidationError as e:
+        _usage(e)
+    code = request.book_info.code
+    try:
+        library = SourceLibrary.local()
+        sections = build_sections(
+            code, library.translation("bsb", code), library.commentary("matthew-henry", code)
+        )
+    except SourceError as e:
+        _exit(ExitCode.SOURCE_CHECKSUM, str(e))
+    entry = next((s for s in sections if s.id == section), None)
+    if entry is None:
+        _exit(
+            ExitCode.USAGE,
+            f"no section {section!r}; {code} has {sections[0].id} … {sections[-1].id}",
+        )
+    if commentator is not None and commentator not in COMMENTATORS:
+        _exit(ExitCode.USAGE, f"unknown commentator {commentator!r}; expected {COMMENTATORS}")
+    cap = load_settings().excerpt_cap_tokens
+    typer.echo(
+        f"{entry.id}: {request.book_info.name} {entry.chapter}:{entry.verse_start}-"
+        f'{entry.verse_end} "{entry.title}" (cap {cap:,} tokens per commentator)'
+    )
+    for name in [commentator] if commentator else COMMENTATORS:
+        ex = gather(entry, code, name, library, cap_tokens=cap)
+        flags = (", trimmed" if ex.trimmed else "") + (
+            f", follows {', '.join(ex.cross_refs)}" if ex.cross_refs else ""
+        )
+        typer.echo(f"\n== {name}: {ex.tokens:,} tokens, {len(ex.parts)} parts{flags}")
+        for part in ex.parts:
+            body = part.text if full else part.text[:300] + ("…" if len(part.text) > 300 else "")
+            typer.echo(f"\n[{part.label}]\n{body}")
+    _exit(ExitCode.OK)
 
 
 @app.command()

@@ -7,6 +7,7 @@ repo, or from the Lambda bundle, which carries a copy (research R19).
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -126,16 +127,69 @@ def verify(
     store: SourceStore,
     manifest: SourceManifest,
     books: set[str] | None = None,
+    progress: Callable[[str], None] | None = None,
 ) -> list[VerifyProblem]:
     """Check every file in the manifest (or only ``books``), including archived module zips.
-    Returns problems, not raises."""
+    Returns problems, not raises. ``progress`` gets one line per file."""
+    files = [
+        (source, book, bf)
+        for source, entry in sorted(manifest.sources.items())
+        for book, bf in entry.files()
+        if books is None or book in books
+    ]
     problems: list[VerifyProblem] = []
-    for source, entry in sorted(manifest.sources.items()):
-        for book, bf in entry.files():
-            if books is not None and book not in books:
-                continue
-            try:
-                verified_bytes(bf, store)
-            except SourceError as e:
-                problems.append(VerifyProblem(source, book, str(e)))
+    width = len(str(len(files)))
+    for i, (source, book, bf) in enumerate(files, 1):
+        try:
+            verified_bytes(bf, store)
+            status = "matches"
+        except SourceError as e:
+            problems.append(VerifyProblem(source, book, str(e)))
+            status = "FAILED"
+        if progress is not None:
+            progress(f"  [{i:>{width}}/{len(files)}] {status:<8} {bf.file}")
     return problems
+
+
+class SourceLibrary:
+    """Verified, cached access to the snapshot's books for the stages (sections, gathering).
+
+    Every book is checked against the manifest on first read (``load_book``), wherever it comes
+    from: the local cache or the sources bucket.
+    """
+
+    def __init__(self, store: SourceStore, manifest: SourceManifest) -> None:
+        self.store = store
+        self.manifest = manifest
+        self._books: dict[
+            tuple[str, str], NormalizedTranslationBook | NormalizedCommentaryBook
+        ] = {}
+
+    @classmethod
+    def local(cls, paths: RepoPaths | None = None) -> SourceLibrary:
+        return cls(SourceStore.local(paths), load_manifest(paths))
+
+    def has(self, source: str, book: str) -> bool:
+        entry = self.manifest.sources.get(source)
+        return entry is not None and book in entry.books
+
+    def _load(self, source: str, book: str) -> NormalizedTranslationBook | NormalizedCommentaryBook:
+        key = (source, book)
+        if key not in self._books:
+            self._books[key] = load_book(source, book, store=self.store, manifest=self.manifest)
+        return self._books[key]
+
+    def translation(self, source: str, book: str) -> NormalizedTranslationBook:
+        loaded = self._load(source, book)
+        if not isinstance(loaded, NormalizedTranslationBook):
+            raise UnknownSource(f"{source!r} is not a translation")
+        return loaded
+
+    def commentary(self, source: str, book: str) -> NormalizedCommentaryBook | None:
+        """The commentator's notes on ``book``, or None if the snapshot has none."""
+        if not self.has(source, book):
+            return None
+        loaded = self._load(source, book)
+        if not isinstance(loaded, NormalizedCommentaryBook):
+            raise UnknownSource(f"{source!r} is not a commentary")
+        return loaded

@@ -113,8 +113,18 @@ the 16 verses modern translations leave out; 116 psalm titles each).
   Re-runs read the archived zip, so the snapshot never depends on CrossWire being online again,
   and a parser fix can be re-applied offline with `import --refresh`.
 - **Editions are recorded**: each manifest source has an `origin` (`helloao:BSB`,
-  `crosswire:JFB@3.0`). A new module version changes the origin, which re-imports every book of
-  that source.
+  `crosswire:JFB@3.0/reader2`). A new module version, or a new `sword.py` reader version, changes
+  the origin, which re-imports every book of that source (from the archived zip; no download).
+- **Notes the index lost** (found 2026-11-16, reader 2): CrossWire's JFB module holds about 1M
+  characters (10% of JFB, 1,294 places in 53 books) in its compressed blocks that no index entry
+  points at, so a plain SWORD reader never shows them. Example: after the note on Mark 1:2-3 sit the
+  rest of the note on verse 3 and JFB's headings for 1:9-20 with their pointers ("Mr 1:12, 13.
+  Temptation of Christ. ( = Mt 4:1-11; Lu 4:1-13). See on Mt 4:1-11."). Henry has 6 such gaps and
+  Clarke 2. Every gap opens with the commentator's verse number ("5. they all brought us…",
+  "Verse 5"), so `sword.py` splits each gap at those numbers and adds each piece to that verse of
+  the chapter; text before the first number continues the preceding note. In 543 gaps that is the
+  preceding verse, in 744 an earlier verse whose index entry was lost. Without this, JFB gave
+  nothing on 29 of Mark's 100 sections; with it, it covers all of them.
 - **`sources check`**: `verify` proves files haven't changed since import; `sources check` proves
   they were right to begin with. It checks every book against the KJV versification and fails on
   out-of-range or overlapping notes, missing translation books, chapters or duplicate verses. It
@@ -175,25 +185,40 @@ ThML, not OSIS, and would need a small second converter.
   example Clarke's "See on Mat 3:1-3 (note)" or JFB's "See on Mat 7:28-29". Henry's text says
   "which we had before, Mat 8:2-4".
 
-**Decision**:
-- A section's excerpt for each commentator is:
-  - (a) items whose key verse falls inside the section;
-  - (b) for Henry, the whole division overlapping the section, with the part about the section's
-    verses highlighted when the division is longer;
-  - (c) chapter-introduction sentences that cite a verse range overlapping the section;
-  - (d) **one hop** of cross-references. The pattern parser recognises "See on {Book} {c}:{v}",
-    "See the note on …" and "( = Mat …)". The target is that commentator's note on the parallel
-    passage, read from the same frozen snapshot and labelled "parallel passage note" in the
-    prompt.
+**Decision** (revised 2026-11-16 for the CrossWire modules, `commentary/gather.py`):
+- Every note and chapter introduction is split into **blocks**: a paragraph that opens with a
+  passage of the same chapter ("Mr 3:13-19. The Twelve…") starts a block for that passage; text
+  before it belongs to the note's own verses (or, in an introduction, to the whole chapter). JFB
+  files the headings of following passages at the end of an earlier note, so this is what brings
+  "Mr 1:12, 13. Temptation of Christ… See on Mt 4:1-11" to section 1:12-15 rather than 1:1-11.
+- A section's excerpt for each commentator is, in this order:
+  - (a) every block whose passage overlaps the section. Henry's notes carry their division's
+    range (1:1-8), so a division that only partly overlaps comes in whole;
+  - (b) the chapter introduction's opening text (Henry's outline);
+  - (c) **one hop** of pointers (`commentary/crossrefs.py`): "See on {Book} {c}:{v}", "See the
+    note(s) on …", "See also …", Henry's "which we had before, Matt. viii. 2-4" (Roman-numeral
+    chapters) and "parallel place (…)", and JFB's "( = Mt …; Lu …)" lists. The target is that
+    commentator's own note on the parallel passage, read from the same frozen snapshot and given
+    to the model as one part labelled "Parallel passage note, {passage}: … applying to this
+    section's passage". A tagged reference to the same chapter makes the range exact.
+    Explicit pointers are always followed; "( = …)" lists only when the commentator's own notes
+    on the section are under 250 tokens; at most 4 pointers per commentator; a pointer to a whole
+    chapter brings only that chapter's introduction.
 - Excerpts are capped at 8k tokens per commentator. When the cap is hit, the excerpt is trimmed
-  at item boundaries, the section is flagged, and the trim is recorded.
+  at a part boundary (pointers go first), and the trim is recorded.
+- `thinkbible-pipeline excerpts --book mark --section mrk-1-12` prints exactly what each
+  commentator contributes to a section.
+- **Mark** (snapshot 2026-11-16): 100 sections; per section Henry 0.9k-7.8k tokens (mean 3.2k),
+  JFB 0.1k-7.9k (mean 2.4k), Clarke 0-6.9k (mean 1.0k; Clarke has no notes on 3:28-30,
+  13:24-27 and 15:12-15). About 6.6k tokens per section in all; 7 of 300 excerpts trimmed.
 
 **Rationale**: without step (d), JFB and Clarke contribute almost nothing to many Mark sections,
 and the "agreed by 2+ commentators" signal falls apart. Cross-references stay inside the closed
 world (constitution II).
 
-**Cost implication**: excerpts are about 3–6k tokens per section including cross-references, well
-below the brief's assumed ~12k. The brief's cost estimates are therefore conservative.
+**Cost implication**: excerpts are about 6.6k tokens per section for Mark including
+cross-references, below the brief's assumed ~12k. The brief's cost estimates are therefore
+conservative.
 
 ## R5. Building sections (FR-004, FR-005)
 
@@ -205,14 +230,24 @@ below the brief's assumed ~12k. The brief's cost estimates are therefore conserv
 3. Compare against Henry's division start verses. If a candidate is longer than 12 verses and
    contains a Henry boundary, split it there. If it has no Henry boundary, split it at the
    paragraph break nearest its middle.
-4. Merge candidates shorter than 3 verses into the next section in the same chapter. A section at
-   the end of a chapter merges into the previous one instead.
+4. Merge candidates shorter than 3 verses into the next section in the same chapter, under the
+   longer piece's title. A section at the end of a chapter merges into the previous one instead.
+   Merging runs before splitting (step 3), so a merge can't leave a section over 12 verses, and
+   splits always leave at least 3 verses on each side. Without a Henry boundary or paragraph
+   break, a long section splits at its middle verse.
 5. The title is the BSB heading. Split pieces get a provisional title "{heading} (cont.)", which
    is flagged so you can retitle it during review.
 6. The section ID is `{book}-{chapter}-{startVerse}` in lowercase USFM, for example `mrk-1-1`.
+7. A chapter whose first heading comes after verse 1 starts with a piece of the previous chapter's
+   last heading, titled "{heading} (cont.)".
+8. Ranges cover every verse of the KJV versification, so KJV-only verses (Mark 7:16) belong to a
+   section even though the BSB omits them.
 
-The output is `content/drafts/{book}/sections.json`. You can edit it freely before first publish.
-Once published, IDs and verse ranges are frozen and enforced by the publish check (FR-024).
+The output is `sections.json` in the drafts store (`sections/builder.py`, the `sections` stage).
+Mark gives 100 sections of 3-12 verses (mean 6.8), 10 with a provisional "(cont.)" title; the
+whole Bible gives 4,187, all 3-12 verses except Psalm 117 (2 verses). The map is rebuilt on every
+run until the book is live; then IDs and verse ranges are frozen and enforced by the publish
+check (FR-024).
 
 Every section, genealogies included, goes on to key-idea extraction. "No prompt" is decided
 later, from the extraction result (FR-005).

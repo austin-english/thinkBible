@@ -49,7 +49,13 @@ pipeline/
 │   ├── ledger.py                   # SpendLedger: a run's cap and spend (in memory for local runs)
 │   ├── stages/
 │   │   ├── base.py                 # shared steps: estimate, plan, run one section, finish; local run()
-│   │   └── __init__.py             # registry() of stage implementations (filled in by US1+)
+│   │   ├── sections.py             # `sections`: writes the book's section map (no model calls)
+│   │   └── __init__.py             # registry() of stage implementations
+│   ├── sections/
+│   │   └── builder.py              # BSB headings + Henry's divisions → 3-12 verse sections (R5)
+│   ├── commentary/
+│   │   ├── crossrefs.py            # "See on Mt 4:1-11", "( = Lu …)": pointers to another note
+│   │   └── gather.py               # each commentator's excerpt for a section (R4)
 │   ├── cloud/
 │   │   ├── handlers.py             # the five Lambda handlers the state machine calls
 │   │   ├── messages.py             # JSON payloads between the state machine's steps
@@ -165,8 +171,9 @@ partial upload is safe.
 - **Nothing upstream can break the snapshot later.** Each file is checksummed and stored
   write-once. Each commentary's module zip is archived next to its books, so re-runs (and parser
   fixes, with `--refresh`) never need CrossWire again.
-- **Each source records its edition** as `origin` (`helloao:BSB`, `crosswire:JFB@3.0`). Importing
-  a new edition re-imports all of that source's books.
+- **Each source records its edition** as `origin` (`helloao:BSB`, `crosswire:JFB@3.0/reader2`).
+  Importing a new edition, or changing how `sword.py` reads modules (`READER_VERSION`),
+  re-imports all of that source's books, from the archived zips.
 - `verify` proves files haven't changed since import; `sources check` proves they were right to
   begin with.
 
@@ -204,6 +211,14 @@ uv run --package thinkbible-pipeline thinkbible-pipeline run --book mark --stage
 
 Before the pipeline is deployed, `run` says so and points you to `--local`, which then keeps
 drafts in `content/drafts/` instead of S3.
+
+To see exactly what the model will be given for a section (each commentator's notes, the
+introduction blocks and the parallel passage notes it follows), with no model call:
+
+```bash
+uv run --package thinkbible-pipeline thinkbible-pipeline excerpts --book mark --section mrk-1-12
+#   --commentator jamieson-fausset-brown   only one commentator;  --full   every part in full
+```
 
 ## Deploying
 

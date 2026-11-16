@@ -38,7 +38,7 @@ from thinkbible_pipeline.ledger import InMemoryLedger, RunStatus, SpendLedger
 from thinkbible_pipeline.llm.budget import EstimateSummary, StageEstimate, estimate, price
 from thinkbible_pipeline.llm.runner import ModelRunner, Usage
 from thinkbible_pipeline.requests import RunRequest
-from thinkbible_pipeline.sources.snapshot import SourceError
+from thinkbible_pipeline.sources.snapshot import SourceError, SourceLibrary
 
 # --- stage interfaces ---
 
@@ -83,6 +83,11 @@ class BookStage(ABC):
     @abstractmethod
     async def run_book(self, request: RunRequest, deps: Deps) -> None: ...
 
+    def planned_section_ids(self, request: RunRequest, deps: Deps) -> list[str] | None:
+        """The section IDs this stage would write, without writing them, so a run that starts
+        with it can be estimated. None for stages that don't change the section list."""
+        return None
+
 
 Stage = SectionStage | BookStage
 
@@ -107,6 +112,14 @@ class Deps:
     clock: Callable[[], datetime] = _utcnow
     echo: Callable[[str], None] = lambda _msg: None
     code_version: str = "unknown"
+    # The frozen snapshot, checked against the manifest on every read (local cache or S3).
+    library: SourceLibrary | None = None
+
+    @property
+    def sources(self) -> SourceLibrary:
+        if self.library is None:
+            raise SourceError("no source snapshot is configured for this run")
+        return self.library
 
     @cached_property
     def runner(self) -> ModelRunner:
@@ -217,8 +230,8 @@ def input_hash(inputs: Any, prompt_version: str, model: str | None) -> str:
 # --- steps ---
 
 
-def _section_ids(request: RunRequest, deps: Deps) -> list[str]:
-    all_ids = deps.store.section_ids()
+def _section_ids(request: RunRequest, deps: Deps, planned: list[str] | None = None) -> list[str]:
+    all_ids = planned if planned is not None else deps.store.section_ids()
     if not request.sections:
         return all_ids
     unknown = sorted(set(request.sections) - set(all_ids))
@@ -234,18 +247,20 @@ def plan_stage(
     deps: Deps,
     *,
     assume_changed: frozenset[str] = frozenset(),
+    planned_sections: list[str] | None = None,
 ) -> StagePlan:
     """Which sections of ``stage`` need running. Read-only, so the CLI can use it to estimate.
 
     ``assume_changed`` lists sections an earlier stage of the same run will rewrite: when
     estimating a multi-stage run, those count as "to process" for later stages too.
+    ``planned_sections`` is the section list a ``sections`` stage earlier in the run will write.
     """
     if isinstance(stage, BookStage):
         return StagePlan(stage=stage.name, book_level=True)
     pv = stage.prompt_version(deps)
     model = stage.model(deps)
     plan = StagePlan(stage=stage.name, prompt_version=pv, model=model)
-    for sid in _section_ids(request, deps):
+    for sid in _section_ids(request, deps, planned_sections):
         draft = deps.store.read_draft_or_new(sid)
         h = input_hash(stage.inputs(sid, draft, deps), pv, model)
         rec = draft.stages.get(stage.name)
@@ -271,8 +286,17 @@ def estimate_run(request: RunRequest, deps: Deps) -> tuple[list[StagePlan], Esti
     """Plan every stage of the run (read-only) and total the estimate (contracts/cli.md)."""
     plans: list[StagePlan] = []
     changed: set[str] = set()
+    planned: list[str] | None = None
     for name in request.stages:
-        plan = plan_stage(deps.stage(name), request, deps, assume_changed=frozenset(changed))
+        stage = deps.stage(name)
+        if isinstance(stage, BookStage):
+            ids = stage.planned_section_ids(request, deps)
+            if ids is not None and ids != deps.store.section_ids():
+                planned = ids
+                changed.update(ids)
+        plan = plan_stage(
+            stage, request, deps, assume_changed=frozenset(changed), planned_sections=planned
+        )
         plans.append(plan)
         if plan.model is not None:
             changed.update(plan.section_ids)

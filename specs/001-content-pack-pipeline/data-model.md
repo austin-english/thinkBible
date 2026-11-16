@@ -160,7 +160,7 @@ henryDivisions: [startVerse…]}`
 |---|---|
 | `section` | The publishable Section fields (as above). Items the gate drops are removed from it and listed in `dropped` |
 | `evidence` | `{keyIdeaId: [{commentator, quote}]}`. Not published (R10) |
-| `excerpts` | `{commentator: {sha256, tokens, items[], crossRefs[], trimmed}}`. A record of model inputs, not the text |
+| `excerpts` | `{commentator: {sha256, tokens, items[], crossRefs[], trimmed}}`. A record of model inputs, not the text. `items` names the parts given (`MRK 1:1-8`, `MRK 3 intro`, `MAT 12:9-21` for a followed pointer) and `crossRefs` the pointer targets followed (R4) |
 | `summary` | One-line passage summary (from `summaries`) |
 | `noPromptReason` | Set when `noPrompt` is true |
 | `features` | `{questionId: {answerDirectness, outsideKnowledge, verseSpan, agreement}}` (R11) |
@@ -215,14 +215,14 @@ labelled, so a later regeneration doesn't change what was graded.
                                  "s3Key": "snapshots/2026-11-05/bsb/MRK.json",
                                  "sha256", "bytes", "retrievedAt", "snapshotId": "2026-11-05" } } },
     "kjv": { "apiId": "eng_kjv", "origin": "helloao:eng_kjv", ... },
-    "matthew-henry": { "kind": "commentary", "apiId": "MHC", "origin": "crosswire:MHC@2.2",
+    "matthew-henry": { "kind": "commentary", "apiId": "MHC", "origin": "crosswire:MHC@2.2/reader2",
                        "tradition": "Reformed (Presbyterian)", "license": "Public Domain",
                        "module": { "file": "matthew-henry/_module/MHC-2.2.zip",
                                    "s3Key": "snapshots/2026-11-13/matthew-henry/_module/MHC-2.2.zip",
                                    "name": "MHC", "version": "2.2", "url", "sha256", ... },
                        "books": { ... } },
-    "jamieson-fausset-brown": { "apiId": "JFB", "origin": "crosswire:JFB@3.0", ... },
-    "adam-clarke": { "apiId": "Clarke", "origin": "crosswire:Clarke@2.0", ... } } }
+    "jamieson-fausset-brown": { "apiId": "JFB", "origin": "crosswire:JFB@3.0/reader2", ... },
+    "adam-clarke": { "apiId": "Clarke", "origin": "crosswire:Clarke@2.0/reader2", ... } } }
 ```
 
 Rules:
@@ -230,7 +230,8 @@ Rules:
 - An entry is added only together with its upload, or before the upload when you work offline,
   with `sources push` still to run.
 - Every read is checked against `sha256`.
-- `origin` names the upstream edition. A different origin re-imports every book of that source.
+- `origin` names the upstream edition and, for CrossWire, the `sword.py` reader version
+  (`/reader2`). A different origin re-imports every book of that source.
 - `module` is the CrossWire zip the commentary books were converted from, archived with them
   (research R2a). `verify`, `sources push` and `sources pull` treat it like a book file.
 - `apiVersion` describes the HelloAO translations only.

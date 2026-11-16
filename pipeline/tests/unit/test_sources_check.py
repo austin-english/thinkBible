@@ -55,7 +55,11 @@ def snapshot_with(paths: RepoPaths, mark_commentary: dict[str, Any]) -> SourceMa
             ]
         put(paths, tr, "bsb", code, doc)
     co = SourceEntry(
-        kind="commentary", api_id="JFB", name="JFB", license="PD", origin="crosswire:JFB@3.0"
+        kind="commentary",
+        api_id="JFB",
+        name="JFB",
+        license="PD",
+        origin="crosswire:JFB@3.0/reader2",
     )
     put(paths, co, "jamieson-fausset-brown", "MRK", mark_commentary)
     manifest = SourceManifest(
@@ -125,7 +129,7 @@ def test_cli_exit_codes(tmp_path: Path, monkeypatch: Any) -> None:
     snapshot_with(paths, GOOD_MARK)
     ok = CliRunner().invoke(app, ["sources", "check"])
     assert ok.exit_code == 0, ok.output
-    assert "jamieson-fausset-brown [crosswire:JFB@3.0]: ok" in ok.output
+    assert "jamieson-fausset-brown [crosswire:JFB@3.0/reader2]: ok" in ok.output
     (paths.sources / "bsb" / "GEN.json").unlink()
     bad = CliRunner().invoke(app, ["sources", "check"])
     assert bad.exit_code == 2 and "bsb/GEN.json" in bad.output

@@ -63,7 +63,7 @@ class ExcerptRecord(JsonModel):
 
     sha256: str
     tokens: int
-    items: list[int] = Field(default_factory=list)  # commentary verse keys included
+    items: list[str] = Field(default_factory=list)  # parts included: "MRK 1:1-8", "MAT 12:9-21"
     cross_refs: list[str] = Field(default_factory=list)
     trimmed: bool = False
 

@@ -45,7 +45,7 @@ from thinkbible_pipeline.sources.models import (
     SourceManifest,
 )
 from thinkbible_pipeline.sources.normalize import normalize_translation_book
-from thinkbible_pipeline.sources.sword import SwordCommentary
+from thinkbible_pipeline.sources.sword import READER_VERSION, SwordCommentary
 from thinkbible_pipeline.storage import LocalBlobStore
 
 API_BASE = "https://bible.helloao.org"
@@ -348,16 +348,32 @@ def _module_zip(ctx: _Context, key: str) -> tuple[bytes, bool]:
 
 def _import_commentary(ctx: _Context, key: str, wanted_books: list[str]) -> None:
     spec = SOURCES[key]
+    previous = ctx.manifest.sources.get(key)
     data, downloaded = _module_zip(ctx, key)
     module = SwordCommentary(data)
     conf = module.conf
-    origin = f"crosswire:{conf.name}@{conf.version}"
+    # The reader version is part of the origin: when sword.py changes how it reads modules, every
+    # book is converted again from the archived zip (no download).
+    origin = f"crosswire:{conf.name}@{conf.version}/reader{READER_VERSION}"
     entry = _entry(ctx, key, origin)
     entry.license = conf.license
     entry.license_url = None
     entry.upstream_sha256 = sha256_hex(data)
     rel = f"{key}/_module/{conf.name}-{conf.version}.zip"
-    if downloaded or entry.module is None or entry.module.file != rel:
+    kept = previous.module if previous is not None else None
+    if (
+        entry.module is None
+        and kept is not None
+        and kept.file == rel
+        and (kept.sha256 == entry.upstream_sha256)
+    ):
+        entry.module = kept  # the same zip, already archived (and pushed): keep its record
+    module_file = entry.module
+    if (
+        module_file is None
+        or module_file.file != rel
+        or module_file.sha256 != entry.upstream_sha256
+    ):
         bf = ctx.file(rel, data)
         entry.module = ModuleFile(
             **bf.model_dump(), name=conf.name, version=conf.version, url=spec.module_url

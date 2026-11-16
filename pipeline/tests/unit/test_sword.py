@@ -145,3 +145,42 @@ def test_unsupported_modules_are_refused(sword_zip: Any, extra: str) -> None:
             zf.writestr(item, body)
     with pytest.raises(SwordFormatError):
         SwordCommentary(out.getvalue())
+
+
+def test_notes_the_index_lost_are_recovered(sword_zip: Any) -> None:
+    """CrossWire's JFB keeps notes in its blocks that no index entry points at (research R2a)."""
+    p = '<div type="x-p" sID="p{}"/>'
+    entries = {
+        ("MRK", 1, 2): "2-3. As it is written in the prophets",
+        ("MRK", 1, 21): "21. And they went into Capernaum",
+        ("ACT", 21, 6): "6. And when we had taken our leave",
+    }
+    orphans = {
+        # After 1:2-3: the rest of verse 3, then passage headings with their pointers.
+        ("MRK", 1, 2): p.format(1)
+        + "3. The voice of one crying in the wilderness"
+        + p.format(2)
+        + "Mr 1:12, 13. Temptation of Christ. ( = Mt 4:1-11; Lu 4:1-13)."
+        + p.format(3)
+        + '<reference osisRef="Matt.4.1-Matt.4.11">See on Mt 4:1-11</reference>.',
+        # After 21:6: a note on verse 5 whose index entry was lost.
+        ("ACT", 21, 6): p.format(4) + "5. they all brought us on our way",
+    }
+    links = {("MRK", 1, 3): ("MRK", 1, 2)}
+    module = SwordCommentary(sword_zip(entries, links=links, orphans=orphans))
+    mark = module.book("MRK")
+    assert mark is not None
+    note = mark.chapters[0].items[0]
+    assert (note.verse, note.verse_end) == (2, 3)
+    paragraphs = note.text.split("\n\n")
+    assert paragraphs[0] == "2-3. As it is written in the prophets"
+    assert paragraphs[1] == "3. The voice of one crying in the wilderness"
+    assert paragraphs[2].startswith("Mr 1:12, 13. Temptation of Christ")
+    assert "MAT 4:1-11" in note.refs
+    assert [i.verse for i in mark.chapters[0].items] == [2, 21]
+    acts = module.book("ACT")
+    assert acts is not None
+    assert [(i.verse, i.text) for i in acts.chapters[0].items] == [
+        (5, "5. they all brought us on our way"),
+        (6, "6. And when we had taken our leave"),
+    ]

@@ -108,7 +108,7 @@ def test_imports_mark_from_all_five_sources(tmp_path: Path, sword_zip: Any) -> N
     # Commentaries: one CrossWire module zip each, archived next to the books made from it.
     assert sorted(fetch.downloads) == sorted(SOURCES[c].module_url for c in COMMENTARIES)
     clarke = manifest.sources["adam-clarke"]
-    assert clarke.origin == "crosswire:Clarke@1.0" and clarke.api_id == "Clarke"
+    assert clarke.origin == "crosswire:Clarke@1.0/reader2" and clarke.api_id == "Clarke"
     assert clarke.tradition == "Wesleyan (Methodist)" and clarke.license == "Public Domain"
     assert clarke.module is not None and clarke.module.version == "1.0"
     assert clarke.module.file == "adam-clarke/_module/Clarke-1.0.zip"
@@ -184,7 +184,7 @@ def test_new_module_version_reimports_every_book(tmp_path: Path, sword_zip: Any)
     result = run(paths, newer, books=["MRK"], sources=["adam-clarke"], refresh=True)
     assert result.written == ["adam-clarke/MRK"]
     entry = SourceManifest.model_validate(read_json(paths.manifest)).sources["adam-clarke"]
-    assert entry.origin == "crosswire:Clarke@2.0"
+    assert entry.origin == "crosswire:Clarke@2.0/reader2"
     assert entry.module is not None and entry.module.file.endswith("Clarke-2.0.zip")
 
 

@@ -20,7 +20,13 @@ from thinkbible_pipeline.llm.budget import EstimateSummary, confirm
 from thinkbible_pipeline.llm.runner import BedrockRunner, ModelRunner
 from thinkbible_pipeline.paths import RepoPaths, repo_paths
 from thinkbible_pipeline.requests import RunRequest
-from thinkbible_pipeline.sources.snapshot import SourceError, SourceStore, load_manifest, verify
+from thinkbible_pipeline.sources.snapshot import (
+    SourceError,
+    SourceLibrary,
+    SourceStore,
+    load_manifest,
+    verify,
+)
 from thinkbible_pipeline.stages import registry
 from thinkbible_pipeline.stages.base import (
     Deps,
@@ -95,6 +101,7 @@ def local_deps(
         preflight=source_preflight(request.book_info.code, paths),
         echo=echo,
         code_version=git_head(paths),
+        library=SourceLibrary(SourceStore.local(paths), load_manifest(paths)),
     )
 
 

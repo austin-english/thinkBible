@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from thinkbible_pipeline.stages.base import BookStage, SectionStage
+from thinkbible_pipeline.stages.sections import SectionsStage
 
 
 def registry() -> dict[str, SectionStage | BookStage]:
-    return {}
+    stages: list[SectionStage | BookStage] = [SectionsStage()]
+    return {s.name: s for s in stages}

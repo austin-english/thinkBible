@@ -131,3 +131,59 @@ def parse_osis_ref(value: str) -> list[str]:
         if ref not in out:
             out.append(ref)
     return out
+
+
+@dataclass(frozen=True)
+class Ref:
+    """A passage: a whole chapter (``verse is None``), a verse, or a range up to ``end``."""
+
+    book: str
+    chapter: int
+    verse: int | None = None
+    end_chapter: int | None = None
+    end_verse: int | None = None
+
+    @property
+    def last_chapter(self) -> int:
+        return self.end_chapter or self.chapter
+
+    def span(self) -> tuple[tuple[int, int], tuple[int, int]]:
+        """(chapter, verse) of the first and last verse covered; a whole chapter ends at 999."""
+        start = (self.chapter, self.verse or 1)
+        if self.end_verse is not None:
+            return start, (self.last_chapter, self.end_verse)
+        if self.verse is not None and self.end_chapter is None:
+            return start, (self.chapter, self.verse)
+        return start, (self.last_chapter, 999)
+
+    def overlaps(self, book: str, chapter: int, verse_start: int, verse_end: int) -> bool:
+        if book != self.book:
+            return False
+        start, end = self.span()
+        return start <= (chapter, verse_end) and (chapter, verse_start) <= end
+
+    def compact(self) -> str:
+        start = _Point(self.book, self.chapter, self.verse)
+        end = None
+        if self.end_chapter is not None or self.end_verse is not None:
+            end = _Point(self.book, self.last_chapter, self.end_verse)
+        return _format(start, end)
+
+
+_COMPACT = re.compile(r"^([1-3]?[A-Z]{2,3}) (\d+)(?::(\d+))?(?:-(\d+)(?::(\d+))?)?$")
+
+
+def parse_compact(value: str) -> Ref:
+    """``MAT 12``, ``MAT 12:9``, ``MAT 12:9-21``, ``MAT 12:9-13:2`` → ``Ref``."""
+    m = _COMPACT.match(value)
+    if not m:
+        raise ValueError(f"not a compact reference: {value!r}")
+    book, ch, v, a, b = m.groups()
+    chapter, verse = int(ch), int(v) if v else None
+    if a is None:
+        return Ref(book, chapter, verse)
+    if b is not None:  # MAT 12:9-13:2
+        return Ref(book, chapter, verse, end_chapter=int(a), end_verse=int(b))
+    if verse is None:  # MAT 12-13
+        return Ref(book, chapter, None, end_chapter=int(a))
+    return Ref(book, chapter, verse, end_verse=int(a))

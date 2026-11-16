@@ -45,6 +45,14 @@ TESTAMENTS: dict[str, tuple[str, ...]] = {
 _ENTRY = {"zCom": ("<IIH", 10), "zCom4": ("<III", 12)}
 
 
+# Bump when the output of ``SwordCommentary.book`` changes: the importer then converts every
+# commentary book again from the archived module zips. 1: first reader. 2: recovers notes the
+# index lost (2026-11-16).
+READER_VERSION = 2
+
+Loc = tuple[str, int, int, int]  # (testament, block, offset in the block, size)
+
+
 class SwordFormatError(ValueError):
     """The module isn't one this reader supports, or its index doesn't match the KJV scheme."""
 
@@ -146,8 +154,9 @@ class SwordCommentary:
                     f"{_expected_entries(testament)}"
                 )
         self._blocks: dict[tuple[str, int], bytes] = {}
+        self._starts_cache: dict[tuple[str, int], list[int]] | None = None
 
-    def _locate(self, book: str, chapter: int, verse: int) -> tuple[str, int, int, int]:
+    def _locate(self, book: str, chapter: int, verse: int) -> Loc:
         testament, i = _POSITIONS[(book, chapter, verse)]
         block, offset, size = struct.unpack_from(
             self._fmt, self._files[f"{testament}.bzv"], i * self._size
@@ -164,40 +173,159 @@ class SwordCommentary:
             self._blocks = {key: zlib.decompress(data)}  # blocks are per book: keep one
         return self._blocks[key]
 
-    def entry(self, book: str, chapter: int, verse: int) -> tuple[tuple[str, int, int, int], str]:
+    def entry(self, book: str, chapter: int, verse: int) -> tuple[Loc, str]:
         """The raw OSIS for one index entry, with its location (equal locations = linked)."""
         loc = self._locate(book, chapter, verse)
-        testament, block, offset, size = loc
-        if size == 0:
-            return loc, ""
-        raw = self._block(testament, block)[offset : offset + size]
-        return loc, raw.decode("utf-8", "replace")
+        return loc, self.entry_at(loc)
+
+    def _index(self, code: str) -> list[tuple[Loc, int, int, int]]:
+        """The book's indexed notes in verse order: (location, chapter, first verse, last verse).
+
+        Chapter 0 is the book introduction and verse 0 a chapter introduction. Consecutive verses
+        pointing at the same location (a linked note) come back as one range.
+        """
+        out: list[tuple[Loc, int, int, int]] = []
+        keys = [(0, 0)] + [(c, v) for c, n in enumerate(KJV_VERSES[code], 1) for v in range(n + 1)]
+        for chapter, verse in keys:
+            loc = self._locate(code, chapter, verse)
+            if loc[3] == 0:
+                continue
+            last = out[-1] if out else None
+            if (
+                last
+                and last[0] == loc
+                and last[1] == chapter
+                and verse > 0
+                and last[3] == verse - 1
+            ):
+                out[-1] = (loc, chapter, last[2], verse)
+            else:
+                out.append((loc, chapter, verse, verse))
+        return out
+
+    def _recover(
+        self, code: str, index: list[tuple[Loc, int, int, int]]
+    ) -> list[tuple[int, int, CommentaryText]]:
+        """Text in the book's blocks that no index entry points at (research R2a).
+
+        Some modules (JFB above all) hold notes in their compressed blocks that the verse index
+        lost. Each gap between two indexed notes is split at the commentator's verse numbers
+        ("5. they all brought us…", "Verse 5") and every piece goes to that verse of the chapter
+        the gap follows; text before the first number continues the preceding note.
+        Returns (chapter, verse, text) pieces; verse 0 is the chapter introduction.
+        """
+        pieces: list[tuple[int, int, CommentaryText]] = []
+        by_block: dict[tuple[str, int], list[tuple[int, int, int, int]]] = {}
+        for (testament, block, offset, size), chapter, _first, last in index:
+            by_block.setdefault((testament, block), []).append((offset, size, chapter, last))
+        for (testament, block), spans in by_block.items():
+            data = self._block(testament, block)
+            starts = self._starts(testament, block)  # every indexed note in the block, any book
+            spans.sort()
+            for offset, size, chapter, last in spans:
+                gap_start = offset + size
+                gap_end = next((s for s in starts if s >= gap_start), len(data))
+                if gap_end <= gap_start:
+                    continue
+                verse = last
+                for chunk in _PARA_SPLIT.split(data[gap_start:gap_end].decode("utf-8", "replace")):
+                    note = osis_to_text(chunk)
+                    if note is None:
+                        continue
+                    numbered = _VERSE_NUMBER.match(note.text)
+                    if numbered and chapter > 0:
+                        n = int(numbered.group(1) or numbered.group(2))
+                        if 1 <= n <= KJV_VERSES[code][chapter - 1]:
+                            verse = n
+                    pieces.append((chapter, verse, note))
+        return pieces
+
+    def _starts(self, testament: str, block: int) -> list[int]:
+        """Sorted start offsets of every indexed note in a block (cached per module)."""
+        if self._starts_cache is None:
+            cache: dict[tuple[str, int], set[int]] = {}
+            for t in TESTAMENTS:
+                bzv = self._files[f"{t}.bzv"]
+                for i in range(len(bzv) // self._size):
+                    blk, offset, size = struct.unpack_from(self._fmt, bzv, i * self._size)
+                    if size:
+                        cache.setdefault((t, blk), set()).add(offset)
+            self._starts_cache = {k: sorted(v) for k, v in cache.items()}
+        return self._starts_cache.get((testament, block), [])
 
     def book(self, code: str) -> NormalizedCommentaryBook | None:
         """All notes on one book, or ``None`` if the module has nothing on it."""
-        chapters: list[CommentaryChapter] = []
-        for number, verses in enumerate(KJV_VERSES[code], 1):
-            items: list[CommentaryItem] = []
-            previous: tuple[str, int, int, int] | None = None
-            for verse in range(1, verses + 1):
-                loc, raw = self.entry(code, number, verse)
-                if loc[3] == 0:
-                    previous = None
-                    continue
-                if loc == previous and items:
-                    items[-1].verse_end = verse
-                    continue
-                previous = loc
-                note = osis_to_text(raw)
-                if note is not None:
-                    items.append(CommentaryItem(verse=verse, text=note.text, refs=note.refs))
-            intro = osis_to_text(self.entry(code, number, 0)[1])
-            if items or intro:
-                chapters.append(CommentaryChapter(number=number, introduction=intro, items=items))
+        index = self._index(code)
+        book_intro: CommentaryText | None = None
+        intros: dict[int, CommentaryText] = {}
+        items: dict[int, list[CommentaryItem]] = {}
+        for loc, chapter, first, last in index:
+            note = osis_to_text(self.entry_at(loc))
+            if note is None:
+                continue
+            if chapter == 0:
+                book_intro = note
+            elif first == 0:
+                intros[chapter] = note
+            else:
+                items.setdefault(chapter, []).append(
+                    CommentaryItem(
+                        verse=first,
+                        verse_end=last if last != first else None,
+                        text=note.text,
+                        refs=note.refs,
+                    )
+                )
+        for chapter, verse, note in self._recover(code, index):
+            if chapter == 0:
+                book_intro = _join(book_intro, note)
+            elif verse == 0:
+                intros[chapter] = _join(intros.get(chapter), note)
+            else:
+                _attach(items.setdefault(chapter, []), verse, note)
+        chapters = [
+            CommentaryChapter(
+                number=number,
+                introduction=intros.get(number),
+                items=sorted(items.get(number, []), key=lambda i: i.verse),
+            )
+            for number in range(1, len(KJV_VERSES[code]) + 1)
+            if items.get(number) or intros.get(number)
+        ]
         if not chapters:
             return None
-        intro = osis_to_text(self.entry(code, 0, 0)[1])
-        return NormalizedCommentaryBook(book=code, introduction=intro, chapters=chapters)
+        return NormalizedCommentaryBook(book=code, introduction=book_intro, chapters=chapters)
+
+    def entry_at(self, loc: Loc) -> str:
+        testament, block, offset, size = loc
+        if size == 0:
+            return ""
+        return self._block(testament, block)[offset : offset + size].decode("utf-8", "replace")
+
+
+# Paragraph boundaries in OSIS, and the commentators' verse numbers: JFB "5. …" / "2-3. …",
+# Clarke "Verse 5" / "Verses 5-7".
+_PARA_SPLIT = re.compile(r'<div\b[^>]*type="x-p"[^>]*/>')
+_VERSE_NUMBER = re.compile(r"^(?:(\d{1,3})(?:\s*[-,]\s*\d{1,3})?\.\s|Verses? (\d{1,3})\b)")
+
+
+def _join(note: CommentaryText | None, more: CommentaryText) -> CommentaryText:
+    if note is None:
+        return more
+    if more.text in note.text:
+        return note
+    refs = note.refs + [r for r in more.refs if r not in note.refs]
+    return CommentaryText(text=f"{note.text}\n\n{more.text}", refs=refs)
+
+
+def _attach(items: list[CommentaryItem], verse: int, note: CommentaryText) -> None:
+    """Add a recovered note to the item covering ``verse``, or as a new item for it."""
+    for item in items:
+        if item.verse <= verse <= (item.verse_end or item.verse):
+            joined = _join(item, note)
+            item.text, item.refs = joined.text, joined.refs
+            return
+    items.append(CommentaryItem(verse=verse, text=note.text, refs=note.refs))
 
 
 # --- OSIS → text ---
