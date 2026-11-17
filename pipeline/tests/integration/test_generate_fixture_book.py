@@ -141,7 +141,7 @@ def test_fixture_book_end_to_end(tmp_path: Path, make_library: Any) -> None:
         assert (root / name).is_file(), name
     assert sorted(p.name for p in (root / "sections").iterdir()) == sorted(f"{i}.json" for i in ids)
     assert {p.name.split("-", 2)[-1] for p in (root / "runs").iterdir()} == {
-        "summaries.json", "generate.json"
+        "summaries.json", "generate.json", "check.json"
     }  # fmt: skip
 
     for sid in ids:
@@ -154,6 +154,8 @@ def test_fixture_book_end_to_end(tmp_path: Path, make_library: Any) -> None:
     card = json.loads((root / "scorecard.json").read_text())
     assert card["sections"] == len(ids) and card["failedSections"] == []
     assert card["notGenerated"] == [] and card["graded"] is False
+    for sid in ids:  # every section passed the schema and cross-field checks
+        assert [c.ok for c in deps.store.read_draft_or_new(sid).checks] == [True]
     assert json.loads((root / "book.json").read_text())["status"] == "generated"
     assert "Mark <span>scorecard</span>" in (root / "review.html").read_text()
     assert len(runner.calls) == 3 * len(ids)  # summary, extract, questions per section

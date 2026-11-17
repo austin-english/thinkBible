@@ -134,6 +134,11 @@ class SectionDraft(JsonModel):
     dropped: list[DroppedItem] = Field(default_factory=list)
     level_changes: list[LevelChange] = Field(default_factory=list)
     failed: str | None = None  # why the section failed after one regeneration (FR-018)
+    # Set by a gate stage when the section broke a rule after generate ran: the next run's
+    # generate regenerates it once (its inputs include this), then clears it (FR-018).
+    regenerate: str | None = None
+    # Why the current content was regenerated, if it was: a second failure is then final.
+    regenerated_for: str | None = None
     stages: dict[str, StageRecord] = Field(default_factory=dict)
 
 

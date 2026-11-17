@@ -536,6 +536,15 @@ risk.
 - **Integration test**: a 2-chapter fixture book runs the whole flow (`run --local --stage all`
   → gate → publish to the draft channel → `promote`) with a fake `ModelRunner` (recorded outputs) and S3 mocked
   by moto. The Lambda handlers are driven through the same flow (Phase 2b).
+- **Rule checks** (`gate/checks.py`, added 2026-11-17): lengths, a "?" at the end, no yes/no
+  questions, no key idea repeated word for word in a question (a run of 8 words from its body, or
+  its whole title), no commentator names in idea text or questions, evidence-backed sources,
+  placeholders that resolve in both translations, targets that exist. They run inside `generate`
+  before the pool is chosen, so failing items are replaced by alternates or the regenerate-once
+  loop, and are recorded with `stage: "check"`. The `check` stage then re-verifies each finished
+  section (the item checks again, the pack schema, the shared cross-field rules). A section that
+  fails there is flagged `regenerate`; the next run's `generate` regenerates it once, and a second
+  failure marks it failed (FR-018).
 - **The quality gate's grader** (revised 2026-11-10; replaces manual review):
   - Opus 5.5 grades every key idea and question 1–5 against a fixed rubric in
     `pipeline/prompts/review/vN.md`. Key ideas: says only what the cited commentators say, neutral

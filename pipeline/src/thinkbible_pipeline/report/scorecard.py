@@ -53,6 +53,7 @@ class Scorecard(JsonModel):
     questions: Rate = Field(default_factory=Rate)
     idea_pass_rate: float | None = None
     question_pass_rate: float | None = None
+    dropped_by_stage: dict[str, int] = Field(default_factory=dict)  # generate, check, review, …
     failed_sections: list[SectionIssue] = Field(default_factory=list)
     not_generated: list[str] = Field(default_factory=list)
     no_prompt: list[SectionIssue] = Field(default_factory=list)
@@ -108,6 +109,7 @@ def build_scorecard(
         for d in draft.dropped:
             kind = d.item_id.rsplit("-", 1)[-1][:1]
             (card.ideas if kind == "k" else card.questions).dropped += 1
+            card.dropped_by_stage[d.stage] = card.dropped_by_stage.get(d.stage, 0) + 1
     for rate in (card.ideas, card.questions):
         rate.total = rate.passed + rate.dropped
     card.idea_pass_rate = card.ideas.pass_rate

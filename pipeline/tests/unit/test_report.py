@@ -147,6 +147,6 @@ def test_placeholders_read_as_the_app_shows_them(text: str, expected: str) -> No
 
 
 def test_all_means_every_implemented_stage_in_order() -> None:
-    assert expand_all("all") == "sections,summaries,generate,report"
+    assert expand_all("all") == "sections,summaries,generate,check,report"
     assert expand_all("generate") == "generate"
-    assert expand_all("generate,all") == "sections,summaries,generate,report"
+    assert expand_all("generate,all") == "sections,summaries,generate,check,report"

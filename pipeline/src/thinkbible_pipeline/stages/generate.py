@@ -19,6 +19,7 @@ from typing import Any
 from thinkbible_core.ids import resolve_book
 from thinkbible_pipeline.commentary.gather import COMMENTATORS, Excerpt, gather_all
 from thinkbible_pipeline.drafts.models import DroppedItem, SectionDraft, SectionMapEntry
+from thinkbible_pipeline.gate.checks import CheckContext
 from thinkbible_pipeline.jsonio import sha256_hex
 from thinkbible_pipeline.llm.outputs import IdeasOut, QuestionsOut
 from thinkbible_pipeline.llm.prompts import system_prompt, version_tag
@@ -116,6 +117,8 @@ class GenerateStage(SectionStage):
             "passages": sha256_hex(_passages(deps, book, entry).encode()),
             "excerpts": {c: e.record().sha256 for c, e in self._excerpts(entry, deps).items()},
             "previous": _previous_summary(section_id, deps),
+            # A gate stage asked for this section to be regenerated (FR-018).
+            "regenerate": draft.regenerate,
         }
 
     async def execute(
@@ -124,6 +127,8 @@ class GenerateStage(SectionStage):
         book = resolve_book(deps.store.book)
         entry = section_entry(section_id, deps)
         excerpts = self._excerpts(entry, deps)
+        ctx = CheckContext.for_book(deps.sources, book.code)
+        regenerating_for, draft.regenerate = draft.regenerate, None
         extract_prompt, questions_prompt = self._prompts(deps)
         usages: list[Usage] = []
         dropped: list[DroppedItem] = []
@@ -146,7 +151,7 @@ class GenerateStage(SectionStage):
                 section_id=section_id, call="extract",
             )  # fmt: skip
             usages.append(usage)
-            ideas, idea_drops = process_ideas(ideas_out, entry, texts, draft)
+            ideas, idea_drops = process_ideas(ideas_out, entry, texts, draft, ctx)
             dropped += idea_drops
             if ideas or ideas_out.no_prompt:
                 break
@@ -184,7 +189,7 @@ class GenerateStage(SectionStage):
                         )
                         for q in pool.questions
                     ]  # fmt: skip
-                pool = process_questions(questions_out, ideas, entry, draft)
+                pool = process_questions(questions_out, ideas, entry, draft, ctx)
                 dropped += pool.dropped
                 if pool.problem is None or attempt == 1:
                     break
@@ -198,7 +203,9 @@ class GenerateStage(SectionStage):
         draft.evidence = {i.id: i.evidence for i in ideas}
         draft.features = {q.id: q.features for q in pool.questions}
         draft.no_prompt_reason = no_prompt_reason if no_prompt else None
-        draft.dropped = [d for d in draft.dropped if d.stage != "generate"] + dropped
+        # The new content replaces the old, and so does its record of drops.
+        draft.dropped = [d for d in draft.dropped if d.stage not in ("generate", "check")] + dropped
+        draft.regenerated_for = regenerating_for
         draft.section = {
             "id": section_id,
             "ref": reference(book.name, entry),

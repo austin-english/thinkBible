@@ -86,6 +86,7 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
     <div class="tile"><b>{{ card.no_prompt|length }}</b><span>with no question</span></div>
     <div class="tile"><b>{{ card.ideas.passed }}<small>/{{ card.ideas.total }}</small></b><span>key ideas kept{% if card.idea_pass_rate is not none %} ({{ (card.idea_pass_rate * 100)|round|int }}%){% endif %}</span></div>
     <div class="tile"><b>{{ card.questions.passed }}<small>/{{ card.questions.total }}</small></b><span>questions kept{% if card.question_pass_rate is not none %} ({{ (card.question_pass_rate * 100)|round|int }}%){% endif %}</span></div>
+    {% for st, n in card.dropped_by_stage|dictsort %}<div class="tile"><b>{{ n }}</b><span>dropped by {{ st }}</span></div>{% endfor %}
     {% if card.not_generated %}<div class="tile"><b>{{ card.not_generated|length }}</b><span>not generated yet</span></div>{% endif %}
   </div>
   {% if card.failed_sections %}

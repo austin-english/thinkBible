@@ -169,6 +169,8 @@ henryDivisions: [startVerse…]}`
 | `dropped` | `[{itemId, stage: "generate"\|"check"\|"review"\|"levels"\|"align", reason, item}]`: what the gate removed and why, with the item as generated (R16) |
 | `levelChanges` | `[{questionId, from, to, reason}]` from the level check (R11) |
 | `failed` | null, or the reason the section failed after one regeneration (FR-018) |
+| `regenerate` | null, or why a gate stage wants the section regenerated: the next run's `generate` regenerates it once (its inputs include this) and clears it |
+| `regeneratedFor` | why the current content was regenerated, if it was; a second failure is then final |
 | `stages` | `{stage: {promptVersion, model, inputHash, completedAt, costUsd, status: "done"\|"failed", error?}}` (R8) |
 
 ### RunRecord (`runs/{runId}-{stage}.json`)

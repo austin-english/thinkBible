@@ -49,6 +49,7 @@ pipeline/
 │   ├── config.py                   # loads config/*.toml into frozen dataclasses
 │   ├── paths.py                    # repo paths (in a Lambda, /var/task is laid out like the repo)
 │   ├── jsonio.py                   # canonical JSON, hashing, the camelCase base model
+│   ├── text.py                     # text normalisation for quote and repeat matching
 │   ├── storage.py                  # BlobStore: a local folder or S3, with conditional writes
 │   ├── ledger.py                   # SpendLedger: a run's cap and spend (in memory for local runs)
 │   ├── stages/
@@ -57,11 +58,14 @@ pipeline/
 │   │   ├── summaries.py            # `summaries`: one line per section (Haiku)
 │   │   ├── generate.py             # `generate`: key ideas, context, questions (Sonnet)
 │   │   ├── generate_rules.py       # evidence check, ranking, levels, pool rules (no model calls)
+│   │   ├── checks.py               # `check`: the gate's rule checks on each finished section
 │   │   ├── report.py               # `report`: scorecard.json + review.html for the book
 │   │   └── __init__.py             # registry() of stage implementations
 │   ├── sections/
 │   │   ├── builder.py              # BSB headings + Henry's divisions → 3-12 verse sections (R5)
 │   │   └── passage.py              # a section's verses as prompt text
+│   ├── gate/
+│   │   └── checks.py               # rule checks: lengths, "?", yes/no, giveaways, names, placeholders
 │   ├── report/
 │   │   ├── scorecard.py            # the book's numbers: kept, dropped, failed, cost
 │   │   ├── render.py               # review.html (Jinja2): every section, its ideas and questions

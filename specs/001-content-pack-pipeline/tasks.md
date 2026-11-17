@@ -652,7 +652,7 @@ without a usable Level 1 question is regenerated and then marked failed.
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T058 [P] [US2] Write `pipeline/tests/unit/test_checks.py`. Each seeded defect is dropped and
+- [X] T058 [P] [US2] Write `pipeline/tests/unit/test_checks.py`. Each seeded defect is dropped and
   listed in `dropped` with `stage: "check"` and a reason:
   - length limits;
   - a question not ending in "?";
@@ -679,9 +679,14 @@ without a usable Level 1 question is regenerated and then marked failed.
 
 ### Implementation for User Story 2
 
-- [ ] T060 [US2] Implement `pipeline/src/thinkbible_pipeline/stages/checks.py`. It covers FR-016,
+- [X] T060 [US2] Implement `pipeline/src/thinkbible_pipeline/stages/checks.py`. It covers FR-016,
   with the list from spec Story 2 scenario 1 (including the evidence check), plus
-  `thinkbible_core.rules`. Failing items are dropped into `dropped`; no model calls.
+  `thinkbible_core.rules`. Failing items are dropped into `dropped`; no model calls. (Done
+  2026-11-17: the item checks live in `gate/checks.py` and run inside `generate`, before the pool
+  is chosen, so a failing item is replaced like any other drop; the `check` stage re-verifies each
+  section, adds the schema and cross-field rules, and flags a section that breaks a rule for one
+  regeneration on the next run (`regenerate`), then marks it failed. Also: no commentator names in
+  idea text or questions.)
 - [ ] T061 [P] [US2] Write the prompts:
   - **`pipeline/prompts/review/v1.md`**: the grader rubric (R16). The grader sees the passage, the
     commentators' excerpts and each item, and grades 1–5 per rubric line with a short reason.

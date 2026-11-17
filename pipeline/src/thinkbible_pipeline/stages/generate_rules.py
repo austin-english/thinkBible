@@ -22,8 +22,8 @@ anything was dropped:
 from __future__ import annotations
 
 import re
-import unicodedata
 from dataclasses import dataclass, field
+from typing import Literal
 
 from thinkbible_pipeline.drafts.ids import next_id
 from thinkbible_pipeline.drafts.models import (
@@ -33,7 +33,9 @@ from thinkbible_pipeline.drafts.models import (
     SectionDraft,
     SectionMapEntry,
 )
+from thinkbible_pipeline.gate.checks import CheckContext, idea_problem, question_problem
 from thinkbible_pipeline.llm.outputs import IdeaOut, IdeasOut, QuestionOut, QuestionsOut
+from thinkbible_pipeline.text import normalize
 
 MAX_IDEAS = 5
 MAX_PER_LEVEL = 2
@@ -104,17 +106,6 @@ class QuestionPool:
 
 # --- evidence ---
 
-# Curly quotes and dashes become plain ones (code points, to keep this file ASCII).
-_QUOTES = {0x2018: "'", 0x2019: "'", 0x201C: '"', 0x201D: '"', 0x2013: "-", 0x2014: "-"}
-
-
-def normalize(text: str) -> str:
-    """Lowercase words only: punctuation, accents and spacing don't decide a match."""
-    text = unicodedata.normalize("NFKD", text.translate(_QUOTES))
-    text = "".join(ch for ch in text if not unicodedata.combining(ch)).lower()
-    return " ".join(re.findall(r"[a-z0-9]+", text))
-
-
 # Bracketed citations such as "(Mr 1:12)" or "(See on Mt 4:1)": a quote that leaves one out is
 # still the commentator's words.
 _CITATION = re.compile(r"\([^()]*\d[^()]*\)")
@@ -137,9 +128,11 @@ def short_quote(quote: str) -> str:
     return quote.strip() if len(words) <= MAX_QUOTE_WORDS else " ".join(words[:MAX_QUOTE_WORDS])
 
 
-def _drop(item_id: str, reason: str, item: object) -> DroppedItem:
+def _drop(
+    item_id: str, reason: str, item: object, stage: Literal["generate", "check"] = "generate"
+) -> DroppedItem:
     data = item.model_dump(by_alias=True) if hasattr(item, "model_dump") else dict(vars(item))
-    return DroppedItem(item_id=item_id, stage="generate", reason=reason, item=data)
+    return DroppedItem(item_id=item_id, stage=stage, reason=reason, item=data)
 
 
 def _in_section(start: int, end: int, section: SectionMapEntry) -> bool:
@@ -170,8 +163,11 @@ def process_ideas(
     section: SectionMapEntry,
     excerpts: dict[str, str],
     draft: SectionDraft,
+    ctx: CheckContext | None = None,
 ) -> tuple[list[Idea], list[DroppedItem]]:
-    """Give every idea an ID, keep the grounded ones (agreed first, at most 5)."""
+    """Give every idea an ID, keep the grounded ones that pass the checks (agreed first, at
+    most 5)."""
+    ctx = ctx or CheckContext()
     kept: list[Idea] = []
     dropped: list[DroppedItem] = []
     for raw in out.key_ideas:
@@ -181,9 +177,9 @@ def process_ideas(
                                  f"outside the section ({section.verse_start}-"
                                  f"{section.verse_end})", raw))  # fmt: skip
             continue
-        if not raw.title.strip() or not raw.body.strip().endswith((".", "!", "?", ")")):
-            dropped.append(_drop(idea_id, "incomplete text: the title is empty or the body "
-                                 "stops mid-sentence", raw))  # fmt: skip
+        problem = idea_problem(raw.title, raw.body, ctx)
+        if problem:
+            dropped.append(_drop(idea_id, problem, raw, "check"))
             continue
         sources, evidence = check_evidence(raw, excerpts)
         if not sources:
@@ -219,16 +215,12 @@ def max_level(ideas: list[Idea]) -> int:
     return min(3, len(ideas))
 
 
-def _complete_question(text: str) -> bool:
-    """A whole question: long enough, and ending with "?" (a cut-off text doesn't)."""
-    return len(text.strip()) >= 10 and text.strip().endswith("?")
-
-
 def process_questions(
     out: QuestionsOut,
     ideas: list[Idea],
     section: SectionMapEntry,
     draft: SectionDraft,
+    ctx: CheckContext | None = None,
 ) -> QuestionPool:
     """Give every question an ID and a level, then choose the pool.
 
@@ -236,15 +228,17 @@ def process_questions(
     one), then the model's order. The alternate is preferably aimed at a different key idea than
     the primary, so it can serve a reader who missed that idea.
     """
+    ctx = ctx or CheckContext()
     pool = QuestionPool()
     agreement = {i.id: len(i.sources) for i in ideas}
+    idea_texts = [(i.title, i.body) for i in ideas]
     cap = max_level(ideas)
     by_level: dict[int, list[tuple[QuestionOut, Question]]] = {}
     for raw in out.questions:
         qid = next_id(draft, section.id, "q")
-        if not _complete_question(raw.text):
-            pool.dropped.append(_drop(qid, "incomplete question: it must be a whole question "
-                                      "ending with '?'", raw))  # fmt: skip
+        problem = question_problem(raw.text, idea_texts, ctx)
+        if problem:
+            pool.dropped.append(_drop(qid, problem, raw, "check"))
             continue
         if not _in_section(raw.verse_start, raw.verse_end, section):
             pool.dropped.append(_drop(qid, f"verses {raw.verse_start}-{raw.verse_end} are "
