@@ -159,7 +159,7 @@
         "text": {
           "type": "string",
           "minLength": 10,
-          "maxLength": 160,
+          "maxLength": 200,
           "pattern": "\\?$"
         },
         "textByTranslation": {
@@ -169,7 +169,7 @@
           "additionalProperties": {
             "type": "string",
             "minLength": 10,
-            "maxLength": 160,
+            "maxLength": 200,
             "pattern": "\\?$"
           }
         },

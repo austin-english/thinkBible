@@ -50,7 +50,7 @@ requests_per_minute = 10  # this account's Bedrock quota for the model
 model = "us.anthropic.claude-sonnet-4-6"
 thinking = "adaptive"
 effort = "medium"
-prompt = "v4"  # extract/v4 (= v3) and questions/v4 (up to 3 questions in order, no levels)
+prompt = "v5"  # extract/v5 (= v3) and questions/v5 (v4 + questions up to 200 characters)
 default_cost_usd = 0.17  # measured on Mark 1 (2026-11-16)
 requests_per_minute = 10  # this account's Bedrock quota for the model
 

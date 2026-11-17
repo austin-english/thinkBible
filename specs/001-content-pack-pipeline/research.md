@@ -424,7 +424,11 @@ risk.
   (`thinkbible_core.rules.max_questions`).
 - **Order**: the order a reader meets them. The app asks the first on the first read and unlocks
   each next one a week after the previous answer. "Not a helpful question?" moves to the next.
-- **Generation** (`questions/v4`, question guide v3): the model writes up to 6 candidates in
+- **Length** (2026-11-17): questions may be up to 200 characters (was 160). On the first run
+  without levels, 10 of 28 dropped questions were 161-170 characters, and they were mostly the
+  whole-passage questions, which need a longer framing sentence. The prompt (`questions/v5`) asks
+  for 200 at most and shorter where possible.
+- **Generation** (`questions/v5`, question guide v3): the model writes up to 6 candidates in
   reading order, aimed at the passage's main ideas. The first opens the main idea, usually on the
   whole passage; later ones take up other ideas and may connect to the rest of Scripture or to
   life. Recall questions are never written.

@@ -28,7 +28,7 @@ from thinkbible_pipeline.text import normalize
 CHECKS_VERSION = "checks-v1"
 
 TITLE_MAX, BODY_MAX = 60, 240
-QUESTION_MIN, QUESTION_MAX = 10, 160
+QUESTION_MIN, QUESTION_MAX = 10, 200  # raised from 160 on 2026-11-17
 REPEAT_WORDS = 8  # a run of this many words from an idea's body in a question gives it away
 
 _YES_NO_START = re.compile(

@@ -25,7 +25,7 @@ from thinkbible_core.models._base import (
     Verse,
 )
 
-QuestionText = Annotated[str, StringConstraints(min_length=10, max_length=160, pattern=r"\?$")]
+QuestionText = Annotated[str, StringConstraints(min_length=10, max_length=200, pattern=r"\?$")]
 
 
 class _VersionedItem(ContractModel):

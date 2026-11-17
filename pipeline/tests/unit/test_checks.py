@@ -65,7 +65,7 @@ def test_good_idea_passes() -> None:
     [
         ("Why might Jesus say this", "ending with '?'"),
         ("Why?", "question length 4"),
-        ("Why " + "x" * 160 + "?", "question length 165"),
+        ("Why " + "x" * 200 + "?", "question length 205"),
         ("Jesus speaks about food. Is that important?", "yes/no question"),
         ("Does this matter to you?", "yes/no question"),
         ("Why might Henry think this matters?", "names a commentator (Henry)"),

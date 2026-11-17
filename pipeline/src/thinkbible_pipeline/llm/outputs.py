@@ -61,7 +61,7 @@ class IdeasOut(_Out):
 
 
 class QuestionOut(_Out):
-    text: str = Field(description="One open question, at most 160 characters, ending with '?'.")
+    text: str = Field(description="One open question, at most 200 characters, ending with '?'.")
     type: QuestionType
     verse_start: int
     verse_end: int

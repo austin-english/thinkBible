@@ -65,7 +65,7 @@ Field names are camelCase in JSON and snake_case in the Python models (Pydantic 
 | `id` | `mrk-1-1-q4` | Permanent. Never reused |
 | `type` | noticing, meaning, application, seasonal | Pipeline metadata |
 | `verseStart`, `verseEnd` | int | Within the section. The full section range means "whole passage" |
-| `text` | 10–160 chars, ends with `?` | Frozen once published. Not yes/no. Does not repeat a target idea word for word |
+| `text` | 10–200 chars, ends with `?` (160 until 2026-11-17) | Frozen once published. Not yes/no. Does not repeat a target idea word for word |
 | `textByTranslation` | `{kjv: "…?"}` | Optional variants (R12) |
 | `targets[]` | key idea ids | ≥ 1. All in the same section and active at publish time |
 | `status`, `addedIn`, `retiredIn`, `replaces`, `series` | as for KeyIdea | |
