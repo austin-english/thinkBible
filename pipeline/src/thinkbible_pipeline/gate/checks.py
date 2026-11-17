@@ -25,11 +25,10 @@ from thinkbible_pipeline.sources.snapshot import SourceLibrary
 from thinkbible_pipeline.text import normalize
 
 # Bump when a check is added or changed: the check stage then re-checks every section.
-CHECKS_VERSION = "checks-v1"
+CHECKS_VERSION = "checks-v2"
 
 TITLE_MAX, BODY_MAX = 60, 240
 QUESTION_MIN, QUESTION_MAX = 10, 200  # raised from 160 on 2026-11-17
-REPEAT_WORDS = 8  # a run of this many words from an idea's body in a question gives it away
 
 _YES_NO_START = re.compile(
     r"^(is|are|do|does|did|can|could|will|would|was|were|has|have|had|should|shall|may|might|must)\b",
@@ -95,16 +94,15 @@ def is_yes_no(text: str) -> bool:
 
 
 def repeats_idea(text: str, ideas: list[tuple[str, str]]) -> str | None:
-    """The title of an idea the question repeats word for word, or None."""
+    """The title of an idea whose title the question repeats word for word, or None."""
     q = f" {normalize(text)} "
-    for title, body in ideas:
+    for title, _body in ideas:
         t = normalize(title)
         if len(t.split()) >= 3 and f" {t} " in q:
             return title
-        words = normalize(body).split()
-        for i in range(len(words) - REPEAT_WORDS + 1):
-            if f" {' '.join(words[i : i + REPEAT_WORDS])} " in q:
-                return title
+    # No check against the idea's body: a plain question describes the same scene the body does
+    # (Mark 1:21-28 lost its best question to an 8-word overlap). The grader's not-leading line
+    # judges whether a question gives the point away.
     return None
 
 

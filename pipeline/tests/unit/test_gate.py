@@ -180,22 +180,30 @@ def test_the_question_spanning_most_of_the_passage_goes_first(
     assert ids(deps.store.read_draft_or_new(SID)) == ["q2", "q1", "q3"]
 
 
-def test_the_best_big_picture_question_is_kept_and_goes_first(
-    tmp_path: Path, make_library: Any
-) -> None:
-    """Mark 1:1-11 lost all three of its arc questions to sharper one-verse ones."""
+def test_a_lower_grade_never_beats_a_higher_one(tmp_path: Path, make_library: Any) -> None:
+    """Regression (Mark 1:21-28): covering every idea first kept a 3 over a 5, and a reserved
+    place for a whole-passage question let a broad 4 beat a sharp 5."""
+    qs = [question(1, [1], 2, 2), question(2, [2], 4, 4), question(3, [3], 5, 5),
+          question(4, [1], 3, 3), question(5, [2], 1, 8)]  # fmt: skip
+    section = {**SECTION, "questions": qs}
+    scores = {"k1": 5, "k2": 5, "k3": 5, "q1": 5, "q2": 5, "q3": 3, "q4": 5, "q5": 4}
+    deps = setup(tmp_path, make_library, {("review", SID): grades(scores)}, section)
+    asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
+    # Three 5s are kept, though q4 repeats q1's idea and neither q3 (k3, a 3) nor q5 (the whole
+    # passage, a 4) made it.
+    assert ids(deps.store.read_draft_or_new(SID)) == ["q1", "q2", "q4"]
+
+
+def test_ties_go_to_a_new_idea_then_to_the_whole_passage(tmp_path: Path, make_library: Any) -> None:
     qs = [question(1, [1], 2, 2), question(2, [2], 4, 4), question(3, [3], 5, 5),
           question(4, [1], 1, 8)]  # fmt: skip
     section = {**SECTION, "questions": qs}
-    scores = {"k1": 5, "k2": 5, "k3": 5, "q1": 5, "q2": 5, "q3": 5, "q4": 4}
+    scores = {"k1": 5, "k2": 5, "k3": 5, "q1": 5, "q2": 5, "q3": 5, "q4": 5}
     deps = setup(tmp_path, make_library, {("review", SID): grades(scores)}, section)
     asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
+    # All 5s: the whole-passage q4 wins the tie on k1 over q1, then q2 and q3 add k2 and k3;
+    # q4 spans the most, so it goes first.
     assert ids(deps.store.read_draft_or_new(SID)) == ["q4", "q2", "q3"]
-    # A big-picture question graded below 4 doesn't get the place.
-    weak = setup(tmp_path / "weak", make_library,
-                 {("review", SID): grades({**scores, "q4": 3})}, section)  # fmt: skip
-    asyncio.run(run(RunRequest(book="mark", stages=["review"]), weak))
-    assert ids(weak.store.read_draft_or_new(SID)) == ["q1", "q2", "q3"]
 
 
 def test_the_notes_are_graded_too(tmp_path: Path, make_library: Any) -> None:

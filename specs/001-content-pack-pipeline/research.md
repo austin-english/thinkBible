@@ -464,11 +464,17 @@ risk.
   commentators", never counted). The grader's `reachable` line drops a key idea that isn't
   reachable. The app also scores an answer against the question's own targets, not every idea
   (spec 003).
-- **A big-picture opener** (2026-11-17): the grader tends to prefer sharp one-verse questions, and
-  Mark 1:1-11 lost all three of its arc questions. The best-graded question about at least half of
-  the passage (or all of it) now takes the first place when it scores 4 or more
-  (`gate.outcomes.pick_opener`); the other two places are chosen as before. Without such a
-  question, the kept question spanning the most of the passage goes first.
+- **Quality first** (2026-11-17, revised the same day): each of the 3 places goes to the
+  highest-graded candidate left, so a lower grade never beats a higher one
+  (`gate.outcomes.pick_best`). Among equal grades: one aimed at a key idea not yet covered, then one
+  about at least half the passage, then the writer's order. The kept question spanning the most of
+  the passage goes first. Two earlier rules were removed after a Mark run: covering every idea
+  before looking at grades kept a 3 over a 5, and a place reserved for a whole-passage question
+  let broad questions beat sharper ones.
+- **Giveaway check**: code drops a question that repeats an idea's title word for word. A check
+  for an 8-word run from the idea's body was removed (`checks-v2`): a plain question describes
+  the same scene the body does, and it dropped Mark 1:21-28's best question. The grader's
+  `not-leading` line judges giveaways.
 - **Plain wording** (2026-11-17, `questions/v9`, `review/v5` `natural`): questions had started
   turning people and actions into abstract nouns ("Why might a true confession still be
   rejected?", "What does that distinction say about the limits of John's ministry?"). v9 asks about

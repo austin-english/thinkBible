@@ -70,8 +70,6 @@ def test_good_idea_passes() -> None:
         ("Does this matter to you?", "yes/no question"),
         ("Why might Henry think this matters?", "names a commentator (Henry)"),
         ("Why might what defiles comes from within matter here?", "gives away a key idea"),
-        ("Jesus says evil thoughts come out of the heart, and those are what make a person "
-         "unclean. Why?", "gives away a key idea"),
         ("What does {{ref:7:16}} add here?", "doesn't resolve in BSB"),
     ],
 )  # fmt: skip
@@ -89,6 +87,9 @@ def test_open_questions_pass() -> None:
         assert question_problem(text, IDEAS, CTX) is None, text
     assert is_yes_no("Is it wrong to eat with unwashed hands?")
     assert repeats_idea("What comes to mind?", IDEAS) is None
+    # Describing the same scene as an idea's body is not a giveaway (Mark 1:21-28 regression).
+    body = IDEAS[0][1]
+    assert repeats_idea(f"{body} Why might that be?", IDEAS) is None
 
 
 def section(**overrides: Any) -> dict[str, Any]:

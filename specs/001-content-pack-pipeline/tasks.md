@@ -882,8 +882,14 @@ text edit is refused.
       `align`, whatever `--fresh` or a prompt-version change says, unless `--refresh` is given;
     - excluded sections are left out of the cost estimate and listed as
       "skipped: live (use --refresh)";
-    - `check`, `review` and `report` still run on them, because they don't rewrite
-      content.
+    - `report` still runs on them. `check` and `review` run in **report-only mode** on them
+      (revised 2026-11-17): since review began dropping ideas, re-picking questions from the
+      candidates and removing weak views-differ notes, a re-run with a new rubric could
+      otherwise change what readers already have. For a live section, `check` records problems
+      but drops nothing, and `review` stores grades for the scorecard but never drops an idea,
+      re-picks questions or removes a note. A weak live item is fixed only by `retire --replace`
+      (T081). Test: a live section re-reviewed with every item graded 1 keeps exactly its
+      published ideas, questions and notes, and the scorecard lists them as weak.
 - [ ] T081 [US6] Add `retire --book B --item ID [--replace]` to `cli.py`, implemented in
   `pipeline/src/thinkbible_pipeline/drafts/retire.py`:
   - it sets `status: retired`; `retiredIn` is set at publish;

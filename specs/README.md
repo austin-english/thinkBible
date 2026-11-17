@@ -45,6 +45,31 @@ Or set `SPECIFY_FEATURE_DIRECTORY=specs/002-reader-read-mode` for one session.
 New features after these use `/speckit-specify <description>`. Its git hook creates the branch and
 picks the next number.
 
+## Future specs (not yet drafted)
+
+Ideas the owner wants to keep, each likely its own spec. Draft with `/speckit-specify` when the
+time comes.
+
+- **Question pool: stable ideas, questions added over time** (noted 2026-11-17). Today one
+  `generate` stage rewrites a section's key ideas and questions together, so every run is a new
+  sample and question wording can't be compared like for like. Proposal:
+  - split `generate` into an `ideas` stage (written once; re-run only when its prompt changes or
+    with `--fresh`, which starts a new pool) and a `questions` stage;
+  - each new questions prompt version **adds** up to 8 candidates to the section's pool instead
+    of replacing it (`--fresh` clears it); the grader re-scores the whole pool with the current
+    rubric and keeps the best 3; cap the pool (about 16, best-scored kept) so the grader call stays
+    bounded;
+  - this gives like-for-like prompt tuning, cheaper questions-only runs (about $0.15 instead of
+    $0.32 per section), a bank of graded questions for more questions per section later, and
+    ready replacements when a live question is retired (spec 001 Story 6).
+
+  Questions point at key idea IDs, so the pool only works while the ideas stay fixed. About a
+  day of work; it fits with spec 001 US6 (refresh) or as a feature of its own.
+- **A question about the reader's own life** as a section's third question (noted 2026-11-17,
+  research R11). Deferred until the first two questions are steady.
+- **The commentators as people in the comment thread** (noted 2026-11-17, `docs/design/README.md`
+  "Future idea"): their own avatars, names and profiles, building on "In their words".
+
 ## Decisions
 
 Confirmed by the product owner on 2026-11-04 and applied to `docs/brief.md`, `DESIGN.md`, the

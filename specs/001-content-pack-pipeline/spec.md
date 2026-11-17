@@ -425,6 +425,12 @@ place and confirm the publish check refuses the version.
   or has different text, or if any published section's verse range has changed. Content is freely
   regenerated, and the draft channel freely republished, until a book's first live publish. IDs are
   never reused, in the draft channel or live.
+- **FR-024a** (2026-11-17): Once a section has a promoted item, no stage may change its live
+  content as a side effect: generation skips it unless `--refresh` is given, and the gate's
+  `check` and `review` only report on it (grades and problems in the scorecard), never dropping
+  ideas, re-picking questions or removing notes. Readers' answered questions therefore never
+  disappear from the pack; retired ones stay, marked retired, and every saved reflection keeps a
+  snapshot of the question and ideas as shown (spec 003 FR-011).
 - **FR-025**: The pack format MUST be defined by a single schema, which pipeline output, backend
   models and app models are all validated against.
 - **FR-026**: The pack format MUST allow optional per-verse notes (names, places, customs) for a

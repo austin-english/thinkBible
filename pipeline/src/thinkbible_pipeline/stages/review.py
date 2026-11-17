@@ -25,7 +25,6 @@ from thinkbible_pipeline.gate.outcomes import (
     clear_earlier_failure,
     drop_items,
     pick_best,
-    pick_opener,
     regenerate_or_fail,
 )
 from thinkbible_pipeline.llm.outputs import ReviewOut
@@ -136,15 +135,12 @@ def choose_questions(
             eligible.append({**c, "targets": targets})
     scores = {cid: g.score for cid, g in grades.items()}
     start, end = draft.section["verseStart"], draft.section["verseEnd"]
-    opener = pick_opener(eligible, scores, start, end)
-    picked = set(pick_best(eligible, scores, max_questions(len(kept_ideas)), opener))
+    picked = set(pick_best(eligible, scores, max_questions(len(kept_ideas)), start, end))
     kept = [c for c in eligible if c["id"] in picked]
     if kept:
-        # The first question opens the main idea: the reserved big-picture opener, or else the
-        # kept question spanning the most of the passage (Mark 1:12-15 led with a detail).
-        first = next((c for c in kept if c["id"] == opener), None) or max(
-            kept, key=lambda c: (c["verseEnd"] - c["verseStart"], -kept.index(c))
-        )
+        # The kept question spanning the most of the passage goes first: the reader's first
+        # question should open the main idea (Mark 1:12-15 had led with a one-verse detail).
+        first = max(kept, key=lambda c: (c["verseEnd"] - c["verseStart"], -kept.index(c)))
         kept = [first, *(c for c in kept if c is not first)]
     for c in eligible:
         if c["id"] not in picked:

@@ -58,9 +58,6 @@ def drop_items(draft: SectionDraft, drops: dict[str, str], stage: GateStage) -> 
         draft.dropped += dropped
 
 
-OPENER_MIN_SCORE = 4  # a big-picture opener must still be a good question
-
-
 def is_big_picture(question: dict[str, Any], start: int, end: int) -> bool:
     """Whether a question is about at least half of the passage (verses ``start``-``end``)."""
     if (question["verseStart"], question["verseEnd"]) == (start, end):
@@ -69,52 +66,35 @@ def is_big_picture(question: dict[str, Any], start: int, end: int) -> bool:
     return span >= 2 and span * 2 >= end - start + 1
 
 
-def pick_opener(
-    candidates: list[dict[str, Any]], scores: dict[str, int], start: int, end: int
-) -> str | None:
-    """The best-graded big-picture candidate scoring at least ``OPENER_MIN_SCORE``, or None.
-
-    The first question a reader meets should open the passage's main idea; the grader on its own
-    tends to prefer sharp one-verse questions (Mark 1:1-11 lost all three of its arc questions).
-    """
-    wide = [
-        (n, c)
-        for n, c in enumerate(candidates)
-        if is_big_picture(c, start, end) and scores.get(c["id"], 0) >= OPENER_MIN_SCORE
-    ]
-    if not wide:
-        return None
-    _, best = min(wide, key=lambda nc: (-scores.get(nc[1]["id"], 0), nc[0]))
-    return str(best["id"])
-
-
 def pick_best(
-    candidates: list[dict[str, Any]],
-    scores: dict[str, int],
-    cap: int,
-    opener: str | None = None,
+    candidates: list[dict[str, Any]], scores: dict[str, int], cap: int, start: int, end: int
 ) -> list[str]:
-    """The IDs of up to ``cap`` candidates, best graded first, then returned in the writer's order.
+    """The IDs of up to ``cap`` candidates, returned in the writer's order.
 
-    ``opener``, if given, takes the first place. Each other pick first goes to the best-graded
-    candidate aimed at a key idea the picks so far don't cover; remaining places go to the best
-    graded of the rest. Ties keep the writer's order.
+    Quality first (revised 2026-11-17): each place goes to the highest-graded candidate left, so a
+    lower grade never beats a higher one. Among equal grades, prefer one aimed at a key idea the
+    picks so far don't cover, then one about at least half the passage, then the writer's order.
+    (Covering every idea first had kept a 3 over a 5, and a reserved place for a whole-passage
+    question had let broad questions beat sharper ones; Mark 1:21-28.)
     """
-    ranked = sorted(range(len(candidates)), key=lambda n: (-scores.get(candidates[n]["id"], 0), n))
+
+    def rank(n: int, covered: set[str]) -> tuple[int, bool, bool, int]:
+        c = candidates[n]
+        return (
+            -scores.get(c["id"], 0),
+            not (set(c["targets"]) - covered),
+            not is_big_picture(c, start, end),
+            n,
+        )
+
     chosen: list[int] = []
     covered: set[str] = set()
-    if opener is not None and cap > 0:
-        first = next(n for n, c in enumerate(candidates) if c["id"] == opener)
-        chosen.append(first)
-        covered |= set(candidates[first]["targets"])
-    for n in ranked:
-        targets = set(candidates[n]["targets"])
-        if len(chosen) < cap and targets - covered:
-            chosen.append(n)
-            covered |= targets
-    for n in ranked:
-        if len(chosen) < cap and n not in chosen:
-            chosen.append(n)
+    remaining = list(range(len(candidates)))
+    while remaining and len(chosen) < cap:
+        best = min(remaining, key=lambda n: rank(n, covered))
+        chosen.append(best)
+        remaining.remove(best)
+        covered |= set(candidates[best]["targets"])
     return [candidates[n]["id"] for n in sorted(chosen)]
 
 
