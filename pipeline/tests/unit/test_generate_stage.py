@@ -179,6 +179,30 @@ def test_a_section_that_breaks_the_rules_twice_fails_but_keeps_its_record(
     assert draft.ids.q == 4  # the counter survived the failure: q1-q4 are never given out again
 
 
+def test_a_note_over_its_limit_asks_once_more(tmp_path: Path, make_library: Any) -> None:
+    """Regression (Mark 1:21-28): a 287-character context note failed the check stage and the
+    whole section was regenerated. Now generate asks the extract call once more."""
+    responses = base_responses()
+    responses[("generate.extract", S1)] = [{**EXTRACT_S1, "context": "x" * 281}, EXTRACT_S1]
+    # The retry's ideas get new IDs (k4-k6; IDs are never reused), so the questions aim at those.
+    responses[("generate.questions", S1)] = {"questions": [
+        {**question, "targets": [f"{S1}-k4"]} for question in GOOD_POOL["questions"]
+    ]}  # fmt: skip
+    deps = setup(tmp_path, make_library, responses)
+    result = asyncio.run(run(RunRequest(book="mark", stages=["generate"]), deps))
+    assert result.exit_code == ExitCode.OK
+    draft = deps.store.read_draft_or_new(S1)
+    assert draft.section["context"] == EXTRACT_S1["context"]
+    runner = deps.runner
+    assert isinstance(runner, FakeRunner)
+    extracts = [p for c, p in zip(runner.calls, runner.prompts, strict=True)
+                if c == ("generate.extract", S1)]  # fmt: skip
+    assert len(extracts) == 2
+    assert "the context note was 281 characters (at most 280)" in extracts[1]
+    redone = [d for d in draft.dropped if d.reason.startswith("regenerated: the context note")]
+    assert [d.item_id for d in redone] == [f"{S1}-k1", f"{S1}-k3"]  # the first attempt's ideas
+
+
 def test_a_second_run_makes_no_model_calls(tmp_path: Path, make_library: Any) -> None:
     deps = setup(tmp_path, make_library, base_responses())
     request = RunRequest(book="mark", stages=["summaries", "generate"])

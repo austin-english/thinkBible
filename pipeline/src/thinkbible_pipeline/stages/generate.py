@@ -30,6 +30,7 @@ from thinkbible_pipeline.stages.base import Deps, SectionResult, SectionStage
 from thinkbible_pipeline.stages.generate_rules import (
     Idea,
     QuestionPool,
+    note_problem,
     process_ideas,
     process_questions,
 )
@@ -150,12 +151,24 @@ class GenerateStage(SectionStage):
             usages.append(usage)
             ideas, idea_drops = process_ideas(ideas_out, entry, texts, draft, ctx)
             dropped += idea_drops
-            if ideas or ideas_out.no_prompt:
+            too_long = note_problem(ideas_out)
+            if (ideas or ideas_out.no_prompt) and too_long is None:
                 break
-            if attempt == 0:
+            if attempt == 1:
+                break  # a note still too long fails the check stage, which regenerates once
+            if not (ideas or ideas_out.no_prompt):
                 extract_user += (
                     "\n\nA previous attempt gave no key idea whose evidence quotes could be found "
                     "in the commentators' notes. Quote their words exactly."
+                )
+            if too_long is not None:
+                dropped += [
+                    DroppedItem(item_id=i.id, stage="generate", reason=f"regenerated: {too_long}",
+                                item=i.publishable())
+                    for i in ideas
+                ]  # fmt: skip
+                extract_user += (
+                    f"\n\nIn a previous attempt {too_long}. Keep every note within its limit."
                 )
         assert ideas_out is not None
 

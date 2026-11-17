@@ -30,6 +30,7 @@ from thinkbible_pipeline.llm.outputs import IdeaOut, IdeasOut, QuestionOut, Ques
 from thinkbible_pipeline.text import normalize
 
 MAX_IDEAS = 5
+CONTEXT_MAX, VIEWS_DIFFER_MAX = 280, 400  # section.schema.json
 MAX_QUOTE_WORDS = 30  # stored evidence is cut to this many words (still a verbatim quote)
 MAX_MATCH_WORDS = 80  # a longer quote is checked whole, as long as it is found verbatim
 MIN_QUOTE_WORDS = 3
@@ -179,6 +180,22 @@ def process_ideas(
     for extra in kept[MAX_IDEAS:]:
         dropped.append(_drop(extra.id, f"more than {MAX_IDEAS} key ideas", extra))
     return kept[:MAX_IDEAS], dropped
+
+
+def note_problem(out: IdeasOut) -> str | None:
+    """Why the context or views-differ note is too long for the pack, or None.
+
+    Models count characters poorly, so ``generate`` asks once more instead of letting the
+    ``check`` stage fail the whole section later (Mark 1:21-28: a 287-character context note).
+    """
+    if len(out.context) > CONTEXT_MAX:
+        return f"the context note was {len(out.context)} characters (at most {CONTEXT_MAX})"
+    if out.views_differ and len(out.views_differ) > VIEWS_DIFFER_MAX:
+        return (
+            f"the views-differ note was {len(out.views_differ)} characters "
+            f"(at most {VIEWS_DIFFER_MAX})"
+        )
+    return None
 
 
 # --- questions ---

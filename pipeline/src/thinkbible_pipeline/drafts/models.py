@@ -111,9 +111,12 @@ class SectionDraft(JsonModel):
     @classmethod
     def _forget_levels(cls, data: Any) -> Any:
         """Drafts written before levels were removed (2026-11-17) still load; the next
-        ``generate`` replaces their content."""
+        ``generate`` replaces their content. The old ``levels`` stage record is forgotten too."""
         if isinstance(data, dict):
             data = {k: v for k, v in data.items() if k not in ("features", "levelChanges")}
+            stages = data.get("stages")
+            if isinstance(stages, dict) and "levels" in stages:
+                data["stages"] = {k: v for k, v in stages.items() if k != "levels"}
         return data
 
     section: dict[str, Any] = Field(default_factory=dict)
