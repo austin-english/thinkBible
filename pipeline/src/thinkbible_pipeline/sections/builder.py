@@ -65,7 +65,10 @@ def _chapters(
             henry_starts[hc.number] = {i.verse for i in hc.items}
     by_number = {c.number: c for c in bsb.chapters}
     out: list[_Chapter] = []
-    for number, last in enumerate(KJV_VERSES[book], 1):
+    # The chapters the BSB has (a missing chapter is a snapshot error `sources check` reports),
+    # each covering every verse of the KJV versification.
+    for number in sorted(n for n in by_number if 1 <= n <= len(KJV_VERSES[book])):
+        last = KJV_VERSES[book][number - 1]
         ch = _Chapter(number=number, last_verse=last, henry=henry_starts.get(number, set()))
         source = by_number.get(number)
         pending: str | None = None

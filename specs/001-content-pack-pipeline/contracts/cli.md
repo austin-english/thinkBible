@@ -16,7 +16,7 @@ Functions execution whose input carries the same request as JSON:
 
 | CLI | JSON request |
 |---|---|
-| `run --book mark --stage all` | `{"book": "mark", "stages": ["all"]}` |
+| `run --book mark --stage all` | `{"book": "mark", "stages": ["sections", "summaries", "generate", "report"]}`: the CLI expands `all` to the stages implemented so far, in order |
 | `--sections mrk-1-1,mrk-1-9` | `"sections": ["mrk-1-1", "mrk-1-9"]` |
 | `--fresh` / `--refresh` | `"fresh": true` / `"refresh": true` |
 | `--cap 20` | `"capUsd": 20` |
@@ -54,7 +54,8 @@ next cloud run if nothing changed.
 
 ## Stages (`run --stage`)
 
-Stages run in this order. `all` runs `sections` through `report`, then publishes the book to the draft channel
+Stages run in this order. `all` runs every implemented stage from `sections` through `report` (until US2
+and US5 exist, that is `sections`, `summaries`, `generate`, `report`), then publishes the book to the draft channel
 if no section failed (R14). `check`, `review` and `levels` together are the quality gate (R16):
 they drop failing items and record why.
 

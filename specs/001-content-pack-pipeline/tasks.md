@@ -464,7 +464,8 @@ confirm `verify` passes.
       `region = "us-west-2"`, `use_lockfile = true`;
     - provider `aws` with region `us-west-2`;
     - `module "sources"` named `thinkbible-sources-522779858032`.
-- [ ] T038 [US4] **Owner run** (AWS, no Bedrock needed):
+- [X] T038 [US4] **Owner run** (AWS, no Bedrock needed; done 2026-11-16: one environment applied,
+  snapshot pushed and `verify --remote` passed for all 333 files):
   1. `thinkbible-pipeline import --all` (done 2026-11-13: translations from HelloAO V1.16.0,
      commentaries re-imported from CrossWire MHC 2.2, JFB 3.0, Clarke 2.0), then
      `sources check` and `verify` (both pass: 333 files).
@@ -530,7 +531,7 @@ every key idea names a commentator. Then, with Bedrock, Mark 1–16 is fully dra
   - **No prompt**: `noPrompt` with a reason when no idea is targetable.
   - **IDs**: counters never reuse IDs, even for rejected items.
 - T043 (removed 2026-11-10: no hand edits to drafts, so no three-way merge; research R9).
-- [ ] T044 [US1] Write `pipeline/tests/integration/test_generate_fixture_book.py`:
+- [X] T044 [US1] Write `pipeline/tests/integration/test_generate_fixture_book.py`:
   - create a 2-chapter fixture book (Mark 1–2, trimmed) in a temp content directory, with
     recorded model outputs;
   - `run --local --stage all` (on a `LocalBlobStore`) produces `book.json`, `sections.json`,
@@ -600,7 +601,7 @@ every key idea names a commentator. Then, with Bedrock, Mark 1–16 is fully dra
   then the section fails with its draft and ID counters saved. The runner takes a `call` name
   (`generate.extract`, `generate.questions`) so FakeRunner fixtures can tell the calls apart.
   `test_generate_postprocess.py` (T042) and `test_generate_stage.py`.)
-- [ ] T055 [US1] Implement `pipeline/src/thinkbible_pipeline/report/render.py` and
+- [X] T055 [US1] Implement `pipeline/src/thinkbible_pipeline/report/render.py` and
   `pipeline/src/thinkbible_pipeline/report/templates/review.html.j2` (R17): the read-only
   scorecard. It writes `scorecard.json` and one self-contained `review.html` to the draft store,
   containing:
@@ -611,11 +612,15 @@ every key idea names a commentator. Then, with Bedrock, Mark 1–16 is fully dra
     questions by level with alternates marked, context, views differ and manuscript notes;
   - `noPrompt` sections with their reasons.
 
-  Until the gate stages exist (US2), the pass rates show as "not graded".
-- [ ] T056 [US1] Register `sections`, `summaries`, `generate` and `report` in
+  Until the gate stages exist (US2), the pass rates show as "not graded". (Done 2026-11-17:
+  `report/scorecard.py`, `report/render.py`, `stages/report.py`; the report also moves
+  `BookState.status` to `generated`, or `failed` when a section failed, and has an "only sections
+  with problems" filter that ignores routine pool drops. `test_report.py`.)
+- [X] T056 [US1] Register `sections`, `summaries`, `generate` and `report` in
   `pipeline/src/thinkbible_pipeline/stages/__init__.py` so `run` (cloud and `--local`) and
   `status` handle them:
-  - `all` runs the implemented stages in the cli.md order;
+  - `all` runs the implemented stages in the cli.md order (`stages.expand_all`, applied by the
+    CLI, so the cloud run gets the same explicit list);
   - `--sections`, `--fresh`, `--cap` and `--yes` work;
   - `BookState.status` follows the data-model.md state machine.
 - [ ] T057 [US1] **Owner run** (needs Bedrock quotas above 0, docs/aws-setup.md):

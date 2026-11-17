@@ -114,7 +114,10 @@ def test_every_verse_is_covered_including_kjv_only_verses() -> None:
     covered = [v for start, end, *_ in seven for v in range(start, end + 1)]
     assert covered == list(range(1, KJV_VERSES["MRK"][6] + 1))
     assert 16 in covered  # BSB omits 7:16; the KJV has it
+    assert {s.chapter for s in sections} == {7}  # only the chapters the BSB has
     for c, last in enumerate(KJV_VERSES["MRK"], 1):
         ranges = [(s.verse_start, s.verse_end) for s in sections if s.chapter == c]
+        if not ranges:
+            continue
         assert ranges[0][0] == 1 and ranges[-1][1] == last
         assert all(b[0] == a[1] + 1 for a, b in pairwise(ranges))

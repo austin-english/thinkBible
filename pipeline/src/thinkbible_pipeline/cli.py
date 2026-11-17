@@ -266,10 +266,12 @@ def run(
     ] = False,
 ) -> None:
     """Run one stage, several, or all of them: in AWS by default, or in-process with --local."""
+    from thinkbible_pipeline.stages import expand_all
+
     try:
         request = RunRequest(
             book=book,
-            stages=stage,  # type: ignore[arg-type]  # comma string, split by the validator
+            stages=expand_all(stage),  # type: ignore[arg-type]  # comma string, split later
             sections=sections,  # type: ignore[arg-type]
             fresh=fresh,
             refresh=refresh,

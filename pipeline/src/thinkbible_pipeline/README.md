@@ -57,10 +57,15 @@ pipeline/
 │   │   ├── summaries.py            # `summaries`: one line per section (Haiku)
 │   │   ├── generate.py             # `generate`: key ideas, context, questions (Sonnet)
 │   │   ├── generate_rules.py       # evidence check, ranking, levels, pool rules (no model calls)
+│   │   ├── report.py               # `report`: scorecard.json + review.html for the book
 │   │   └── __init__.py             # registry() of stage implementations
 │   ├── sections/
 │   │   ├── builder.py              # BSB headings + Henry's divisions → 3-12 verse sections (R5)
 │   │   └── passage.py              # a section's verses as prompt text
+│   ├── report/
+│   │   ├── scorecard.py            # the book's numbers: kept, dropped, failed, cost
+│   │   ├── render.py               # review.html (Jinja2): every section, its ideas and questions
+│   │   └── templates/review.html.j2
 │   ├── commentary/
 │   │   ├── crossrefs.py            # "See on Mt 4:1-11", "( = Lu …)": pointers to another note
 │   │   └── gather.py               # each commentator's excerpt for a section (R4)
@@ -214,7 +219,7 @@ Everything here is safe to re-run. `…` stands for
 
 ```bash
 make pipeline BOOK=mark STAGE=all       # in AWS: estimate, confirm, start, wait for the result
-make status BOOK=mark                   # latest runs, spend, and the scorecard
+make status BOOK=mark                   # latest runs, spend, and opens the scorecard (review.html)
 uv run --package thinkbible-pipeline thinkbible-pipeline run --book mark --stage generate \
   --local --sections mrk-1-1,mrk-1-9    # in-process, two sections, using the repo's prompts
 ```
