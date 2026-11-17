@@ -53,6 +53,11 @@ class RepoPaths:
     def prompts(self) -> Path:
         return self.pipeline / "prompts"
 
+    @property
+    def calibration(self) -> Path:
+        """The grader's calibration set, committed (R16)."""
+        return self.pipeline / "evals" / "calibration.json"
+
 
 def find_repo_root(start: Path | None = None) -> Path:
     """``$THINKBIBLE_REPO_ROOT``, else the nearest parent with ``content/`` and ``pipeline/``."""

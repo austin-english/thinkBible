@@ -26,6 +26,7 @@ h1 span { color: var(--rubric); }
 .meta { color: var(--ink-2); font-size: 13px; }
 .meta code { font: 12px var(--mono); }
 .banner { background: var(--warn-tint); color: var(--warn); border-radius: 10px; padding: 10px 14px; font-weight: 600; }
+.banner.ok { background: var(--rubric-tint); color: var(--rubric); }
 .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .tile { background: var(--page); border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px; }
 .tile b { display: block; font: 700 24px/1.1 var(--sans); font-variant-numeric: tabular-nums; }
@@ -79,13 +80,18 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
       {% if card.prompt_versions %} · prompts {% for k, v in card.prompt_versions|dictsort %}<code>{{ k }} {{ v }}</code>{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
     </div>
   </div>
-  {% if not card.graded %}<div class="banner">Not graded yet: {{ card.promotable_reason }}. Pass rates below count only what the generate rules kept.</div>{% endif %}
+  {% if card.promotable %}<div class="banner ok">Promotable: graded, calibrated, and above every threshold.</div>
+  {% else %}<div class="banner">Not promotable yet: {{ card.blockers|join("; ") }}.</div>{% endif %}
   <div class="tiles">
     <div class="tile"><b>{{ card.sections }}</b><span>sections</span></div>
     <div class="tile {{ 'bad' if card.failed_sections }}"><b>{{ card.failed_sections|length }}</b><span>failed</span></div>
     <div class="tile"><b>{{ card.no_prompt|length }}</b><span>with no question</span></div>
-    <div class="tile"><b>{{ card.ideas.passed }}<small>/{{ card.ideas.total }}</small></b><span>key ideas kept{% if card.idea_pass_rate is not none %} ({{ (card.idea_pass_rate * 100)|round|int }}%){% endif %}</span></div>
-    <div class="tile"><b>{{ card.questions.passed }}<small>/{{ card.questions.total }}</small></b><span>questions kept{% if card.question_pass_rate is not none %} ({{ (card.question_pass_rate * 100)|round|int }}%){% endif %}</span></div>
+    <div class="tile"><b>{{ card.kept_ideas }}</b><span>key ideas kept</span></div>
+    <div class="tile"><b>{{ card.kept_questions }}</b><span>questions kept</span></div>
+    {% set t = card.thresholds %}
+    <div class="tile {{ 'bad' if card.idea_pass_rate is not none and card.idea_pass_rate < t.min_idea_pass_rate }}"><b>{{ "—" if card.idea_pass_rate is none else ((card.idea_pass_rate * 100)|round|int|string + "%") }}</b><span>idea pass rate (needs {{ (t.min_idea_pass_rate * 100)|round|int }}%)</span></div>
+    <div class="tile {{ 'bad' if card.question_pass_rate is not none and card.question_pass_rate < t.min_question_pass_rate }}"><b>{{ "—" if card.question_pass_rate is none else ((card.question_pass_rate * 100)|round|int|string + "%") }}</b><span>question pass rate (needs {{ (t.min_question_pass_rate * 100)|round|int }}%)</span></div>
+    {% if card.calibration %}<div class="tile {{ 'bad' if not card.calibration.current }}"><b>{{ "—" if card.calibration.agreement is none else ((card.calibration.agreement * 100)|round|int|string + "%") }}</b><span>grader agreement with you{% if card.calibration.items %} ({{ card.calibration.items }} items){% endif %}</span></div>{% endif %}
     {% for st, n in card.dropped_by_stage|dictsort %}<div class="tile"><b>{{ n }}</b><span>dropped by {{ st }}</span></div>{% endfor %}
     {% if card.not_generated %}<div class="tile"><b>{{ card.not_generated|length }}</b><span>not generated yet</span></div>{% endif %}
   </div>
@@ -125,7 +131,7 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
           <div class="idea">
             <div class="t">{{ i.title }} <span class="pill info">{{ i.scope }}</span>{% if i.agreed %} <span class="pill info">agreed</span>{% endif %}</div>
             <div class="b">{{ i.body }}</div>
-            <div class="src">{{ i.names|join(" · ") }} · <span class="mono">{{ i.id }}</span></div>
+            <div class="src">{{ i.names|join(" · ") }} · <span class="mono">{{ i.id }}</span>{% if i.grade %} · graded {{ i.grade.score }}: {{ i.grade.notes }}{% endif %}</div>
             <details><summary>Evidence</summary>{% for who, quote in i.evidence %}<blockquote><b>{{ who }}:</b> “{{ quote }}”</blockquote>{% endfor %}</details>
           </div>
           {% else %}<div class="qmeta">No key ideas kept.</div>{% endfor %}
@@ -137,7 +143,7 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
             {% for q in qs %}
             <div>
               <div class="q {{ 'alt' if q.isAlternate }}">{{ q.text }}</div>
-              <div class="qmeta">{{ "alternate · " if q.isAlternate }}{{ q.type }} · {{ q.scope }}{% if q.features %} · {{ q.features.answer_directness }}, outside knowledge {{ q.features.outside_knowledge }}{% endif %} · aims at: {{ q.targets|join("; ") }} · <span class="mono">{{ q.id }}</span></div>
+              <div class="qmeta">{% if q.grade %}<b>graded {{ q.grade.score }}</b>: {{ q.grade.notes }}<br>{% endif %}{{ "alternate · " if q.isAlternate }}{{ q.type }} · {{ q.scope }}{% if q.features %} · {{ q.features.answer_directness }}, outside knowledge {{ q.features.outside_knowledge }}{% endif %} · aims at: {{ q.targets|join("; ") }} · <span class="mono">{{ q.id }}</span></div>
             </div>
             {% endfor %}
           </div>
@@ -149,6 +155,7 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
         <details><summary>Pipeline details: summary, commentary given, dropped items ({{ s.dropped|length }})</summary>
           <p class="qmeta">Summary for the next section: “{{ s.summary or "" }}”</p>
           <p class="qmeta">Commentary given: {% for who, tokens, refs, trimmed in s.excerpts %}{{ who }} {{ "{:,}".format(tokens) }} tokens{% if refs %} (follows {{ refs|join(", ") }}){% endif %}{% if trimmed %}, trimmed{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}</p>
+          {% if s.level_changes %}<p class="qmeta">Level changes: {% for c in s.level_changes %}<span class="mono">{{ c.question_id }}</span> {{ c.from_level }}→{{ c.to_level }} ({{ c.reason }}){% if not loop.last %}; {% endif %}{% endfor %}</p>{% endif %}
           {% if s.dropped %}<ul class="dropped">{% for d in s.dropped %}<li><span class="mono">{{ d.id }}</span> · {{ d.reason }}<br><em>{{ d.text }}</em></li>{% endfor %}</ul>{% endif %}
         </details>
         {% else %}

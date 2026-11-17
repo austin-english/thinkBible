@@ -20,7 +20,7 @@ from __future__ import annotations
 from typing import Any
 
 from thinkbible_core.ids import resolve_book
-from thinkbible_pipeline.drafts.models import CheckResult, DroppedItem, SectionDraft
+from thinkbible_pipeline.drafts.models import CheckResult, SectionDraft
 from thinkbible_pipeline.gate.checks import (
     CHECKS_VERSION,
     CheckContext,
@@ -28,56 +28,33 @@ from thinkbible_pipeline.gate.checks import (
     question_problem,
     section_problems,
 )
+from thinkbible_pipeline.gate.outcomes import clear_earlier_failure, drop_items, regenerate_or_fail
 from thinkbible_pipeline.stages.base import Deps, SectionResult, SectionStage
-from thinkbible_pipeline.stages.generate import SectionFailed
-
-
-def _drop(item: dict[str, Any], reason: str) -> DroppedItem:
-    return DroppedItem(item_id=item["id"], stage="check", reason=reason, item=item)
 
 
 def apply_checks(draft: SectionDraft, ctx: CheckContext) -> list[str]:
     """Drop failing items from ``draft.section`` in place; return the section's problems."""
     section = draft.section
-    dropped: list[DroppedItem] = []
-    ideas = []
+    drops: dict[str, str] = {}
+    texts = []
     for idea in section.get("keyIdeas", []):
         backed = {e.commentator for e in draft.evidence.get(idea["id"], [])}
         problem = idea_problem(idea["title"], idea["body"], ctx)
         if problem is None and not set(idea["sources"]) <= backed:
             problem = "evidence: a source has no quote found in that commentator's notes"
         if problem:
-            dropped.append(_drop(idea, problem))
+            drops[idea["id"]] = problem
         else:
-            ideas.append(idea)
-    kept_ids = {i["id"] for i in ideas}
-    texts = [(i["title"], i["body"]) for i in ideas]
-    cap = min(3, len(ideas))
-    questions = []
+            texts.append((idea["title"], idea["body"]))
     for q in section.get("questions", []):
-        targets = [t for t in q["targets"] if t in kept_ids]
         variants = list((q.get("textByTranslation") or {}).values())
         problem = next(
             (p for p in (question_problem(t, texts, ctx) for t in [q["text"], *variants]) if p),
             None,
         )
-        if not targets:
-            problem = "targets no key idea that was kept"
-        elif q["level"] > cap:
-            problem = (
-                f"Level {q['level']} needs at least {q['level']} key ideas ({len(ideas)} left)"
-            )
         if problem:
-            dropped.append(_drop(q, problem))
-        else:
-            questions.append({**q, "targets": targets})
-    for level in {q["level"] for q in questions}:  # an alternate stands in for a dropped primary
-        at = [q for q in questions if q["level"] == level]
-        if all(q["isAlternate"] for q in at):
-            at[0]["isAlternate"] = False
-    if dropped:
-        draft.section = {**section, "keyIdeas": ideas, "questions": questions}
-        draft.dropped += dropped
+            drops[q["id"]] = problem
+    drop_items(draft, drops, "check")
     return section_problems(draft.section, ctx)
 
 
@@ -106,14 +83,6 @@ class CheckStage(SectionStage):
             CheckResult(item_id=section_id, check="section", ok=False, detail=p) for p in problems
         ] or [CheckResult(item_id=section_id, check="section", ok=True)]
         if problems:
-            reason = f"checks: {problems[0]}"
-            if draft.regenerated_for:
-                draft.failed = f"{reason} (after one regeneration)"
-            else:
-                draft.regenerate = reason
-                draft.failed = f"{reason} (regenerates on the next run)"
-            deps.store.write_draft(section_id, draft)
-            raise SectionFailed(f"{section_id}: {draft.failed}")
-        if draft.failed and draft.failed.startswith("checks:"):  # an earlier check failure
-            draft.failed, draft.regenerate = None, None
+            regenerate_or_fail(draft, deps.store, section_id, "check", problems[0])
+        clear_earlier_failure(draft, "check")
         return SectionResult()

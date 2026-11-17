@@ -7,7 +7,7 @@ result to an exit code. No pipeline logic lives here.
 from __future__ import annotations
 
 import asyncio
-from typing import Annotated, NoReturn
+from typing import Annotated, Any, NoReturn
 
 import typer
 from pydantic import ValidationError
@@ -452,10 +452,96 @@ def calibrate(
     label: Annotated[
         bool, typer.Option("--label", help="Grade calibration items yourself.")
     ] = False,
-    book: Annotated[str | None, typer.Option("--book")] = None,
+    book: Annotated[str, typer.Option("--book", help="Book whose drafts to label from.")] = "mark",
+    yes: Annotated[bool, typer.Option("--yes", help="Skip the Proceed? prompt.")] = False,
 ) -> None:
-    """Calibrate the quality gate's grader against your own grades (R16)."""
-    _not_implemented("calibrate")
+    """Calibrate the quality gate's grader against your own grades (R16).
+
+    With --label: show items from the drafts one at a time and record your pass/fail, until the
+    set has enough (gate.min_calibration_items). Without it: run the grader on the set and record
+    how often it agrees with you, for the current grader prompt and model.
+    """
+    from datetime import UTC, datetime
+
+    from thinkbible_pipeline import app as wiring
+    from thinkbible_pipeline.gate.calibration import (
+        label_items,
+        load_calibration,
+        run_calibration,
+        save_calibration,
+    )
+    from thinkbible_pipeline.llm.prompts import system_prompt, version_tag
+    from thinkbible_pipeline.paths import repo_paths
+    from thinkbible_pipeline.sections.passage import passage_text
+    from thinkbible_pipeline.stages.review import grade_items
+
+    try:
+        request = RunRequest(book=book, stages=["review"])
+    except ValidationError as e:
+        _usage(e)
+    deps = wiring.local_deps(request, echo=typer.echo)
+    path = repo_paths().calibration
+    calibration = load_calibration(path)
+    entries = {e.id: e for e in deps.store.read_section_map()}
+    code = request.book_info.code
+
+    if label:
+        drafts = {sid: d for sid in entries if (d := deps.store.read_draft(sid)) and d.section}
+        if not drafts:
+            _exit(ExitCode.USAGE, f"no generated sections for {code} yet: run generate first")
+        passages = {sid: passage_text(deps.sources, "bsb", code, entries[sid]) for sid in drafts}
+        target = deps.settings.gate.min_calibration_items
+        n = label_items(
+            calibration, drafts, passages, target=target,
+            save=lambda c: save_calibration(path, c), echo=typer.echo, ask=input,
+        )  # fmt: skip
+        typer.echo(f"labelled {n} this time; the set has {len(calibration.items)} of {target}")
+        typer.echo("next: `thinkbible-pipeline calibrate` to measure the grader's agreement")
+        _exit(ExitCode.OK)
+
+    if not calibration.items:
+        _exit(ExitCode.USAGE, "the calibration set is empty: run `calibrate --label` first")
+    sections = sorted({c.section_id for c in calibration.items})
+    cost = len(sections) * deps.settings.stage("review").default_cost_usd
+    typer.echo(f"calibrate: grade {len(calibration.items)} items in {len(sections)} sections, "
+               f"about ${cost:.2f}")  # fmt: skip
+    if not yes and not typer.confirm("Proceed?", default=False):
+        _exit(ExitCode.OK, "not run")
+
+    async def grade(sid: str, items: list[dict[str, Any]]) -> dict[str, int]:
+        if sid not in entries:
+            typer.echo(f"  {sid} is no longer in sections.json; its items are skipped", err=True)
+            return {}
+        draft = deps.store.read_draft_or_new(sid)
+        section = {
+            "keyIdeas": draft.section.get("keyIdeas", [])
+            + [c.item for c in calibration.items if c.section_id == sid and c.kind == "keyIdea"]
+        }
+        grades, _usage = await grade_items(entries[sid], section, list(items), deps)
+        return {i: g.score for i, g in grades.items()}
+
+    review = system_prompt("review", deps.settings)
+    version, model = version_tag(review.versions), deps.settings.stage("review").model
+    result = asyncio.run(
+        run_calibration(
+            calibration, grade, threshold=deps.settings.review_flag_threshold,
+            prompt_version=version, model=model,
+            now=datetime.now(UTC).isoformat(timespec="seconds"),
+        )
+    )  # fmt: skip
+    save_calibration(path, calibration)
+    gate = deps.settings.gate
+    ok = result.agreement >= gate.min_agreement and result.items >= gate.min_calibration_items
+    typer.echo(f"grader agreement {result.agreement:.0%} on {result.items} items "
+               f"(needs {gate.min_agreement:.0%} on {gate.min_calibration_items})")  # fmt: skip
+    for item_id in result.disagreements:
+        typer.echo(f"  disagrees on {item_id}")
+    typer.echo(
+        "commit pipeline/evals/calibration.json"
+        if ok
+        else "below the bar: adjust prompts/review (a new version) and run `calibrate` again"
+    )
+    _exit(ExitCode.OK)
 
 
 @app.command("eval")

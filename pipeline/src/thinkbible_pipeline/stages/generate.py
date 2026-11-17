@@ -20,6 +20,7 @@ from thinkbible_core.ids import resolve_book
 from thinkbible_pipeline.commentary.gather import COMMENTATORS, Excerpt, gather_all
 from thinkbible_pipeline.drafts.models import DroppedItem, SectionDraft, SectionMapEntry
 from thinkbible_pipeline.gate.checks import CheckContext
+from thinkbible_pipeline.gate.outcomes import SectionFailed
 from thinkbible_pipeline.jsonio import sha256_hex
 from thinkbible_pipeline.llm.outputs import IdeasOut, QuestionsOut
 from thinkbible_pipeline.llm.prompts import system_prompt, version_tag
@@ -39,10 +40,6 @@ COMMENTATOR_NAMES = {
     "jamieson-fausset-brown": "Jamieson-Fausset-Brown",
     "adam-clarke": "Adam Clarke",
 }
-
-
-class SectionFailed(RuntimeError):
-    """The section broke a rule twice. Its draft (with the reason) is saved before raising."""
 
 
 def _previous_summary(section_id: str, deps: Deps) -> str | None:
@@ -203,8 +200,9 @@ class GenerateStage(SectionStage):
         draft.evidence = {i.id: i.evidence for i in ideas}
         draft.features = {q.id: q.features for q in pool.questions}
         draft.no_prompt_reason = no_prompt_reason if no_prompt else None
-        # The new content replaces the old, and so does its record of drops.
-        draft.dropped = [d for d in draft.dropped if d.stage not in ("generate", "check")] + dropped
+        # New content replaces the old, and so does everything the gate recorded about it.
+        draft.dropped = dropped
+        draft.grades, draft.level_changes, draft.checks = {}, [], []
         draft.regenerated_for = regenerating_for
         draft.section = {
             "id": section_id,

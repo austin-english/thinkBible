@@ -10,7 +10,10 @@ from __future__ import annotations
 
 from thinkbible_core.ids import resolve_book
 from thinkbible_pipeline.drafts.models import BookRef, BookState
+from thinkbible_pipeline.gate.calibration import load_calibration
 from thinkbible_pipeline.jsonio import canonical_json
+from thinkbible_pipeline.llm.prompts import system_prompt, version_tag
+from thinkbible_pipeline.paths import repo_paths
 from thinkbible_pipeline.report.render import render_review
 from thinkbible_pipeline.report.scorecard import build_scorecard
 from thinkbible_pipeline.requests import RunRequest
@@ -25,7 +28,17 @@ class ReportStage(BookStage):
         info = resolve_book(store.book)
         sections = store.read_section_map()
         drafts = {s.id: d for s in sections if (d := store.read_draft(s.id)) is not None}
-        card = build_scorecard(info.code, sections, drafts, store.read_runs(), deps.clock())
+        review = system_prompt("review", deps.settings)
+        card = build_scorecard(
+            info.code,
+            sections,
+            drafts,
+            store.read_runs(),
+            deps.clock(),
+            settings=deps.settings,
+            calibration=load_calibration(repo_paths().calibration),
+            grader=(version_tag(review.versions), deps.settings.stage("review").model),
+        )
         store.write_text("scorecard.json", canonical_json(card.to_doc()), "application/json")
         html = render_review(card, sections, drafts, deps.sources)
         store.write_text("review.html", html, "text/html; charset=utf-8")
@@ -33,14 +46,16 @@ class ReportStage(BookStage):
         state = store.read_book() or BookState(
             book=BookRef(id=info.code, name=info.name), status="sectioned"
         )
-        if state.status in ("sectioned", "generating", "generated", "failed") and sections:
+        if state.status in ("sectioned", "generating", "generated", "gated", "failed") and sections:
             if card.failed_sections:
                 state.status = "failed"
+            elif card.graded:
+                state.status = "gated"
             elif not card.not_generated:
                 state.status = "generated"
             store.write_book(state)
         deps.echo(
-            f"report: {card.ideas.passed} key ideas and {card.questions.passed} questions kept, "
+            f"report: {card.kept_ideas} key ideas and {card.kept_questions} questions kept, "
             f"{len(card.failed_sections)} failed, {len(card.not_generated)} not generated; "
-            "review.html written"
+            + ("promotable" if card.promotable else f"not promotable ({card.promotable_reason})")
         )

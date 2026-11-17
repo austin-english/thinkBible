@@ -38,6 +38,16 @@ class PromptSettings:
 
 
 @dataclass(frozen=True)
+class GateSettings:
+    """When a graded book may be promoted (R16, constitution v1.2.0)."""
+
+    min_idea_pass_rate: float = 0.90
+    min_question_pass_rate: float = 0.80
+    min_agreement: float = 0.85  # the grader's agreement with the owner's calibration grades
+    min_calibration_items: int = 30
+
+
+@dataclass(frozen=True)
 class Settings:
     region: str
     concurrency: int
@@ -49,6 +59,7 @@ class Settings:
     prompts: PromptSettings
     stages: Mapping[str, StageSettings]
     endpoint: Endpoint = "runtime"  # bedrock-runtime, or bedrock-mantle
+    gate: GateSettings = GateSettings()
 
     def stage(self, name: str) -> StageSettings:
         try:
@@ -158,6 +169,7 @@ def load_settings(config_dir: Path | None = None) -> Settings:
             question_guide=str(prompts["question_guide"]),
         ),
         stages=MappingProxyType(stages),
+        gate=GateSettings(**{k: v for k, v in raw.get("gate", {}).items()}),
     )
 
 

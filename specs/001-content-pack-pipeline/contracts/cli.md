@@ -16,7 +16,7 @@ Functions execution whose input carries the same request as JSON:
 
 | CLI | JSON request |
 |---|---|
-| `run --book mark --stage all` | `{"book": "mark", "stages": ["sections", "summaries", "generate", "check", "report"]}`: the CLI expands `all` to the stages implemented so far, in order |
+| `run --book mark --stage all` | `{"book": "mark", "stages": ["sections", "summaries", "generate", "check", "review", "levels", "report"]}`: the CLI expands `all` to the stages implemented so far, in order |
 | `--sections mrk-1-1,mrk-1-9` | `"sections": ["mrk-1-1", "mrk-1-9"]` |
 | `--fresh` / `--refresh` | `"fresh": true` / `"refresh": true` |
 | `--cap 20` | `"capUsd": 20` |
@@ -36,7 +36,7 @@ Functions execution whose input carries the same request as JSON:
 | `status --book B [--open]` | Book status, the latest runs (from the ledger and run records) with spend and counts, the latest scorecard's pass rates and failed sections, and what is left. `--open` downloads `review.html` and opens it | S3, DynamoDB, Step Functions | No |
 | `publish --book B [--dry-run]` | Build the pack from the S3 drafts and publish it to the **draft** channel (no additive check there). A run that includes `report` does this automatically when no section failed; this command repeats it by hand | S3 / CloudFront (dev) | No |
 | `promote --book B` | Copy the book's current draft version, byte for byte, to **live**: refuses (exit 5) unless the gate passed, pass rates meet the thresholds, the grader calibration is current and at least 85%, and the live publish check passes. Then updates prod's index and invalidates it (FR-021, FR-024) | S3 / CloudFront (draft → live) | No |
-| `calibrate [--label] [--book B]` | `--label`: show calibration candidates (item, passage, excerpts) and record your pass/fail grade for each, until the set has at least 30. Without it: run the grader on the set and record its agreement for the current grader prompt and model (R16) | Bedrock only | Yes (without `--label`) |
+| `calibrate [--label] [--book B] [--yes]` | `--label`: show calibration candidates (item, passage, excerpts) and record your pass/fail grade for each, until the set has at least 30. Without it: run the grader on the set and record its agreement for the current grader prompt and model (R16) | Bedrock only | Yes (without `--label`) |
 | `eval --sample mark-sample --candidate PROMPT_SET [--yes]` | Run the current and candidate prompt sets in local mode on a fixed sample of 15–25 sections, grade both with the calibrated grader, and render a side-by-side report (FR-029) | Bedrock only | Yes |
 
 ## Cloud and local runs
@@ -55,7 +55,7 @@ next cloud run if nothing changed.
 ## Stages (`run --stage`)
 
 Stages run in this order. `all` runs every implemented stage from `sections` through `report` (until US2
-and US5 exist, that is `sections`, `summaries`, `generate`, `check`, `report`), then publishes the book to the draft channel
+exists, that is `sections`, `summaries`, `generate`, `check`, `review`, `levels`, `report`), then publishes the book to the draft channel
 if no section failed (R14). `check`, `review` and `levels` together are the quality gate (R16):
 they drop failing items and record why.
 

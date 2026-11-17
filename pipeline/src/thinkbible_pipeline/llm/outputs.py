@@ -76,3 +76,42 @@ class QuestionsOut(_Out):
     """``generate`` call 2 (``questions``): the question pool; code sets levels and alternates."""
 
     questions: list[QuestionOut] = Field(description="Up to 8 candidate questions.")
+
+
+class ItemGradeOut(_Out):
+    item_id: str
+    score: int = Field(description="1 (fails badly) to 5 (excellent), against the rubric.")
+    failed_rules: list[str] = Field(
+        default_factory=list, description="The rubric lines this item breaks, by their names."
+    )
+    reason: str = Field(description="One short sentence on the grade, at most 200 characters.")
+
+
+class ReviewOut(_Out):
+    """``review``: the grader's 1-5 grade for every key idea and question of a section (R16)."""
+
+    items: list[ItemGradeOut]
+
+
+class ReaderAnswerOut(_Out):
+    question_id: str
+    answer: str = Field(description="Two or three sentences, as a typical reader would answer.")
+
+
+class LevelsAnswerOut(_Out):
+    """``levels`` call 1: a typical reader answers every question using only the passage."""
+
+    answers: list[ReaderAnswerOut]
+
+
+class CoverageOut(_Out):
+    question_id: str
+    covered_target_ids: list[str] = Field(
+        description="The IDs of the question's target ideas this answer really reaches."
+    )
+
+
+class LevelsJudgeOut(_Out):
+    """``levels`` call 2: which target ideas each typical answer covers (R11)."""
+
+    judgments: list[CoverageOut]

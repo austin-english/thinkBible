@@ -58,6 +58,9 @@ def commentary(name: str, every: int) -> dict[str, Any]:
 _SECTION = re.compile(r"^Section (\S+): Mark (\d+):(\d+)-(\d+)", re.M)
 _NOTE = re.compile(r'<commentary commentator="([a-z-]+)"[^>]*>\n\[[^\]]+\]\n(.+?)\n', re.S)
 _IDEA = re.compile(r"^- (\S+-k\d+) \[verses (\d+)-(\d+)", re.M)
+_GRADED = re.compile(r"^- (\S+) \[(?:key idea|question);", re.M)
+_ASKED = re.compile(r"^- (\S+-q\d+): ", re.M)
+_JUDGED = re.compile(r"^Question (\S+): (.+)\n(?:.*\n)*?Target key ideas:\n((?:  - .+\n?)+)", re.M)
 
 
 @dataclass
@@ -73,7 +76,20 @@ class ScriptedRunner:
         m = _SECTION.search(user)
         assert m, user[:200]
         start, end = int(m.group(3)), int(m.group(4))
-        if name == "summaries":
+        if name == "review":  # every item is good, so the gate keeps them all
+            value = {"items": [{"itemId": i, "score": 4, "reason": "Clear and faithful."}
+                               for i in _GRADED.findall(user)]}  # fmt: skip
+        elif name == "levels.answer":
+            value = {"answers": [{"questionId": q, "answer": "A thoughtful answer."}
+                                 for q in _ASKED.findall(user)]}  # fmt: skip
+        elif name == "levels.judge":  # reaches the first target, except on the connecting question
+            judgments = []
+            for qid, text, targets in _JUDGED.findall(user):
+                first = re.findall(r"  - (\S+):", targets)[:1]
+                reached = [] if "Scripture" in text else first
+                judgments.append({"questionId": qid, "coveredTargetIds": reached})
+            value = {"judgments": judgments}
+        elif name == "summaries":
             value: dict[str, Any] = {"summary": f"What happens in {section_id}."}
         elif name == "generate.extract":
             notes = {c: " ".join(text.split()[:8]) for c, text in _NOTE.findall(user)}
@@ -141,7 +157,7 @@ def test_fixture_book_end_to_end(tmp_path: Path, make_library: Any) -> None:
         assert (root / name).is_file(), name
     assert sorted(p.name for p in (root / "sections").iterdir()) == sorted(f"{i}.json" for i in ids)
     assert {p.name.split("-", 2)[-1] for p in (root / "runs").iterdir()} == {
-        "summaries.json", "generate.json", "check.json"
+        "summaries.json", "generate.json", "check.json", "review.json", "levels.json"
     }  # fmt: skip
 
     for sid in ids:
@@ -153,12 +169,16 @@ def test_fixture_book_end_to_end(tmp_path: Path, make_library: Any) -> None:
 
     card = json.loads((root / "scorecard.json").read_text())
     assert card["sections"] == len(ids) and card["failedSections"] == []
-    assert card["notGenerated"] == [] and card["graded"] is False
+    assert card["notGenerated"] == []
     for sid in ids:  # every section passed the schema and cross-field checks
         assert [c.ok for c in deps.store.read_draft_or_new(sid).checks] == [True]
-    assert json.loads((root / "book.json").read_text())["status"] == "generated"
+    assert json.loads((root / "book.json").read_text())["status"] == "gated"
     assert "Mark <span>scorecard</span>" in (root / "review.html").read_text()
-    assert len(runner.calls) == 3 * len(ids)  # summary, extract, questions per section
+    # summary, extract, questions, grade, answer, judge per section
+    assert len(runner.calls) == 6 * len(ids)
+    assert card["ideaPassRate"] == 1.0 and card["questionPassRate"] == 1.0
+    assert card["graded"] is True and not card["promotable"]  # no calibration yet
+    assert any("calibrat" in b for b in card["blockers"])
 
 
 def test_a_second_run_reports_nothing_to_do(tmp_path: Path, make_library: Any) -> None:

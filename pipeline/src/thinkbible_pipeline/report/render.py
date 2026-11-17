@@ -84,6 +84,7 @@ def section_view(
                 "body": readable(i["body"], ch),
                 "scope": _scope(i["verseStart"], i["verseEnd"], entry),
                 "names": [NAMES.get(c, c) for c in i["sources"]],
+                "grade": draft.grades.get(i["id"]),
                 "evidence": [
                     (NAMES.get(e.commentator, e.commentator), e.quote)
                     for e in draft.evidence.get(i["id"], [])
@@ -100,6 +101,7 @@ def section_view(
                 "text": readable(q["text"], ch),
                 "scope": _scope(q["verseStart"], q["verseEnd"], entry),
                 "targets": [titles.get(t, t) for t in q["targets"]],
+                "grade": draft.grades.get(q["id"]),
                 "features": features,
             }
         )
@@ -113,6 +115,7 @@ def section_view(
             "no_prompt_reason": draft.no_prompt_reason,
             "failed": draft.failed,
             "summary": draft.summary,
+            "level_changes": draft.level_changes,
             "dropped": [
                 {
                     "id": d.item_id,

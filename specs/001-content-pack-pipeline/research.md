@@ -556,6 +556,18 @@ risk.
     fill in).
   - Book pass rates (ideas and questions graded above the threshold, before drops) are compared
     with `gate.min_idea_pass_rate` (0.90) and `gate.min_question_pass_rate` (0.80) for promotion.
+- **Managed alternatives considered** (2026-11-17): Bedrock Guardrails' contextual grounding
+  check scores whether a text is supported by a source (0 to 1, through `ApplyGuardrail` with no
+  model call, about $0.10 per 1,000 characters). It covers only faithfulness, penalises the
+  paraphrase and "why it matters" the key ideas are written in, and returns no reason; the
+  evidence check and the grader already cover faithfulness. Not used; it remains a cheap second
+  opinion to add if calibration shows the grader misjudging faithfulness. Bedrock Evaluations
+  (LLM-as-a-judge jobs) fits `eval` (comparing prompts or models), not the in-run gate.
+- **Implementation** (2026-11-17): `review` makes one Opus call per section, grading every item
+  with the rubric lines it breaks and a reason; `levels` makes two Haiku calls per section (answer
+  every question, then judge every answer), not two per question, to stay within the RPM quota.
+  Both drop through `gate/outcomes.py`, which also re-picks primaries and alternates and flags a
+  section left unusable for one regeneration on the next run.
 - **Grader calibration** (constitution v1.2.0):
   - `pipeline/evals/calibration.json`: at least 30 items from Mark (ideas and questions, a mix
     of good and weak), each with the owner's grade (pass or fail, with a note). The owner grades

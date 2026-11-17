@@ -21,6 +21,15 @@ invalid_output_retries = 2
 # Client-side refusal fallback (Bedrock has no server-side `fallbacks`): one retry on this model.
 refusal_fallback_model = "us.anthropic.claude-opus-4-6-v1"
 
+# The quality gate (R16): a graded book may be promoted when its pass rates (items the grader
+# scores above review_flag_threshold, before drops) reach these, and the grader agrees with the
+# owner's calibration grades on at least min_agreement of at least min_calibration_items items.
+[gate]
+min_idea_pass_rate = 0.90
+min_question_pass_rate = 0.80
+min_agreement = 0.85
+min_calibration_items = 30
+
 [prompts]
 shared_context = "v1"
 question_guide = "v2"  # v2 (2026-11-16): guiding questions, levels by reach
@@ -39,7 +48,7 @@ model = "us.anthropic.claude-sonnet-4-6"
 thinking = "adaptive"
 effort = "medium"
 prompt = "v3"  # extract/v3 and questions/v3 (v2 + single quotation marks)
-default_cost_usd = 0.09
+default_cost_usd = 0.17  # measured on Mark 1 (2026-11-16)
 
 [stages.align]
 model = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
@@ -56,7 +65,8 @@ prompt = "v1"
 default_cost_usd = 0.08
 
 [stages.levels]
+# Two calls per section: answer every question as a typical reader, then judge the answers.
 model = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
 thinking = "none"
 prompt = "v1"
-default_cost_usd = 0.05
+default_cost_usd = 0.01

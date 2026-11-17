@@ -105,15 +105,16 @@ def test_scorecard_counts_kept_dropped_failed_and_missing() -> None:
     runs = [run("old", "2026-11-16T10:00", 1.0), run("new", "2026-11-17T10:00", 0.25)]
     card = build_scorecard("MRK", sections, drafts, runs, NOW)
     assert card.run_id == "new" and card.cost_usd == 0.25  # the latest run only
-    assert (card.ideas.passed, card.ideas.dropped, card.ideas.total) == (6, 1, 7)
-    assert (card.questions.passed, card.questions.dropped) == (6, 1)
-    assert card.idea_pass_rate == round(6 / 7, 4)
+    assert (card.kept_ideas, card.kept_questions) == (6, 6)
+    assert card.ideas.total == 0 and card.idea_pass_rate is None  # nothing graded yet
+    assert card.dropped_by_stage == {"generate": 2}
     assert [f.section_id for f in card.failed_sections] == ["mrk-1-12"]
     assert card.failed_sections[0].reason == "no question on the whole passage"
     assert [n.section_id for n in card.no_prompt] == ["mrk-1-9"] and card.not_generated == [
         "mrk-1-16"
     ]
-    assert not card.graded and not card.promotable and "not graded" in card.promotable_reason
+    assert not card.graded and not card.promotable
+    assert "1 sections not generated" in card.blockers and "1 sections failed" in card.blockers
 
 
 def test_review_page_shows_sections_ideas_and_problems(make_library: Any) -> None:
@@ -127,7 +128,7 @@ def test_review_page_shows_sections_ideas_and_problems(make_library: Any) -> Non
     drafts = {"mrk-1-1": draft(2, 2, ["mrk-1-1-k3"])}
     card = build_scorecard("MRK", sections, drafts, [], NOW)
     html = render_review(card, sections, drafts, lib)
-    assert "Mark <span>scorecard</span>" in html and "Not graded yet" in html
+    assert "Mark <span>scorecard</span>" in html and "Not promotable yet" in html
     assert 'id="mrk-1-1"' in html and 'data-problem="yes"' in html  # an evidence drop
     assert "BSB verse 3." in html and "KJV verse 3." in html
     assert "Not generated yet" in html  # mrk-1-16
@@ -147,6 +148,7 @@ def test_placeholders_read_as_the_app_shows_them(text: str, expected: str) -> No
 
 
 def test_all_means_every_implemented_stage_in_order() -> None:
-    assert expand_all("all") == "sections,summaries,generate,check,report"
+    every = "sections,summaries,generate,check,review,levels,report"
+    assert expand_all("all") == every
     assert expand_all("generate") == "generate"
-    assert expand_all("generate,all") == "sections,summaries,generate,check,report"
+    assert expand_all("generate,all") == every

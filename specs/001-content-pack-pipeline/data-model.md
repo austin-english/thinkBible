@@ -189,15 +189,22 @@ Items expire after 90 days; the RunRecords in S3 are the lasting history.
 
 ### Scorecard (`scorecard.json`, rendered into `review.html`)
 
-`{book, runId, generatedAt, ideas: {total, passed, dropped, passRate}, questions: {total, passed,
-dropped, passRate}, failedSections: [{sectionId, reason}], noPrompt: [{sectionId, reason}],
-calibration: {agreement, graderPromptVersion, graderModel, current: bool}, thresholds:
-{minIdeaPassRate, minQuestionPassRate}, promotable: bool, costUsd}`
+`{book, runId, generatedAt, graded, sections, ideas: {total, passed, dropped}, questions: {total,
+passed, dropped}, ideaPassRate, questionPassRate, keptIdeas, keptQuestions, droppedByStage,
+failedSections: [{sectionId, reason}], notGenerated: [sectionId], noPrompt: [{sectionId, reason}],
+calibration: {agreement, items, graderPromptVersion, graderModel, current: bool}, thresholds:
+{minIdeaPassRate, minQuestionPassRate}, promotable: bool, promotableReason, blockers: [string],
+costUsd, models, promptVersions}`
+
+`ideas` and `questions` count what the grader graded (`passed` = graded above
+`review_flag_threshold`, counted before drops, R16). `blockers` lists every unmet condition for
+promotion: sections not generated, not graded or failed; a pass rate below its threshold; no
+current calibration, or one with too few items or too little agreement.
 
 ### Calibration set (`pipeline/evals/calibration.json`, committed)
 
 `{items: [{itemId, kind: "keyIdea"|"question", sectionId, item, ownerGrade: "pass"|"fail", note}],
-results: [{graderPromptVersion, graderModel, agreement, runAt}]}`. At least 30 items, labelled
+results: [{graderPromptVersion, graderModel, agreement, items, runAt, disagreements: [itemId]}]}`. At least 30 items, labelled
 once by the owner with `calibrate --label` (R16). `item` is a copy of the key idea or question as
 labelled, so a later regeneration doesn't change what was graded.
 

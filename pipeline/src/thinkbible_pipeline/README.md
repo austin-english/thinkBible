@@ -36,7 +36,9 @@ pipeline/
 │   ├── summaries/v1.md             # one-line summary
 │   ├── extract/v1.md               # generate call 1: key ideas, context, views differ
 │   ├── questions/v1.md             # generate call 2: the question pool
-│   └── question-guide/v1.md        # quality rules + example questions (DRAFT: owner approves)
+│   ├── question-guide/v2.md        # quality rules + example questions (DRAFT: owner approves)
+│   ├── review/v1.md                # the grader's rubric
+│   └── levels-answer/, levels-judge/  # the typical-reader level check
 ├── scripts/
 │   └── build_bundle.py             # `make lambda-bundle`: builds pipeline/out/lambda.zip
 ├── src/thinkbible_pipeline/
@@ -59,13 +61,17 @@ pipeline/
 │   │   ├── generate.py             # `generate`: key ideas, context, questions (Sonnet)
 │   │   ├── generate_rules.py       # evidence check, ranking, levels, pool rules (no model calls)
 │   │   ├── checks.py               # `check`: the gate's rule checks on each finished section
+│   │   ├── review.py               # `review`: the grader (Opus) grades every item 1-5
+│   │   ├── levels.py               # `levels`: a typical reader (Haiku) checks question levels
 │   │   ├── report.py               # `report`: scorecard.json + review.html for the book
 │   │   └── __init__.py             # registry() of stage implementations
 │   ├── sections/
 │   │   ├── builder.py              # BSB headings + Henry's divisions → 3-12 verse sections (R5)
 │   │   └── passage.py              # a section's verses as prompt text
 │   ├── gate/
-│   │   └── checks.py               # rule checks: lengths, "?", yes/no, giveaways, names, placeholders
+│   │   ├── checks.py               # rule checks: lengths, "?", yes/no, giveaways, names, placeholders
+│   │   ├── outcomes.py             # drop items, re-pick alternates, flag a section for regeneration
+│   │   └── calibration.py          # your pass/fail grades vs the grader's (evals/calibration.json)
 │   ├── report/
 │   │   ├── scorecard.py            # the book's numbers: kept, dropped, failed, cost
 │   │   ├── render.py               # review.html (Jinja2): every section, its ideas and questions
