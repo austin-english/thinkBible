@@ -3,9 +3,8 @@
 One call per section: the grader sees the passage (BSB and KJV), each commentator's notes (the same
 excerpts ``generate`` was given) and every key idea and question, and grades each 1-5 against the
 rubric in ``prompts/review/vN.md``, with the rubric lines it breaks and a short reason. Grades are
-stored in ``grades``; items at or below ``review_flag_threshold`` are dropped (an alternate steps
-in for a dropped primary). A section left unusable is regenerated once on the next run, then
-failed (FR-018).
+stored in ``grades``; items at or below ``review_flag_threshold`` are dropped. A section left
+unusable (no key idea or no question) is regenerated once on the next run, then failed (FR-018).
 
 ``grade_items`` is shared with ``calibrate``, so the calibrated grader is exactly this one.
 """
@@ -47,9 +46,9 @@ def _item_lines(section: dict[str, Any], items: list[dict[str, Any]], chapter: i
     lines = []
     for item in items:
         verses = f"verses {item['verseStart']}-{item['verseEnd']}"
-        if "level" in item:  # a question
+        if "targets" in item:  # a question
             aims = "; ".join(f"{t} ({titles.get(t, 'unknown idea')})" for t in item["targets"])
-            lines.append(f"- {item['id']} [question; level {item['level']}; {verses}; aims at: "
+            lines.append(f"- {item['id']} [question; {verses}; aims at: "
                          f"{aims}]\n  {readable(item['text'], chapter)}")  # fmt: skip
         else:
             names = ", ".join(COMMENTATOR_NAMES.get(s, s) for s in item["sources"])

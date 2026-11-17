@@ -61,6 +61,7 @@
     },
     "questions": {
       "type": "array",
+      "description": "In the order a reader meets them: the first active question on the first read, each next one unlocking a week after the previous answer. At most 3 active, and never more than the active key ideas.",
       "items": { "$ref": "#/$defs/question" }
     }
   },
@@ -139,19 +140,16 @@
       "additionalProperties": false,
       "required": [
         "id",
-        "level",
         "type",
         "verseStart",
         "verseEnd",
         "text",
         "targets",
-        "isAlternate",
         "status",
         "addedIn"
       ],
       "properties": {
         "id": { "$ref": "#/$defs/questionId" },
-        "level": { "type": "integer", "minimum": 1, "maximum": 3 },
         "type": {
           "type": "string",
           "enum": ["noticing", "meaning", "application", "seasonal"]
@@ -180,10 +178,6 @@
           "minItems": 1,
           "uniqueItems": true,
           "items": { "$ref": "#/$defs/keyIdeaId" }
-        },
-        "isAlternate": {
-          "type": "boolean",
-          "description": "False for the primary question of a level; true for the hidden alternate."
         },
         "status": { "$ref": "#/$defs/status" },
         "addedIn": { "$ref": "#/$defs/packVersion" },

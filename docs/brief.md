@@ -12,7 +12,7 @@ A Bible reader where you think first: scroll through a book one section at a tim
 - **Feel:** a book you scroll. Each passage section is a cream page card in one continuous feed: justified serif text, a drop cap, the verse range at the foot, and long passages split into pages you swipe sideways. The question sits in the card's footer as a comment from ThinkBible, and your answer and the commentators' reply appear as comments under it, so the reader never leaves the text.
 - **Grounded, not invented:** questions, key ideas and context are generated once in batch jobs from public-domain commentaries, reviewed, and shipped as content packs. The live AI only compares your answer with those stored ideas.
 - **Works offline:** the stored key ideas are on the phone, so the comparison card always works; the personal note fills in when online.
-- **Your reflections:** saved per section. A day after you answer, that section's next, harder question unlocks, and one notification brings you back to it.
+- **Your reflections:** saved per section. A week after you answer, that section's next question unlocks, and one notification brings you back to it.
 - **Name:** ThinkBible (App Store: "ThinkBible: Read & Reflect"; domain thinkbible.app). Tagline idea: "Think first. Then see what the commentators saw."
 
 ## Users and business model
@@ -29,7 +29,7 @@ Scripture stays free; people pay for the study experience around it. Faith apps 
 **Free vs Premium (prices are hypotheses to test):**
 
 - **Free:** reading is always free (questions off, and the full text), plus **3 free reflections** with full results, counted by posted answers. The answer box shows "2 of 3 free reflections left". On the 4th Post the paywall opens as a sheet; the typed answer is kept and checked as soon as the trial starts. The free count is stored server-side per device (App Attest), so reinstalling doesn't reset it. Earlier reflections stay viewable after the free ones run out.
-- **Premium, about $3.99/month or $29.99/year:** unlimited reflections, harder questions that unlock a day later (Levels 2–3), every study book as it's released, seasonal series.
+- **Premium, about $3.99/month or $29.99/year:** unlimited reflections, each section's follow-up questions (they unlock a week apart), every study book as it's released, seasonal series.
 - **Free trial:** 7 days of Premium, offered on the paywall as "Start 7-day free trial" with the plan price and "Cancel anytime in Settings" underneath (yearly preselected, "Save 37%"). The sheet also has Restore purchases, Terms, Privacy and "Not now, keep reading".
 - **Groups and homeschool tier:** V2.
 
@@ -62,8 +62,8 @@ One continuous scroll through a book, chapter after chapter, split into passage 
 | Action row | Send and Save, nothing else | Send opens the share sheet with the passage and a link; Save bookmarks it |
 | Question footer | A comment from ThinkBible: "· question on verse 7" in small caps, then the question in italic serif. Always visible, whatever the passage length | Tap "Add your answer…" |
 | Inline answer | Answer field with mic and Post, free-reflection count; the question's verses are tinted on the page while typing | Post (15-character minimum), dictate |
-| Reply thread | Your answer as a comment with the matched phrase highlighted; ThinkBible's reply "from Henry, JFB & Clarke": a short note, the ideas you caught with verse tags, "See what you missed (n)" with sources; then "Harder question unlocks tomorrow · Enduring Word" | Edit (2 re-checks), See what you missed / Hide details |
-| Unlocked card | Newest first: the Level 2 question with a "New" tag, "Add your answer…", then "Show more" for the earlier thread | Answer, Show more / Show less |
+| Reply thread | Your answer as a comment with the matched phrase highlighted; ThinkBible's reply "from Henry, JFB & Clarke": a short note, the ideas you caught with verse tags, "See what you missed (n)" with sources; then "Next question unlocks in a week · Enduring Word" | Edit (2 re-checks), See what you missed / Hide details |
+| Unlocked card | Newest first: the next question with a "New" tag, "Add your answer…", then "Show more" for the earlier thread | Answer, Show more / Show less |
 | Chapter panel | Drops from the header: book button, chapter grid (numbers only), the chapter's sections with status pills (✓ 3/3 ideas caught, Read, Reading, New, bookmark). The book button turns the panel into the 66-book list with Old and New Testament headers and Ready tags | Jump to any section or book; unpublished books show "coming soon · Notify me" |
 | End of chapter | "End of Mark 1 · Keep scrolling for Mark 2" page | Keep scrolling |
 
@@ -79,7 +79,7 @@ Every section is a page card in the feed, and answering is optional. Posting an 
 
 _(User flow diagram: see the online brief.)_
 
-A day after an answer, that section's next level unlocks and one notification per chapter brings the reader back. With Show questions off in Settings, the feed is plain reading.
+A week after an answer, that section's next question unlocks and one notification per chapter brings the reader back. With Show questions off in Settings, the feed is plain reading.
 
 ## Content sources and licensing
 
@@ -129,7 +129,7 @@ All the study content is produced ahead of time, one book at a time, reviewed, a
 
 **Question quality rules:** open-ended (no yes/no); short, one question at a time; answerable from the passage itself; not leading; no assumptions about one tradition's doctrine.
 
-**How questions are shaped:** the commentary decides what is worth asking about; the passage is what the user answers from. Each question must target at least one key idea without giving it away, and be answerable from the passage alone. Questions guide the reader into the passage's meaning; none is a reading quiz. Each starts from something the commentators find significant (a surprising detail, a tension, an unusual order of events) and asks what the reader makes of it. Each question is also ranked by how far it reaches: **Level 1** thinks about one detail, **Level 2** about the whole passage or a contrast in it, **Level 3** connects it to the rest of Scripture or to life. Every section gets at least one question per level (two or three levels depending on the section), and each question records which key ideas it targets. Questions and key ideas also have a **scope**: one verse, a few verses, or the whole passage. A key idea takes its scope from the commentary (Henry's opening summaries are often about the whole section), and every section with two or more levels gets at least one whole-passage question, usually Level 2 or 3. In Mark 1:1–8, for example: "Mark starts his gospel with John in the wilderness, not with Jesus's birth. Why do you think he begins here?" The question footer labels it "question on the whole passage", and idea chips read "v. 7", "vv. 7–8" or "Passage".
+**How questions are shaped:** the commentary decides what is worth asking about; the passage is what the user answers from. Each question must target at least one key idea without giving it away, and be answerable from the passage alone. Questions guide the reader into the passage's meaning; none is a reading quiz. Each starts from something the commentators find significant (a surprising detail, a tension, an unusual order of events) and asks what the reader makes of it. Questions aim at the passage's main ideas rather than minor details, and are not ranked by difficulty. A section gets up to three, one per key idea at most, in the order the reader meets them, and each question records which key ideas it targets. Questions and key ideas also have a **scope**: one verse, a few verses, or the whole passage. A key idea takes its scope from the commentary (Henry's opening summaries are often about the whole section), and the first question is usually about the whole passage. In Mark 1:1–8, for example: "Mark starts his gospel with John in the wilderness, not with Jesus's birth. Why do you think he begins here?" The question footer labels it "question on the whole passage", and idea chips read "v. 7", "vv. 7–8" or "Passage".
 
 - **Inputs per section:** the passage in both translations; the ranked key ideas (agreed ideas first); any "views differ" note; a one-line summary of the previous section; existing questions for that section (on refreshes, to avoid repeats); and the question guide.
 - **Question guide:** a file in the repo with the quality rules and 10–20 example questions you write or approve. It sets the app's voice, and its version is recorded with every question.
@@ -153,10 +153,9 @@ Shape follows `docs/design/DESIGN.md` ("Data the UI reads"); `content/schema/sec
     { "id": "mrk-1-1-k4", "title": "Where the prophets left off", "body": "John is the messenger Isaiah promised, so the good news picks up where the prophets left off.", "sources": ["Matthew Henry", "JFB"], "agreed": true, "verseStart": 1, "verseEnd": 8 }
   ],
   "questions": [
-    { "id": "mrk-1-1-q1", "level": 1, "type": "meaning", "verseStart": 7, "verseEnd": 7, "text": "Why do you think John says he isn't worthy to untie the straps of Jesus's sandals?", "textByTranslation": { "kjv": "Why do you think John says he isn't worthy to unloose Jesus's shoes?" }, "targets": ["mrk-1-1-k1", "mrk-1-1-k2"], "isAlternate": false, "status": "active", "addedIn": "1.0.0" },
-    { "id": "mrk-1-1-q2", "level": 1, "type": "noticing", "verseStart": 7, "verseEnd": 7, "text": "How does John describe the One who is coming after him?", "targets": ["mrk-1-1-k2"], "isAlternate": true, "status": "active", "addedIn": "1.0.0" },
-    { "id": "mrk-1-1-q3", "level": 2, "type": "meaning", "verseStart": 1, "verseEnd": 8, "text": "Mark starts his gospel with John in the wilderness, not with Jesus's birth. Why do you think he begins here?", "targets": ["mrk-1-1-k4"], "isAlternate": false, "status": "active", "addedIn": "1.0.0" },
-    { "id": "mrk-1-1-q4", "level": 3, "type": "application", "verseStart": 7, "verseEnd": 8, "text": "John baptizes with water, but says Jesus will baptize with the Holy Spirit. What difference is he pointing to?", "textByTranslation": { "kjv": "John baptizes with water, but says Jesus will baptize with the Holy Ghost. What difference is he pointing to?" }, "targets": ["mrk-1-1-k3"], "isAlternate": false, "status": "active", "addedIn": "1.0.0" }
+    { "id": "mrk-1-1-q3", "type": "meaning", "verseStart": 1, "verseEnd": 8, "text": "Mark starts his gospel with John in the wilderness, not with Jesus's birth. Why do you think he begins here?", "targets": ["mrk-1-1-k4"], "status": "active", "addedIn": "1.0.0" },
+    { "id": "mrk-1-1-q1", "type": "meaning", "verseStart": 7, "verseEnd": 7, "text": "Why do you think John says he isn't worthy to untie the straps of Jesus's sandals?", "textByTranslation": { "kjv": "Why do you think John says he isn't worthy to unloose Jesus's shoes?" }, "targets": ["mrk-1-1-k1", "mrk-1-1-k2"], "status": "active", "addedIn": "1.0.0" },
+    { "id": "mrk-1-1-q4", "type": "meaning", "verseStart": 7, "verseEnd": 8, "text": "John baptizes with water, but says Jesus will baptize with the Holy Spirit. What difference is he pointing to?", "textByTranslation": { "kjv": "John baptizes with water, but says Jesus will baptize with the Holy Ghost. What difference is he pointing to?" }, "targets": ["mrk-1-1-k3"], "status": "active", "addedIn": "1.0.0" }
   ],
   "context": "Mark opens without a birth story; John is introduced as the messenger Isaiah foretold.",
   "viewsDiffer": null,
@@ -189,45 +188,43 @@ Shape follows `docs/design/DESIGN.md` ("Data the UI reads"); `content/schema/sec
 
 Each section has a pool of questions, and new questions and series are added on a regular schedule, so rereading a book never feels like repeating a quiz.
 
-- **Pools, not single questions:** 3–5 questions per section across types (noticing, meaning, application), all tied to the same stored key ideas, so any of them works with the comparison card.
-- **Rotation per user:** the app remembers which question IDs you've answered (on the device) and picks one you haven't seen, starting with "meaning" questions on a first read and favoring "application" on later reads.
-- **"Not a helpful question?"** in the card's ⋯ menu swaps in the alternate at the same level, once.
+- **A short sequence, not a single question:** up to 3 questions per section (revised 2026-11-17), all tied to the same stored key ideas, so any of them works with the comparison card.
+- **One at a time, in order:** the app remembers which question IDs you've answered (on the device) and shows the section's next one a week after your last answer.
+- **"Not a helpful question?"** in the card's ⋯ menu moves on to the section's next question right away (if there is one), without waiting a week.
 - **Seasonal and themed series:** batch runs that write new questions for existing sections around a theme or season (Advent, Lent and Easter, New Year, "prayer in the Gospels"), released ahead of each season.
-- **No scheduled refresh:** the three commentaries are public domain and never change, so key ideas are stable once reviewed, and harder questions already unlock a day after each answer. New questions come only from deliberate runs: a new commentary source, replacing questions flagged "not helpful" or with odd catch rates (only those sections), topping up missing alternates, or a better model or prompt. Refreshes are additive: existing questions keep their IDs and wording, and weak ones are retired (removed from rotation but kept in the pack), never deleted. Key ideas stay the same, so refreshed questions still match the comparison card.
-- **Question budget per section:** the number of levels follows the number of key ideas (1 idea = Level 1 only, 2 ideas = Levels 1–2, 3+ = all three). The pipeline never invents an idea to fill a level. Cap: 3 levels × 2 questions = 6 per section.
-- **One question visible per read; alternates stay hidden.** The second question at a level is used only to (1) replace a question the reader marks "Not a helpful question?" (shown once, in place) and (2) quietly pick the one aimed at an idea the reader hasn't caught. After the last level the section shows "All levels done".
-- **How levels are set:** the model records features for each question, and a fixed rule sets the level. Level 1 (a detail): one or two verses and no outside knowledge; the reader thinks about something the text plainly shows, often an idea all three commentators agree on. Level 2 (interpret): several verses or a contrast, answer must be inferred, a little context helps, usually two commentators. Level 3 (connect): needs other Scripture, history or life application, often a deeper point from one commentator.
-- **Level checks:** a separate model answers each question as a typical reader with only the passage; a Level 3 it nails easily moves down, a Level 1 it struggles with is flagged. After launch, if a Level 2 question is caught more often than its section's Level 1, the next maintenance run swaps them.
+- **No scheduled refresh:** the three commentaries are public domain and never change, so key ideas are stable once reviewed, and follow-up questions already unlock a week after each answer. New questions come only from deliberate runs: a new commentary source, replacing questions flagged "not helpful" or with odd catch rates (only those sections), topping up sections with fewer than three questions, or a better model or prompt. Refreshes are additive: existing questions keep their IDs and wording, and weak ones are retired (removed from rotation but kept in the pack), never deleted. Key ideas stay the same, so refreshed questions still match the comparison card.
+- **Questions per section (revised 2026-11-17):** up to three, never more than the section's key ideas, in a fixed order. The pipeline never invents an idea to fill a question. There are no difficulty levels and no hidden alternates: difficulty depends on the reader and couldn't be measured reliably.
+- **Big picture first:** questions aim at the main ideas the commentators draw from the passage. The first opens the passage's main idea, usually on the whole passage; later ones take up other ideas and may connect the passage to the rest of Scripture or to the reader's life. After the last one the section shows "All questions done".
 - **Feedback loop:** "This question wasn't helpful" and pass rates per question (shown, then scrolled past without an answer) feed the review queue; you see the worst performers first.
 - **New books:** each new book released (the next after Mark might be John, Genesis or Philippians) brings its own fresh pool and is a natural moment to bring lapsed users back.
-- **Harder questions unlock a day later:** 24 hours after you answer a section, its next level unlocks, preferring a question aimed at an idea you haven't caught yet. Opening a section again doesn't count as a re-read, so tapping out and back in never skips ahead. This replaces "Try a different question" and the in-card "Go deeper". See Next-level unlock below.
+- **The next question unlocks a week later:** a week after you answer a section, its next question unlocks. People rarely reread the same passage within days, so a week fits how they read the Bible. Opening a section again doesn't count as a re-read, so tapping out and back in never skips ahead. This replaces "Try a different question" and the in-card "Go deeper". See Next-level unlock below.
 
-### Next-level unlock (24 hours)
+### Next-question unlock (one week)
 
-Answering a section starts a 24-hour timer for that section's next level. When it ends, the harder question appears in place of the old one, and a notification brings the reader back. Spacing the questions out helps people remember what they read and gives them a reason to return.
+Answering a section starts a one-week timer for that section's next question. When it ends, the next question appears in place of the old one, and a notification brings the reader back. Spacing the questions out helps people remember what they read and gives them a reason to return.
 
 **How it works (all on the phone, no server):**
 
-- Every level ships in the content pack, so unlocking only reveals a question the phone already has.
-- When an answer is checked, the app saves `unlocksAt = answeredAt + 24h` on that section's progress record. On launch and when returning to the app, any section past `unlocksAt` shows its next level. Progress syncs through iCloud, so every device agrees.
+- Every question ships in the content pack, so unlocking only reveals a question the phone already has.
+- When an answer is checked, the app saves `unlocksAt = answeredAt + 7 days` on that section's progress record. On launch and when returning to the app, any section past `unlocksAt` shows its next question. Progress syncs through iCloud, so every device agrees.
 - The same moment, the app schedules a local notification (UNUserNotificationCenter) for `unlocksAt`. It fires with the app closed and needs no push service or cron job.
-- Two gates for each level: 24 hours have passed AND the level before it was answered. A skipped day just waits, with no streak penalty. After Level 3 the section shows "All levels done" and nothing more is scheduled.
+- Two gates for each question: a week has passed AND the question before it was answered. A late return just waits, with no streak penalty. After the last question the section shows "All questions done" and nothing more is scheduled.
 
 **Notification rules:**
 
-- At most one per chapter and one per day. Each new answer replaces the pending notification with an updated count: "3 harder questions are ready in Mark 1". With just one: "A harder question is ready for Mark 1:1–8."
+- At most one per chapter and one per day. Each new answer replaces the pending notification with an updated count: "3 new questions are ready in Mark 1". With just one: "A new question is ready for Mark 1:1–8."
 - It fires at the same time of day the reader answered. If they've set a daily reading reminder, the unlock folds into that reminder instead of sending a second one.
 - Tapping it opens the feed scrolled to the first unlocked section.
-- Permission is asked after the first answer, not at launch: an in-card prompt "Want a nudge when your harder question is ready?" (Notify me / Not now), then the system prompt. The prompt appears once, after the reader's first answer ever, and never again whichever button they tap; later cards show only the small unlock line. Settings has a Harder-question alerts switch.
+- Permission is asked after the first answer, not at launch: an in-card prompt "Want a nudge when your next question is ready?" (Notify me / Not now), then the system prompt. The prompt appears once, after the reader's first answer ever, and never again whichever button they tap; later cards show only the small unlock line. Settings has a New-question alerts switch.
 - Users who haven't allowed notifications still see unlocked questions the next time they open the app.
 
 **On screen:**
 
-- After answering, the reply footer says "Harder question unlocks tomorrow" in place of "Next read: a harder Level 2 question".
-- Once unlocked, the card's comments read newest first, like a social thread: the Level 2 question with a "New" tag sits at the top, then the answer box, then a plain "Show more" link, which expands the earlier question, answer and reply underneath ("Show less" folds it again).
+- After answering, the reply footer says "Next question unlocks in a week".
+- Once unlocked, the card's comments read newest first, like a social thread: the next question with a "New" tag sits at the top, then the answer box, then a plain "Show more" link, which expands the earlier question, answer and reply underneath ("Show less" folds it again).
 - The chapter panel marks unlocked sections with a "New" tag and the chapter tile with a dot.
 
-**Free users:** an unlocked question counts as a reflection. With no free reflections left, the notification says so honestly ("Your harder question is ready · Premium") and Post opens the paywall. The 24-hour timer is a local clock, so a changed device clock can unlock early; that's acceptable for a reading app.
+**Free users:** an unlocked question counts as a reflection. With no free reflections left, the notification says so honestly ("Your next question is ready · Premium") and Post opens the paywall. The one-week timer is a local clock, so a changed device clock can unlock early; that's acceptable for a reading app.
 
 **Later, with a server:** push from the backend only for things the phone can't know: a new book published, a win-back after two weeks away, or keeping several devices from all notifying.
 
@@ -242,7 +239,7 @@ The only live AI step: a fast model compares the user's answer with that section
 | Question pool | Which key ideas the user touched on |
 | Key ideas with commentator sources | A highlighted phrase from the user's own words |
 | Context note, views-differ note, verse notes | A 2–3 sentence encouraging note |
-|  | Nothing else: every question, including later-read levels, is pre-generated |
+|  | Nothing else: every question, including follow-up questions, is pre-generated |
 
 **The call:**
 
@@ -287,7 +284,7 @@ The card, built by code from the content pack:
 - **Off-topic or empty:** treated like "I don't know".
 - **Distress or crisis language:** the app responds with care and shows support resources instead of a comparison.
 
-**Harder questions a day later:** one question per section at a time, no in-card "Go deeper" button. A section starts with its Level 1 question. 24 hours after it is answered, the next level unlocks (see Next-level unlock), picked from the reviewed batch pool to target a key idea the user hasn't caught yet. The answer goes through the same live comparison; "You caught" counts ideas across all levels. The new question sits at the top of the card's comments with a "New" tag, and the earlier thread folds behind "Show more". The reply footer says "Harder question unlocks tomorrow". No questions are generated live. With only Mark at launch, this gives about three levels of fresh questions per section.
+**The next question a week later:** one question per section at a time, no in-card "Go deeper" button. A section starts with its first question. A week after it is answered, the next one in the section's order unlocks (see Next-question unlock). The answer goes through the same live comparison; "You caught" counts ideas across all of a section's questions. The new question sits at the top of the card's comments with a "New" tag, and the earlier thread folds behind "Show more". The reply footer says "Next question unlocks in a week". No questions are generated live. With only Mark at launch, this gives up to three questions per section over a few weeks.
 
 **Tone rules in every prompt:** lead with what the person noticed; never say "wrong"; never preach; plain, warm language; under 60 words.
 
@@ -309,11 +306,11 @@ Published study content (questions, key ideas, context) lives in versioned conte
 | --- | --- | --- |
 | ContentPack | book, packVersion, sections\[\] (study content shared by both translations), plus one verse-text file per translation, source provenance | S3 + CloudFront; cached on device |
 | Section | id, ref (shared verse range), title, questions\[\], keyIdeas\[\], context, viewsDiffer, verseNotes\[\] (V2), noPrompt flag | Inside the content pack |
-| Question | id (permanent, never reused), level (1–3), type (noticing, meaning, application, seasonal), verseStart, verseEnd, text, optional per-translation wording, target key idea IDs, isAlternate, series, status (active or retired), added in pack version | Inside the content pack |
+| Question | id (permanent, never reused), type (noticing, meaning, application, seasonal), verseStart, verseEnd, text, optional per-translation wording, target key idea IDs, series, status (active or retired), added in pack version. Order in the section is reading order | Inside the content pack |
 | KeyIdea | id, title, body, sources\[\], agreed (shared by 2+ commentators), verseStart, verseEnd | Inside the content pack |
 | Reflection | section ID, question ID, answer text, covered idea IDs, note, highlight, created, synced status, plus a snapshot of what was shown: question text, key ideas, translation, pack version | SwiftData + iCloud |
 | Progress | book, last section, sections read, sections reflected, streak | SwiftData + iCloud |
-| SectionProgress | section ID, state (none, read, reflected), ideas caught and total, level reached, unlocksAt, notification scheduled, saved | SwiftData + iCloud |
+| SectionProgress | section ID, state (none, read, reflected), ideas caught and total, questions answered, unlocksAt, notification scheduled, saved | SwiftData + iCloud |
 | QuestionHistory | question IDs answered or skipped | SwiftData + iCloud |
 | PipelineState | book, section, prompt version, stage (generated, checked, flagged, approved, published) | DynamoDB |
 | QuestionStats | question ID, times shown, answered, skipped, not helpful (anonymous counts) | DynamoDB |
@@ -412,7 +409,7 @@ No app found asks you to interpret first and then compares your answer with comm
 
 ## MVP scope and V2 backlog
 
-The MVP is one book (Mark) done very well in one translation, with the full read, reflect and compare loop, offline support, harder questions that unlock a day after answering, and section status and saved passages in the chapter panel.
+The MVP is one book (Mark) done very well in one translation, with the full read, reflect and compare loop, offline support, follow-up questions that unlock a week after answering, and section status and saved passages in the chapter panel.
 
 | MVP feature | Spec | Notes |
 | --- | --- | --- |
@@ -420,7 +417,7 @@ The MVP is one book (Mark) done very well in one translation, with the full read
 | Book-feel feed and chapter panel | 3 | Page cards with sideways pages, chapter and book panel, progress, offline packs; BSB (default) and KJV in Settings |
 | Question footer and reply thread | 4 | Question rotation, inline answer and Post, "Not a helpful question?" swap, "Here's what commentators noticed" default |
 | Live comparison API | 4 | One Lambda + Bedrock, App Attest, offline fallback |
-| Question levels and unlocks | 5 | Levels 1–3 per section, one at a time; the next level unlocks 24 hours after answering, with one local notification per chapter |
+| Question sequence and unlocks | 5 | Up to 3 questions per section, one at a time; the next unlocks a week after answering, with one local notification per chapter |
 | Saved passages, reflections and progress | 6 | Section status pills in the chapter panel, saved passages, streak on the avatar |
 | Subscription and paywall | 7 | 3 free reflections, then the paywall sheet on Post; Premium monthly and yearly with a 7-day trial |
 | Feedback and question analytics | 8 | Not helpful, skip rates, review queue |
@@ -448,7 +445,7 @@ Same stack as the grocery app: Swift app, Python backend and pipeline, Terraform
 
 1. Swift 6, SwiftUI + Observation, SwiftData with CloudKit, Swift Testing.
 2. Scripture text is never paywalled.
-3. The live model only compares answers with stored key ideas; it never generates questions or interpretation on its own. Follow-up questions are the harder, pre-generated questions that unlock 24 hours after the reader answers a section (one level at a time).
+3. The live model only compares answers with stored key ideas; it never generates questions or interpretation on its own. Follow-up questions are the section's next pre-generated questions, unlocking a week after the reader answers (one at a time).
 4. Every key idea shown has a named commentator source from the content pack.
 5. The comparison card always works offline from the content pack.
 6. Reflections stay on the device and in iCloud; the backend never stores answer text.
@@ -486,7 +483,7 @@ thinkbible/
 
 **Step zero:** the content spike on Mark (see Validation) before any Spec Kit spec.
 
-**Spec order:** 1 constitution → 2 content pack format and pipeline → 3 book-feel feed and chapter panel → 4 question footer, reply thread and live API → 5 question levels and unlocks → 6 saved passages, reflections and progress → 7 subscription, paywall and Settings → 8 feedback and question analytics.
+**Spec order:** 1 constitution → 2 content pack format and pipeline → 3 book-feel feed and chapter panel → 4 question footer, reply thread and live API → 5 question sequence and weekly unlocks → 6 saved passages, reflections and progress → 7 subscription, paywall and Settings → 8 feedback and question analytics.
 
 ## Screens
 
@@ -496,8 +493,8 @@ Five MVP screens, drawn on the ThinkBible Screens canvas (Post feed page) and ex
 | --- | --- | --- |
 | Feed | Read and reflect in one scroll | Header (wordmark, chapter pill, avatar with streak), page cards with sideways pages, Send and Save, question footer, inline answer and reply thread, end-of-chapter page |
 | Chapter panel | Go anywhere, see status | Book button that turns the panel into the 66-book list (Ready, or coming soon · Notify me), chapter grid, the chapter's sections with ✓ ideas caught / Read / Reading / New pills, Saved passages, You & settings |
-| Unlocked question | Come back a day later | Level 2 question with a "New" tag at the top of the card's comments, Show more for the earlier thread, one local notification per chapter, a one-time notify prompt after the first answer |
-| You & settings | Profile and preferences | Streak and stats, your books, saved passages, translation, text size, accent colour, justify text, verse numbers, show questions, harder-question alerts, appearance, reminder, subscription, your reflections, about |
+| Unlocked question | Come back a week later | The next question with a "New" tag at the top of the card's comments, Show more for the earlier thread, one local notification per chapter, a one-time notify prompt after the first answer |
+| You & settings | Profile and preferences | Streak and stats, your books, saved passages, translation, text size, accent colour, justify text, verse numbers, show questions, new-question alerts, appearance, reminder, subscription, your reflections, about |
 | Paywall | Subscribe | Free vs Premium, monthly and yearly, 7-day trial, restore; opens on Post after 3 free reflections |
 
 ## Open questions
@@ -508,5 +505,5 @@ Five MVP screens, drawn on the ThinkBible Screens canvas (Post feed page) and ex
 - [ ] Is 3 free reflections the right number? Test 3 against 5 once there's traffic.
 - [ ] Prices and trial length; test before launch.
 - [ ] Voice input in the MVP or V2.
-- [ ] Whether an unlocked Level 2–3 question counts against the 3 free reflections. Leaning yes, with honest notification copy for free users ("Your harder question is ready · Premium").
+- [ ] Whether an unlocked follow-up question counts against the 3 free reflections. Leaning yes, with honest notification copy for free users ("Your next question is ready · Premium").
 - [ ] Request permission from Enduring Word (their permissions form) for anything beyond linking.

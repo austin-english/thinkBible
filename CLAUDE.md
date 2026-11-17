@@ -57,7 +57,7 @@ Suggested feature order (from the brief):
 2. content pack format and pipeline
 3. reader and Read mode
 4. reflection, comparison and live API
-5. question levels and re-reads
+5. question sequence and weekly unlocks
 6. contents, saved reflections and progress
 7. subscription, paywall and Settings
 8. feedback and question analytics

@@ -90,14 +90,13 @@
     }
   ],
   "build": {
-    "promptVersions": { "summaries": "v1", "extract": "v1", "questions": "v1", "align": "v1", "review": "v1", "levels": "v1" },
+    "promptVersions": { "summaries": "v1", "extract": "v1", "questions": "v1", "align": "v1", "review": "v1" },
     "questionGuideVersion": "v1",
     "models": {
       "generate": "us.anthropic.claude-sonnet-5-5",
       "review": "us.anthropic.claude-sonnet-5-5",
       "summaries": "us.anthropic.claude-haiku-5-5",
-      "align": "us.anthropic.claude-haiku-5-5",
-      "levels": "us.anthropic.claude-haiku-5-5"
+      "align": "us.anthropic.claude-haiku-5-5"
     }
   },
   "sections": [
@@ -161,7 +160,6 @@
       "questions": [
         {
           "id": "mrk-1-1-q1",
-          "level": 1,
           "type": "meaning",
           "verseStart": 7,
           "verseEnd": 7,
@@ -170,37 +168,21 @@
             "kjv": "Why do you think John says he isn't worthy to unloose Jesus's shoes?"
           },
           "targets": ["mrk-1-1-k1", "mrk-1-1-k2"],
-          "isAlternate": false,
-          "status": "active",
-          "addedIn": "1.0.0"
-        },
-        {
-          "id": "mrk-1-1-q2",
-          "level": 1,
-          "type": "noticing",
-          "verseStart": 7,
-          "verseEnd": 7,
-          "text": "How does John describe the One who is coming after him?",
-          "targets": ["mrk-1-1-k2"],
-          "isAlternate": true,
           "status": "active",
           "addedIn": "1.0.0"
         },
         {
           "id": "mrk-1-1-q3",
-          "level": 2,
           "type": "meaning",
           "verseStart": 1,
           "verseEnd": 8,
           "text": "Mark starts his gospel with John in the wilderness, not with Jesus's birth. Why do you think he begins here?",
           "targets": ["mrk-1-1-k4"],
-          "isAlternate": false,
           "status": "active",
           "addedIn": "1.0.0"
         },
         {
           "id": "mrk-1-1-q4",
-          "level": 3,
           "type": "application",
           "verseStart": 7,
           "verseEnd": 8,
@@ -209,7 +191,6 @@
             "kjv": "John baptizes with water, but says Jesus will baptize with the Holy Ghost. What difference is he pointing to?"
           },
           "targets": ["mrk-1-1-k3"],
-          "isAlternate": false,
           "status": "active",
           "addedIn": "1.0.0"
         }
@@ -264,7 +245,6 @@
       "questions": [
         {
           "id": "mrk-1-9-q1",
-          "level": 1,
           "type": "meaning",
           "verseStart": 11,
           "verseEnd": 11,
@@ -273,25 +253,11 @@
             "kjv": "God says he is well pleased with Jesus before Jesus has done any public ministry. Why do you think that matters?"
           },
           "targets": ["mrk-1-9-k1"],
-          "isAlternate": false,
-          "status": "active",
-          "addedIn": "1.0.0"
-        },
-        {
-          "id": "mrk-1-9-q2",
-          "level": 1,
-          "type": "noticing",
-          "verseStart": 10,
-          "verseEnd": 11,
-          "text": "What three things happen as Jesus comes up out of the water?",
-          "targets": ["mrk-1-9-k2"],
-          "isAlternate": true,
           "status": "active",
           "addedIn": "1.0.0"
         },
         {
           "id": "mrk-1-9-q3",
-          "level": 2,
           "type": "meaning",
           "verseStart": 10,
           "verseEnd": 10,
@@ -300,32 +266,27 @@
             "kjv": "Mark says the heavens were opened as Jesus came up. What do you think that picture is telling us?"
           },
           "targets": ["mrk-1-9-k3"],
-          "isAlternate": false,
           "status": "active",
           "addedIn": "1.1.0",
           "replaces": "mrk-1-9-q5"
         },
         {
           "id": "mrk-1-9-q4",
-          "level": 3,
           "type": "meaning",
           "verseStart": 9,
           "verseEnd": 11,
           "text": "The Son, the Spirit and the Father all appear in this scene. What does that tell you about who Jesus is?",
           "targets": ["mrk-1-9-k2"],
-          "isAlternate": false,
           "status": "active",
           "addedIn": "1.0.0"
         },
         {
           "id": "mrk-1-9-q5",
-          "level": 2,
           "type": "noticing",
           "verseStart": 10,
           "verseEnd": 10,
           "text": "What did Jesus see when he came up out of the water?",
           "targets": ["mrk-1-9-k3"],
-          "isAlternate": false,
           "status": "retired",
           "addedIn": "1.0.0",
           "retiredIn": "1.1.0"

@@ -122,7 +122,7 @@ def _show(
             lines.append(f"  Evidence ({NAMES.get(e.commentator, e.commentator)}): “{e.quote}”")
     else:
         titles = {i["id"]: i["title"] for i in draft.section.get("keyIdeas", [])}
-        lines.append(f"Question (level {item.get('level', '?')}): {readable(item['text'], ch)}")
+        lines.append(f"Question: {readable(item['text'], ch)}")
         lines.append("  Aims at: " + "; ".join(titles.get(t, t) for t in item.get("targets", [])))
     return lines
 

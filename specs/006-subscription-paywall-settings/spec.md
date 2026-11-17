@@ -6,7 +6,7 @@
 
 **Updated**: 2026-11-10 for the "book feel" design: Settings becomes **You & settings**, opened from
 the avatar or the chapter panel. Scripture font, "Open in" and "Open questions automatically" are
-gone. Accent color, Justify text, Show questions and Harder-question alerts are new. "Submit" is
+gone. Accent color, Justify text, Show questions and New-question alerts (first named Harder-question alerts) are new. "Submit" is
 now "Post". The paywall and entitlement rules are unchanged.
 
 **Status**: Draft
@@ -25,7 +25,7 @@ paywall, You & settings); mockup [Paywall.dc.html](../../docs/design/screens/Pay
 [docs/design/README.md](../../docs/design/README.md) (You & settings, Composer, Tokens); screen
 [10-you-settings.png](../../docs/design/screens/10-you-settings.png); brief "Users and business
 model"; constitution principles I, VI, IX, X. Depends on 003 (compare service outcomes), 004
-(harder-question alerts) and 005 (profile, books, saved passages, reflections settings).
+(new-question alerts) and 005 (profile, books, saved passages, reflections settings).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -46,7 +46,7 @@ reinstall, and confirm the count is still used up.
 1. **Given** a new device, **When** the first composer opens, **Then** its note reads "3 of 3 free
    reflections left" (or the equivalent wording at each count).
 2. **Given** a free reflection's live check succeeds, **When** the reply shows, **Then** the count
-   goes down by one. An unlocked Level 2–3 question counts the same way.
+   goes down by one. An unlocked follow-up question counts the same way.
 3. **Given** a re-check of a free answer, or a failed, offline or capped check, **When** it
    completes, **Then** the count is unchanged.
 4. **Given** the app is deleted and reinstalled on the same device, **When** the composer opens,
@@ -95,7 +95,7 @@ appears.
 
 ### User Story 3 - Premium unlocks unlimited reflections (Priority: P1)
 
-A subscriber can reflect on any section, at every level as it unlocks, subject only to the fair-use
+A subscriber can reflect on any section, on every question as it unlocks, subject only to the fair-use
 daily cap. When a subscription lapses, reading and saved reflections remain, and new posts go back
 to the paywall.
 
@@ -125,7 +125,7 @@ passages from spec 005, it lists:
   justified text, folio); Accent color (Blue / Red, "Drop caps, verse numbers, question label");
   Justify text ("Book-style edges. Off at the largest size."); Verse numbers.
 - **Questions:** Show questions ("Off for plain reading. Your reflections stay saved."),
-  Harder-question alerts ("One notification when a new level unlocks, a day after you answer.").
+  New-question alerts ("One notification when your next question unlocks, a week after you answer.").
 - **Appearance:** System / Light / Dark.
 - **Reminder:** Daily reading reminder and Time.
 - **Subscription:** "Free · 2 of 3 free reflections left" with See plans; Restore purchases.
@@ -179,7 +179,7 @@ and a scheduled reminder notification.
 - Family Sharing: whether it is enabled is decided in App Store Connect configuration, and
   entitlement follows the App Store's answer.
 - Free-tier abuse across many devices: accepted risk. Each real device gets 3.
-- Harder-question alerts switched on without notification permission: the system prompt is shown
+- New-question alerts switched on without notification permission: the system prompt is shown
   (or, if denied before, a line explains how to allow it in iOS Settings).
 
 ## Requirements *(mandatory)*
@@ -190,7 +190,7 @@ and a scheduled reminder notification.
 
 - **FR-001**: Each device MUST get a fixed number of free reflections in total (default 3,
   configurable on the server without an app update), counted only by successful, first-time live
-  checks of a new answer, at any level.
+  checks of a new answer, on any question.
 - **FR-002**: The free count MUST be kept on the server per attested device, so reinstalling does
   not reset it. No account and no personal data are used.
 - **FR-003**: For non-subscribers, the composer note MUST show "A sentence or so · <n> of 3 free
@@ -201,7 +201,7 @@ and a scheduled reminder notification.
 - **FR-005**: The compare service MUST verify subscription status from a signed App Store
   transaction sent by the app, without accounts, and treat trial and active subscriptions as
   Premium.
-- **FR-006**: Premium MUST grant unlimited live comparisons at every level, subject only to the
+- **FR-006**: Premium MUST grant unlimited live comparisons on every question, subject only to the
   daily fair-use cap (spec 003).
 
 **Paywall**
@@ -231,7 +231,7 @@ and a scheduled reminder notification.
   app-wide. Justify text (default on) MUST be forced off at the largest text size. Verse numbers
   MUST toggle their display.
 - **FR-015**: Show questions (default on) MUST hide or show every question footer and thread
-  (spec 003 FR-016). Harder-question alerts (on by default once permission is granted) MUST turn
+  (spec 003 FR-016). New-question alerts (on by default once permission is granted) MUST turn
   unlock notifications on or off (spec 004).
 - **FR-016**: Appearance MUST offer System, Light and Dark, applied app-wide.
 - **FR-017**: The daily reminder MUST use local notifications, ask permission only when switched
@@ -246,7 +246,7 @@ and a scheduled reminder notification.
 - **Device free count** (server): attested device key → free reflections used. No personal data.
 - **Subscription products** (App Store): monthly and yearly, in one group, each with a trial.
 - **Preferences** (device, `@AppStorage`): translation, text size, accent color, justify text,
-  verse numbers, show questions, harder-question alerts, appearance, reminder on and time.
+  verse numbers, show questions, new-question alerts, appearance, reminder on and time.
 
 ## Success Criteria *(mandatory)*
 
@@ -263,7 +263,7 @@ and a scheduled reminder notification.
 ## Assumptions
 
 - The free tier is 3 reflections in total per device, after which the reader must subscribe
-  (confirmed 2026-11-04). An unlocked Level 2–3 question counts as a reflection (the brief's open
+  (confirmed 2026-11-04). An unlocked follow-up question counts as a reflection (the brief's open
   question leans yes). A/B testing 3 against 5 is later work.
 - Prices ($3.99 monthly, $29.99 yearly) and the 7-day trial are App Store Connect configuration and
   can change without an app update.

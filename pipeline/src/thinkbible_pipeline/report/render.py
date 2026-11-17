@@ -2,7 +2,7 @@
 
 One self-contained HTML file (no external requests): the headline numbers, failed and
 no-question sections, then every section in order with its passage (BSB and KJV), key ideas with
-their evidence quotes, the question pool by level, context, views differ, and what the rules
+their evidence quotes, the questions in reading order, context, views differ, and what the rules
 dropped and why. Verse placeholders read as the app shows them: "(verse 7)".
 """
 
@@ -27,7 +27,7 @@ NAMES = {
     "adam-clarke": "Adam Clarke",
 }
 # Drops that are part of choosing a pool, not a sign that something went wrong.
-ROUTINE_DROPS = ("regenerated:", "more than ", "Level ")
+ROUTINE_DROPS = ("regenerated:", "more than ")
 _REF = re.compile(r"\s*\{\{ref:(\d+):(\d+)(?:-(\d+))?\}\}")
 
 
@@ -92,30 +92,26 @@ def section_view(
             }
         )
     titles = {i["id"]: i["title"] for i in ideas}
-    levels: dict[int, list[dict[str, Any]]] = {}
-    for q in s.get("questions", []):
-        features = draft.features.get(q["id"])
-        levels.setdefault(q["level"], []).append(
-            {
-                **q,
-                "text": readable(q["text"], ch),
-                "scope": _scope(q["verseStart"], q["verseEnd"], entry),
-                "targets": [titles.get(t, t) for t in q["targets"]],
-                "grade": draft.grades.get(q["id"]),
-                "features": features,
-            }
-        )
+    questions = [
+        {
+            **q,
+            "text": readable(q["text"], ch),
+            "scope": _scope(q["verseStart"], q["verseEnd"], entry),
+            "targets": [titles.get(t, t) for t in q["targets"]],
+            "grade": draft.grades.get(q["id"]),
+        }
+        for q in s.get("questions", [])
+    ]
     view.update(
         {
             "ideas": ideas,
-            "levels": sorted(levels.items()),
+            "questions": questions,
             "context": readable(s.get("context") or "", ch),
             "views_differ": readable(s["viewsDiffer"], ch) if s.get("viewsDiffer") else None,
             "no_prompt": s.get("noPrompt", False),
             "no_prompt_reason": draft.no_prompt_reason,
             "failed": draft.failed,
             "summary": draft.summary,
-            "level_changes": draft.level_changes,
             "dropped": [
                 {
                     "id": d.item_id,

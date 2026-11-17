@@ -43,11 +43,8 @@ def idea(title: str, sources: dict[str, str], vs: int, ve: int) -> dict[str, Any
             "evidence": [{"commentator": c, "quote": q} for c, q in sources.items()]}  # fmt: skip
 
 
-def q(
-    text: str, vs: int, ve: int, targets: list[str], qtype: str, directness: str
-) -> dict[str, Any]:
-    return {"text": text, "type": qtype, "verseStart": vs, "verseEnd": ve, "targets": targets,
-            "answerDirectness": directness, "outsideKnowledge": "none"}  # fmt: skip
+def q(text: str, vs: int, ve: int, targets: list[str], qtype: str) -> dict[str, Any]:
+    return {"text": text, "type": qtype, "verseStart": vs, "verseEnd": ve, "targets": targets}
 
 
 EXTRACT_S1 = {
@@ -62,14 +59,13 @@ EXTRACT_S1 = {
     "noPrompt": False,
 }  # fmt: skip
 GOOD_POOL = {"questions": [
-    q("How does John describe the One who comes after him?", 7, 7, [f"{S1}-k1"],
-      "noticing", "stated"),
-    q("Why do you think Mark begins with John in the wilderness?", 1, 8, [f"{S1}-k1"],
-      "meaning", "inferred"),
+    q("Why do you think Mark begins with John in the wilderness?", 1, 8, [f"{S1}-k1"], "meaning"),
+    q("Why might John call people to be baptized out in the wilderness?", 4, 5, [f"{S1}-k3"],
+      "meaning"),
 ]}  # fmt: skip
-NO_WHOLE_PASSAGE = {"questions": [
-    q("What does John wear?", 6, 6, [f"{S1}-k1"], "noticing", "stated"),
-    q("Why does John baptize in the wilderness?", 4, 6, [f"{S1}-k3"], "meaning", "inferred"),
+UNUSABLE = {"questions": [  # aimed at ideas that weren't kept
+    q("What do you make of John's clothes?", 6, 6, [f"{S1}-k2"], "noticing"),
+    q("Why does John baptize in the wilderness?", 4, 6, [f"{S1}-k9"], "meaning"),
 ]}  # fmt: skip
 NO_PROMPT = {"keyIdeas": [], "context": "Mark wrote for Roman believers.", "noPrompt": True,
              "noPromptReason": "The commentators only list the names."}  # fmt: skip
@@ -118,11 +114,9 @@ def test_generate_writes_a_section_with_grounded_ideas_and_a_pool(
     ideas = section["keyIdeas"]
     assert [(i["id"], i["agreed"]) for i in ideas] == [(f"{S1}-k1", True), (f"{S1}-k3", False)]
     assert [d.item_id for d in draft.dropped] == [f"{S1}-k2"]  # JFB's invented quote
-    assert [(x["level"], x["isAlternate"]) for x in section["questions"]] == [
-        (1, False),
-        (2, False),
-    ]
-    assert draft.features[f"{S1}-q1"].verse_span == 1
+    assert [(x["id"], x["verseStart"], x["verseEnd"]) for x in section["questions"]] == [
+        (f"{S1}-q1", 1, 8), (f"{S1}-q2", 4, 5)
+    ]  # fmt: skip
     assert set(draft.excerpts) == {"matthew-henry", "jamieson-fausset-brown", "adam-clarke"}
     assert draft.excerpts["jamieson-fausset-brown"].tokens == 0  # no JFB notes in this snapshot
     assert draft.stages["generate"].status == "done" and draft.failed is None
@@ -157,30 +151,30 @@ def test_no_prompt_sections_skip_the_questions_call(tmp_path: Path, make_library
 
 def test_a_broken_pool_is_regenerated_once(tmp_path: Path, make_library: Any) -> None:
     responses = base_responses()
-    responses[("generate.questions", S1)] = [NO_WHOLE_PASSAGE, GOOD_POOL]
+    responses[("generate.questions", S1)] = [UNUSABLE, GOOD_POOL]
     deps = setup(tmp_path, make_library, responses)
     asyncio.run(run(RunRequest(book="mark", stages=["generate"]), deps))
     draft = deps.store.read_draft_or_new(S1)
     assert [x["id"] for x in draft.section["questions"]] == [f"{S1}-q3", f"{S1}-q4"]
-    regenerated = [d for d in draft.dropped if d.reason.startswith("regenerated")]
-    assert [d.item_id for d in regenerated] == [f"{S1}-q1", f"{S1}-q2"]
+    first = [d for d in draft.dropped if d.item_id in (f"{S1}-q1", f"{S1}-q2")]
+    assert {d.reason for d in first} == {"targets no key idea that was kept"}
     runner = deps.runner
     assert isinstance(runner, FakeRunner)
     second = [p for c, p in zip(runner.calls, runner.prompts, strict=True)
               if c == ("generate.questions", S1)][1]  # fmt: skip
-    assert "A previous attempt broke a rule: no question on the whole passage" in second
+    assert "A previous attempt broke a rule: no usable question" in second
 
 
 def test_a_section_that_breaks_the_rules_twice_fails_but_keeps_its_record(
     tmp_path: Path, make_library: Any
 ) -> None:
     responses = base_responses()
-    responses[("generate.questions", S1)] = [NO_WHOLE_PASSAGE, NO_WHOLE_PASSAGE]
+    responses[("generate.questions", S1)] = [UNUSABLE, UNUSABLE]
     deps = setup(tmp_path, make_library, responses)
     result = asyncio.run(run(RunRequest(book="mark", stages=["generate"]), deps))
     assert result.exit_code == ExitCode.SECTIONS_FAILED
     draft = deps.store.read_draft_or_new(S1)
-    assert draft.failed == "no question on the whole passage"
+    assert draft.failed == "no usable question"
     assert draft.stages["generate"].status == "failed"
     assert draft.ids.q == 4  # the counter survived the failure: q1-q4 are never given out again
 

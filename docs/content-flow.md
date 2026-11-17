@@ -37,7 +37,7 @@ flowchart LR
     VERSES["verses/bsb.json<br/>verses/kjv.json"]
     SEC["Sections<br/>Mark 1:1-8, ..."]
     IDEAS["Key ideas<br/>with commentator sources"]
-    QS["Questions<br/>levels 1-3"]
+    QS["Questions<br/>up to 3, in order"]
 
     INDEX --> STUDY & VERSES
     STUDY --> SEC --> IDEAS & QS

@@ -18,6 +18,8 @@ review_flag_threshold = 2
 max_tokens = 16000
 # Structured output that fails validation is retried this many times, then the section fails.
 invalid_output_retries = 2
+# Throttled requests (Bedrock 429) are retried this many times, waiting 10s, 20s, 40s, then 60s.
+throttle_retries = 5
 # Client-side refusal fallback (Bedrock has no server-side `fallbacks`): one retry on this model.
 refusal_fallback_model = "us.anthropic.claude-opus-4-6-v1"
 
@@ -32,7 +34,7 @@ min_calibration_items = 30
 
 [prompts]
 shared_context = "v1"
-question_guide = "v2"  # v2 (2026-11-16): guiding questions, levels by reach
+question_guide = "v3"  # v3 (2026-11-17): big-picture questions in reading order, no levels
 
 # Per stage: model; thinking ("adaptive" or "none"); effort (output_config.effort, omit for
 # models that don't accept it, such as Haiku 4.5); prompt version; and the default cost per
@@ -42,31 +44,29 @@ model = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
 thinking = "none"
 prompt = "v1"
 default_cost_usd = 0.02
+requests_per_minute = 10  # this account's Bedrock quota for the model
 
 [stages.generate]
 model = "us.anthropic.claude-sonnet-4-6"
 thinking = "adaptive"
 effort = "medium"
-prompt = "v3"  # extract/v3 and questions/v3 (v2 + single quotation marks)
+prompt = "v4"  # extract/v4 (= v3) and questions/v4 (up to 3 questions in order, no levels)
 default_cost_usd = 0.17  # measured on Mark 1 (2026-11-16)
+requests_per_minute = 10  # this account's Bedrock quota for the model
 
 [stages.align]
 model = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
 thinking = "none"
 prompt = "v1"
 default_cost_usd = 0.02
+requests_per_minute = 10  # this account's Bedrock quota for the model
 
 [stages.review]
 # The quality gate's grader: a stronger model than the generator (research R16).
 model = "us.anthropic.claude-opus-4-6-v1"
 thinking = "adaptive"
 effort = "medium"
-prompt = "v1"
+prompt = "v2"  # v2 (2026-11-17): adds the big-picture rubric line
 default_cost_usd = 0.08
+requests_per_minute = 5  # this account's Bedrock quota for the model
 
-[stages.levels]
-# Two calls per section: answer every question as a typical reader, then judge the answers.
-model = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
-thinking = "none"
-prompt = "v1"
-default_cost_usd = 0.01

@@ -67,14 +67,12 @@ class KeyIdea(_VersionedItem):
 
 class Question(_VersionedItem):
     id: QuestionId
-    level: Annotated[int, Field(ge=1, le=3)]
     type: Literal["noticing", "meaning", "application", "seasonal"]
     verse_start: Verse
     verse_end: Verse
     text: QuestionText
     text_by_translation: dict[TranslationId, QuestionText] | None = None
     targets: Annotated[list[KeyIdeaId], Field(min_length=1)]
-    is_alternate: bool
     replaces: QuestionId | None = None
     series: Annotated[str, StringConstraints(pattern=r"^[a-z0-9-]{1,40}$")] | None = None
 

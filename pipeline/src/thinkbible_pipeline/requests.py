@@ -21,10 +21,9 @@ STAGE_ORDER: tuple[str, ...] = (
     "align",
     "check",
     "review",
-    "levels",
     "report",
 )
-MODEL_STAGES = frozenset({"summaries", "generate", "align", "review", "levels"})
+MODEL_STAGES = frozenset({"summaries", "generate", "align", "review"})
 
 
 class _Request(BaseModel):

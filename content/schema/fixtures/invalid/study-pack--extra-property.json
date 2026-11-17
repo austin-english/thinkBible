@@ -98,16 +98,14 @@
       "extract": "v1",
       "questions": "v1",
       "align": "v1",
-      "review": "v1",
-      "levels": "v1"
+      "review": "v1"
     },
     "questionGuideVersion": "v1",
     "models": {
       "generate": "us.anthropic.claude-sonnet-5-5",
       "review": "us.anthropic.claude-sonnet-5-5",
       "summaries": "us.anthropic.claude-haiku-5-5",
-      "align": "us.anthropic.claude-haiku-5-5",
-      "levels": "us.anthropic.claude-haiku-5-5"
+      "align": "us.anthropic.claude-haiku-5-5"
     }
   },
   "sections": [
@@ -184,7 +182,6 @@
       "questions": [
         {
           "id": "mrk-1-1-q1",
-          "level": 1,
           "type": "meaning",
           "verseStart": 7,
           "verseEnd": 7,
@@ -196,27 +193,11 @@
             "mrk-1-1-k1",
             "mrk-1-1-k2"
           ],
-          "isAlternate": false,
-          "status": "active",
-          "addedIn": "1.0.0"
-        },
-        {
-          "id": "mrk-1-1-q2",
-          "level": 1,
-          "type": "noticing",
-          "verseStart": 7,
-          "verseEnd": 7,
-          "text": "How does John describe the One who is coming after him?",
-          "targets": [
-            "mrk-1-1-k2"
-          ],
-          "isAlternate": true,
           "status": "active",
           "addedIn": "1.0.0"
         },
         {
           "id": "mrk-1-1-q3",
-          "level": 2,
           "type": "meaning",
           "verseStart": 1,
           "verseEnd": 8,
@@ -224,13 +205,11 @@
           "targets": [
             "mrk-1-1-k4"
           ],
-          "isAlternate": false,
           "status": "active",
           "addedIn": "1.0.0"
         },
         {
           "id": "mrk-1-1-q4",
-          "level": 3,
           "type": "application",
           "verseStart": 7,
           "verseEnd": 8,
@@ -241,7 +220,6 @@
           "targets": [
             "mrk-1-1-k3"
           ],
-          "isAlternate": false,
           "status": "active",
           "addedIn": "1.0.0"
         }
@@ -304,7 +282,6 @@
       "questions": [
         {
           "id": "mrk-1-9-q1",
-          "level": 1,
           "type": "meaning",
           "verseStart": 11,
           "verseEnd": 11,
@@ -315,27 +292,11 @@
           "targets": [
             "mrk-1-9-k1"
           ],
-          "isAlternate": false,
-          "status": "active",
-          "addedIn": "1.0.0"
-        },
-        {
-          "id": "mrk-1-9-q2",
-          "level": 1,
-          "type": "noticing",
-          "verseStart": 10,
-          "verseEnd": 11,
-          "text": "What three things happen as Jesus comes up out of the water?",
-          "targets": [
-            "mrk-1-9-k2"
-          ],
-          "isAlternate": true,
           "status": "active",
           "addedIn": "1.0.0"
         },
         {
           "id": "mrk-1-9-q3",
-          "level": 2,
           "type": "meaning",
           "verseStart": 10,
           "verseEnd": 10,
@@ -346,14 +307,12 @@
           "targets": [
             "mrk-1-9-k3"
           ],
-          "isAlternate": false,
           "status": "active",
           "addedIn": "1.1.0",
           "replaces": "mrk-1-9-q5"
         },
         {
           "id": "mrk-1-9-q4",
-          "level": 3,
           "type": "meaning",
           "verseStart": 9,
           "verseEnd": 11,
@@ -361,13 +320,11 @@
           "targets": [
             "mrk-1-9-k2"
           ],
-          "isAlternate": false,
           "status": "active",
           "addedIn": "1.0.0"
         },
         {
           "id": "mrk-1-9-q5",
-          "level": 2,
           "type": "noticing",
           "verseStart": 10,
           "verseEnd": 10,
@@ -375,7 +332,6 @@
           "targets": [
             "mrk-1-9-k3"
           ],
-          "isAlternate": false,
           "status": "retired",
           "addedIn": "1.0.0",
           "retiredIn": "1.1.0"

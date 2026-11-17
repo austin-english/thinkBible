@@ -16,7 +16,7 @@ Functions execution whose input carries the same request as JSON:
 
 | CLI | JSON request |
 |---|---|
-| `run --book mark --stage all` | `{"book": "mark", "stages": ["sections", "summaries", "generate", "check", "review", "levels", "report"]}`: the CLI expands `all` to the stages implemented so far, in order |
+| `run --book mark --stage all` | `{"book": "mark", "stages": ["sections", "summaries", "generate", "check", "review", "report"]}`: the CLI expands `all` to the stages implemented so far, in order |
 | `--sections mrk-1-1,mrk-1-9` | `"sections": ["mrk-1-1", "mrk-1-9"]` |
 | `--fresh` / `--refresh` | `"fresh": true` / `"refresh": true` |
 | `--cap 20` | `"capUsd": 20` |
@@ -55,8 +55,8 @@ next cloud run if nothing changed.
 ## Stages (`run --stage`)
 
 Stages run in this order. `all` runs every implemented stage from `sections` through `report` (until US2
-exists, that is `sections`, `summaries`, `generate`, `check`, `review`, `levels`, `report`), then publishes the book to the draft channel
-if no section failed (R14). `check`, `review` and `levels` together are the quality gate (R16):
+exists, that is `sections`, `summaries`, `generate`, `check`, `review`, `report`), then publishes the book to the draft channel
+if no section failed (R14). `check` and `review` together are the quality gate (R16):
 they drop failing items and record why.
 
 | Stage | Reads | Writes | Model |
@@ -66,8 +66,7 @@ they drop failing items and record why.
 | `generate` | Passage (BSB + KJV), commentary excerpts (+ one-hop cross-references), previous summary, question guide | key ideas + evidence, context, views differ, no-prompt decision, then the question pool | Sonnet 5.5 |
 | `align` | Draft items, both translations, BSB footnotes | KJV wording variants, manuscript notes | Haiku 5.5 |
 | `check` | Drafts | `checks` per item; failing items dropped with the reason (FR-016) | none |
-| `review` | Drafts, passage, excerpts, rubric | grade per item; items at or below the threshold dropped, alternates promoted (FR-017) | Opus 5.5 |
-| `levels` | Questions, passage | level adjustments; unanswerable Level 1 questions dropped (FR-011) | Haiku 5.5 |
+| `review` | Drafts, passage, excerpts, rubric | grade per item; items at or below the threshold dropped; the other questions keep their order (FR-017) | Opus 5.5 |
 | `report` | Drafts, calibration | `scorecard.json` and `review.html` (FR-019) | none |
 
 ## Re-runs and published sections
@@ -83,7 +82,7 @@ they drop failing items and record why.
   failed; the next run tries it again.
 - **`--refresh`**: the only way to add to a published section. It adds new questions with new
   IDs, reuses the stored key ideas, and never changes existing items (FR-024, US6).
-- **Gate stages**: `check`, `review` and `levels` re-run whenever a section's content changed,
+- **Gate stages**: `check` and `review` re-run whenever a section's content changed,
   and skip unchanged sections like any other stage. `report` always runs.
 
 ## Cost behaviour (FR-027, FR-028)

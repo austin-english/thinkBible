@@ -2,7 +2,7 @@
 
 Source of truth for the iOS UI. Build in SwiftUI (iOS 17+, Swift 6, Observation, SwiftData).
 
-**The feed, chapter panel, next-level unlock and You & settings follow the "book feel" design in
+**The feed, chapter panel, next-question unlock and You & settings follow the "book feel" design in
 [`README.md`](README.md)** and the PNGs in `screens/`. It replaced the earlier Home + contents
 screen, the sticky-header chapter reader with its study card, and the old Settings screen (Nov 2026).
 This file keeps what the book-feel design leaves unchanged: the paywall, fallback and offline rules,
@@ -15,7 +15,7 @@ comes from the content packs (see "Data the UI reads").
 
 | File | Screen |
 |---|---|
-| [`README.md`](README.md) + `screens/01`–`15-*.png` | Feed, page cards, composer and reply thread, chapter panel and book list, You & settings, notify prompt, notification, unlocked Level 2 |
+| [`README.md`](README.md) + `screens/01`–`15-*.png` | Feed, page cards, composer and reply thread, chapter panel and book list, You & settings, notify prompt, notification, unlocked next question |
 | `screens/Paywall.dc.html` | Paywall sheet, after the 3 free reflections. It was drawn over the old reader; the sheet itself is unchanged, and in the app it opens over the feed. HTML prototype that needs the design-canvas runtime: read it for copy, colors and spacing, don't port it |
 
 There is no tab bar and no Home screen. The feed opens where the reader left off. The chapter panel
@@ -76,20 +76,20 @@ section's first to last verse means **the whole passage**.
 | A few verses | "· question on verses 7–8" | Those verses | "vv. 7–8" |
 | Whole passage | "· question on the whole passage" | None | "Passage" |
 
-Every section with 2 or more levels has at least one whole-passage question, usually Level 2 or 3.
-Level 1 is often a single verse.
+The first question is usually about the whole passage.
 
-## Levels
+## Question sequence (revised 2026-11-17)
 
-- A section starts with its Level 1 question. The next level **unlocks 24 hours after the previous
-  level is answered** (two gates: time and the previous answer). Opening a section again is not a
-  re-read and never advances the level. Details, notifications and on-screen states: `README.md` →
-  "Next-level unlock".
-- When a level has two questions, the app picks the one that targets a key idea the reader hasn't
-  caught yet. The other is a hidden alternate, shown only through "Not a helpful question?" in the
-  card's `…` menu (once per level).
-- "You caught" counts ideas across all levels. After the last level the reply footer reads "All
-  levels done".
+- A section has up to three questions in a fixed order, aimed at the passage's main ideas. There
+  are no difficulty levels and no hidden alternates.
+- A section starts with its first question. The next one **unlocks a week after the previous one
+  is answered** (two gates: time and the previous answer). Opening a section again is not a
+  re-read and never advances it. Details, notifications and on-screen states: `README.md` →
+  "Next-question unlock".
+- "Not a helpful question?" in the card's `…` menu moves on to the section's next question right
+  away, if there is one.
+- "You caught" counts ideas across all of a section's questions. After the last one the reply
+  footer reads "All questions done".
 
 ## Post, edit and cost rules
 
@@ -106,7 +106,7 @@ Level 1 is often a single verse.
 
 - **Reading is always free.** The full text, navigation and the feed with Show questions off are never locked.
 - **Free reflections:**
-  - 3 in total, counted by posted answers. An unlocked Level 2–3 question counts the same way.
+  - 3 in total, counted by posted answers. An unlocked follow-up question counts the same way.
   - Re-checks of a free answer don't count.
   - The count is enforced on the server per device (App Attest), so reinstalling doesn't reset it.
 - **Under the composer**, the note reads "A sentence or so · 2 of 3 free reflections left". When they're used up, it reads "You've used your 3 free reflections."
@@ -161,7 +161,7 @@ Store settings in `@AppStorage` (they're device preferences). Reflections and se
 ## Suggested state
 
 - `SectionProgress`: see `README.md` → "Progress model".
-- `Reflection` (SwiftData): `sectionId`, `level`, `questionId`, `answer`, `coveredIdeaIds`, `highlightPhrase`, `note`, a snapshot of the question and ideas, `createdAt`.
+- `Reflection` (SwiftData): `sectionId`, `questionId`, `answer`, `coveredIdeaIds`, `highlightPhrase`, `note`, a snapshot of the question and ideas, `createdAt`.
 
 ## Data the UI reads
 
@@ -170,7 +170,7 @@ The content pack for each section (from the batch pipeline, cached offline) incl
 - `id`, `ref`, `title`
 - `verses` (BSB and KJV)
 - `keyIdeas[]`: `id`, `title`, `body`, `sources[]`, `verseStart`, `verseEnd`, `agreed`
-- `questions[]`: `id`, `level` (1–3), `verseStart`, `verseEnd`, `text` (BSB and KJV variants), `targets[]` (key idea IDs), `isAlternate`
+- `questions[]` (in reading order): `id`, `verseStart`, `verseEnd`, `text` (BSB and KJV variants), `targets[]` (key idea IDs)
 
 The compare API returns `coveredIdeaIds`, `highlightPhrase`, `note`, `contradictsText`.
 `content/schema/section.schema.json` and `api/openapi.yaml` are the binding contracts.
@@ -182,7 +182,7 @@ rules above. Keep the wording unless a spec changes it.
 
 - "· question on verse N" / "· question on verses A–B" / "· question on the whole passage"
 - "Not a helpful question?"
-- "Thanks for the feedback. Here's another question at this level."
+- "Thanks for the feedback. Here's another question on this passage."
 - "Your answer took its own angle. Here's what the commentators focused on."
 - "Checking with the commentators…"
 - "Re-check · N left"

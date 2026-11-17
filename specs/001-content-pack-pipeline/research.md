@@ -284,8 +284,13 @@ later, from the extraction result (FR-005).
   | `generate` (key ideas, context, views differ, then questions) | Sonnet 5.5 | Sonnet 4.6 | Quality-critical |
   | `align` (wording variants, manuscript notes) | Haiku 5.5 | Haiku 4.5 | The brief's "small model call" |
   | `review` (the quality gate's grader, R16) | Opus 5.5 | Opus 4.6 | A stronger model than the generator grades its output (revised 2026-11-10) |
-  | `levels` (typical-reader check) | Haiku 5.5 | Haiku 4.5 | Stands in for a typical reader |
 
+- **Pacing and throttling** (2026-11-17): this account's quotas are 10 requests a minute for
+  Sonnet 4.6 and Haiku 4.5 and 5 for Opus 4.6. The runner paces requests per model to the
+  `requests_per_minute` set per stage (stages sharing a model share it) and retries a throttled
+  request with backoff (10s, 20s, 40s, then 60s; `throttle_retries`) before raising `Throttled`.
+  In the cloud each Lambda paces only itself, and Step Functions retries what still comes back
+  throttled. The first 10-section `--local` run failed four sections on 429s before this.
 - **Structured outputs**: each call uses `client.messages.parse(...)` with a Pydantic output model
   (supported on Bedrock). Invalid output is retried up to 2 times, then the section is marked
   failed.
@@ -412,33 +417,36 @@ or after a live publish, retire and replace (US6).
 **Rationale**: a cheap, deterministic guard against invented attribution, which is the core trust
 risk.
 
-## R11. Setting question levels (FR-011)
+## R11. Choosing a section's questions (FR-008, FR-009; revised 2026-11-17)
 
-**Decision**:
-- **Features**: the model records `answerDirectness` (`stated`, `inferred` or `beyond`) and
-  `outsideKnowledge` (`none`, `some` or `required`). Code computes verse span from the scope, and
-  commentator agreement from the target ideas' sources.
-- **Rule** (revised 2026-11-16): levels differ by how far a question reaches, not by recall
-  versus thinking. Every question guides the reader into the passage's meaning; recall questions
-  ("What two things does Mark say…") are never written (`questions/v2.md`, question guide v2).
-  The first Mark run showed that a Level 1 limited to `stated` answers produces reading-quiz
-  questions, and Level 1 is the question every reader meets first.
-  - **Level 1** (a detail): span ≤ 2 verses and `outsideKnowledge = none`, whether the answer is
-    `stated` or `inferred`.
-  - **Level 3** (beyond it): `outsideKnowledge = required`, or `answerDirectness = beyond`, or
-    type `application`.
-  - **Level 2** (the passage, or a contrast across verses): everything else.
-- **Pool rules**:
-  - Levels are capped by the number of key ideas (FR-009).
-  - At most 2 questions per level. The second is `isAlternate: true`.
-  - A section with 2+ levels must include a whole-passage question. If none qualifies, the
-    section is regenerated once, then failed (FR-018).
-- **Level check**:
-  - Haiku answers each question as a typical reader with only the passage.
-  - A second Haiku call judges whether the answer covers the question's target ideas.
-  - A Level 3 question that is covered is moved down to Level 2 automatically. A Level 1
-    question that isn't covered is dropped and replaced by its alternate if it has one. Both are
-    listed in the scorecard.
+**Decision**: questions are an ordered list with no levels and no hidden alternates.
+- **Count**: up to 3 active questions per section, and never more than its active key ideas
+  (`thinkbible_core.rules.max_questions`).
+- **Order**: the order a reader meets them. The app asks the first on the first read and unlocks
+  each next one a week after the previous answer. "Not a helpful question?" moves to the next.
+- **Generation** (`questions/v4`, question guide v3): the model writes up to 6 candidates in
+  reading order, aimed at the passage's main ideas. The first opens the main idea, usually on the
+  whole passage; later ones take up other ideas and may connect to the rest of Scripture or to
+  life. Recall questions are never written.
+- **Choosing** (`generate_rules.choose`): code keeps the candidates that pass the checks, in the
+  model's order. A question aimed at a key idea the earlier ones don't cover comes before a repeat;
+  if none of the kept questions covers the whole passage and one passed, it takes the last place.
+  This is a preference, not a rule: a section never fails for want of a whole-passage question.
+- **Gate**: a question the grader drops leaves a gap the others close up; questions left aiming
+  at no kept idea, or beyond the one-per-idea cap, are dropped. A section left with no question is
+  regenerated once, then failed (FR-018). The grader's rubric gained a `big-picture` line
+  (`review/v2`).
+
+**Why the levels went** (history):
+- 2026-11-16: levels were redefined by reach (L1 a detail, L2 the passage, L3 beyond it), set by
+  a rule from features the model recorded (`answerDirectness`, `outsideKnowledge`), with a
+  primary and an alternate per level and a typical-reader level check (Haiku) that moved easy
+  Level 3 questions down and dropped Level 1 questions a reader couldn't reach.
+- 2026-11-17: on a 10-section Mark run, 5 sections failed because Level 3 ended up empty, and the
+  "at most 2 per level" rule threw away many good big-picture questions. Difficulty depends on the
+  reader, so neither the rule nor the check could measure it reliably. Dropping levels removed the
+  `levels` stage (two Haiku calls per section), the features, alternates and level changes, and the
+  most common cause of failed sections.
 
 ## R12. Detecting wording that leans on one translation (Story 5)
 
@@ -503,8 +511,8 @@ risk.
 - **Estimate**: sections still to run × expected cost per section for each stage.
   - The expected cost is the median of the last 20 recorded runs for that stage, from the
     book's run records (`drafts/{book}/runs/`).
-  - With no history, it falls back to the config defaults: generate $0.06, review $0.02, levels
-    $0.005, summaries and align $0.002.
+  - With no history, it falls back to the config defaults: generate $0.06, review $0.02,
+    summaries and align $0.002.
 - **Spend tracking**:
   - Each response's `usage` is multiplied by per-model prices in `pipeline/config/pricing.toml`.
   - The accepted Bedrock offer for Sonnet 5.5 (checked 2026-11-04) is $2 input / $10 output per
@@ -529,7 +537,7 @@ risk.
   - The same fixtures will be reused by the Swift `ContentKit` tests in spec 002.
 - **Unit tests** (`pipeline/tests/unit`):
   - section builder, cross-reference parser, excerpt gathering;
-  - checks, level rule, BSB-only token detection;
+  - checks, question choice, BSB-only token detection;
   - ID allocation, three-way merge, publish check;
   - cost estimate and cap;
   - the no-tools and no-network guards.
@@ -540,8 +548,8 @@ risk.
   questions, no key idea repeated word for word in a question (a run of 8 words from its body, or
   its whole title), no commentator names in idea text or questions, evidence-backed sources,
   placeholders that resolve in both translations, targets that exist. They run inside `generate`
-  before the pool is chosen, so failing items are replaced by alternates or the regenerate-once
-  loop, and are recorded with `stage: "check"`. The `check` stage then re-verifies each finished
+  before the questions are chosen, so failing items are replaced by the next candidate or the
+  regenerate-once loop, and are recorded with `stage: "check"`. The `check` stage then re-verifies each finished
   section (the item checks again, the pack schema, the shared cross-field rules). A section that
   fails there is flagged `regenerate`; the next run's `generate` regenerates it once, and a second
   failure marks it failed (FR-018).
@@ -552,8 +560,8 @@ risk.
     open-ended, short, answerable from the passage alone, not leading, no tradition-specific
     assumptions, aimed at its target ideas without giving them away.
   - The grader sees the passage, the commentators' excerpts and the item, so it can judge
-    faithfulness. Items graded at or below `review_flag_threshold` (2) are dropped (R11 alternates
-    fill in).
+    faithfulness. Items graded at or below `review_flag_threshold` (2) are dropped (the other
+    questions keep their order, R11).
   - Book pass rates (ideas and questions graded above the threshold, before drops) are compared
     with `gate.min_idea_pass_rate` (0.90) and `gate.min_question_pass_rate` (0.80) for promotion.
 - **Managed alternatives considered** (2026-11-17): Bedrock Guardrails' contextual grounding
@@ -564,10 +572,10 @@ risk.
   opinion to add if calibration shows the grader misjudging faithfulness. Bedrock Evaluations
   (LLM-as-a-judge jobs) fits `eval` (comparing prompts or models), not the in-run gate.
 - **Implementation** (2026-11-17): `review` makes one Opus call per section, grading every item
-  with the rubric lines it breaks and a reason; `levels` makes two Haiku calls per section (answer
-  every question, then judge every answer), not two per question, to stay within the RPM quota.
-  Both drop through `gate/outcomes.py`, which also re-picks primaries and alternates and flags a
-  section left unusable for one regeneration on the next run.
+  with the rubric lines it breaks and a reason. Drops go through `gate/outcomes.py`, which also
+  drops questions left without a kept idea or over the cap, and flags a section left unusable for
+  one regeneration on the next run. (A `levels` stage with two Haiku calls per section was built
+  and removed the same day, R11.)
 - **Grader calibration** (constitution v1.2.0):
   - `pipeline/evals/calibration.json`: at least 30 items from Mark (ideas and questions, a mix
     of good and weak), each with the owner's grade (pass or fail, with a note). The owner grades
@@ -576,7 +584,7 @@ risk.
     grader prompt version and model. Promotion requires at least 85% on the current version; a
     change to either requires re-running `calibrate` (labels are reused).
 - **Prompt evaluation** (before a new prompt version is used for a live book):
-  - `eval` runs `generate`, `review` and `levels` in local mode on a fixed sample of 15–25 Mark
+  - `eval` runs `generate` and `review` in local mode on a fixed sample of 15–25 Mark
     sections (`pipeline/evals/mark-sample.json`): narrative, teaching, miracle, parable, a
     genealogy-like list, and Mark 7 and Mark 16 for manuscript cases.
   - It grades the current and candidate prompt versions with the calibrated grader and renders a
@@ -593,7 +601,7 @@ risk.
     grader's calibration agreement, and the run's cost;
   - dropped items with their reasons, grouped by section;
   - then every section in order, with the passage (BSB and KJV toggle), key ideas with evidence
-    quotes and grades, questions by level with alternates marked, context, views differ, and
+    quotes and grades, questions in reading order, context, views differ, and
     manuscript notes;
   - "no prompt" sections with their reason.
 - It is written to `drafts/{book}/review.html` in S3. `status --book B --open` downloads it to a

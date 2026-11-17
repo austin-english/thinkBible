@@ -46,7 +46,7 @@ this feature); constitution principles II, III, IV, VII.
   owner's machine for a few sections at a time (`--local`) while tuning prompts.
 - Q: Does the owner review and edit the generated JSON? → A: No. Item-by-item review is replaced
   by an automatic quality gate: rule checks, the evidence check, and a model grader that grades
-  every item against a fixed rubric. Failing items are dropped or replaced by their alternate, and
+  every item against a fixed rubric. Failing items are dropped, and
   each run produces a read-only scorecard. A book that passes the gate is published to the draft channel; the
   owner reads it in the app and promotes it to live. After launch, reader feedback drives
   retire-and-replace (constitution v1.2.0).
@@ -57,6 +57,17 @@ this feature); constitution principles II, III, IV, VII.
   may be republished from scratch. Frozen text, frozen section ranges and the additive publish
   check apply from the first live publish. IDs are never reused anywhere.
 
+### Session 2026-11-17
+
+- Q: Can a question's difficulty be measured well enough to sort questions into levels? → A: No.
+  Difficulty depends on the reader, and the typical-reader level check was noisy: it emptied
+  Level 3 and failed half of a 10-section Mark run. Questions are now an ordered list of up to
+  three per section (never more than the key ideas), aimed at the passage's main ideas, with no
+  levels and no hidden alternates. The first is asked on the first read; each next one unlocks a
+  week after the previous answer, to match how rarely people return to the same passage. "Not a
+  helpful question?" moves to the next question. The `levels` stage was removed (constitution
+  v1.3.0).
+
 ## User Scenarios & Testing *(mandatory)*
 
 The primary actor is the **content owner** (the developer, who runs the pipeline, calibrates the
@@ -66,8 +77,8 @@ which consumes published packs.
 ### User Story 1 - Generate and read a book's study content (Priority: P1)
 
 The content owner runs the pipeline for one book (Mark) against the frozen sources. They get every
-section of that book, each with its verse range, title, 1–5 key ideas attributed to commentators, a
-leveled question pool, a context note and any "views differ" note. They can read it all in a
+section of that book, each with its verse range, title, 1–5 key ideas attributed to commentators,
+up to three questions in reading order, a context note and any "views differ" note. They can read it all in a
 read-only scorecard and content report, and in the app once it is published to the draft channel.
 
 **Why this priority**: This is the brief's "step zero" content spike. If the key ideas aren't sound
@@ -87,8 +98,8 @@ least one of the three commentators.
    extracted, **Then** each idea is in plain modern English and lists the commentators it came
    from. Ideas stated by two or more commentators are marked "agreed" and ranked first.
 3. **Given** a section with N key ideas, **When** questions are written, **Then** the section gets
-   Level 1 only (N = 1), Levels 1–2 (N = 2) or Levels 1–3 (N ≥ 3). Each level has one or two
-   questions, each targeting at least one key idea, with at most 6 questions per section.
+   up to min(N, 3) questions in the order a reader meets them, each targeting at least one key
+   idea, with no difficulty levels (revised 2026-11-17).
 4. **Given** a genealogy such as Genesis 5, **When** it is generated, **Then** it goes through
    key-idea extraction like any other section, and its questions are scoped to the verses the
    commentaries discuss (for example Enoch in 5:21–24).
@@ -104,8 +115,8 @@ least one of the three commentators.
 
 ### User Story 2 - The automatic quality gate keeps weak content out (Priority: P1)
 
-After generation, rule checks, the evidence check, a model grader and a level check run over the
-book and **act** on what they find: failing items are dropped or replaced by their alternate, a
+After generation, rule checks, the evidence check and a model grader run over the
+book and **act** on what they find: failing items are dropped, a
 section left without usable content is regenerated once and then marked failed, and the run ends
 with a scorecard. Nobody reviews items one by one.
 
@@ -115,7 +126,7 @@ stops a weak or misattributed item from reaching readers.
 **Independent Test**: Seed a draft book with known-bad items (a yes/no question, a question that
 repeats a key idea word for word, an idea whose evidence quote isn't in the commentary, a broken
 verse placeholder, an idea the fake grader scores 1). Confirm each is dropped or replaced with the
-right reason in the scorecard, and that a section left with no usable Level 1 question is
+right reason in the scorecard, and that a section left with no usable question is
 regenerated and then marked failed.
 
 **Acceptance Scenarios**:
@@ -129,13 +140,12 @@ regenerated and then marked failed.
 2. **Given** items that pass the checks, **When** the grader runs, **Then** each key idea and
    question gets a 1–5 grade against a fixed rubric (ideas: say only what the commentators say,
    neutral, plain English; questions: open-ended, short, answerable from the passage, not leading,
-   no tradition-specific assumptions, aimed at their idea without giving it away). Items at or
-   below the threshold are dropped, and a dropped primary question is replaced by its alternate.
-3. **Given** a question's level assigned by rule, **When** the level check answers it as a
-   typical reader with only the passage, **Then** a Level 3 it answers easily is moved down, and a
-   Level 1 it can't answer is dropped (or replaced by its alternate).
+   no tradition-specific assumptions, aimed at their idea without giving it away, aimed at one of
+   the passage's main ideas). Items at or below the threshold are dropped; the remaining questions
+   keep their order.
+3. *(Removed 2026-11-17: the level check. Questions have no levels.)*
 4. **Given** a section left without a key idea, or a prompted section left without an active
-   Level 1 question, **When** the gate finishes, **Then** the section is regenerated once, and if
+   question, **When** the gate finishes, **Then** the section is regenerated once, and if
    it still fails it is marked failed and listed in the scorecard.
 5. **Given** a finished run, **When** the owner opens the scorecard, **Then** it shows the book's
    pass rates (ideas, questions), every dropped item with its reason, failed sections, the
@@ -233,7 +243,7 @@ gets a KJV variant, and that Mark 16:9–20 (bracketed in BSB) gets a manuscript
 ### User Story 6 - Additive refreshes keep IDs stable (Priority: P3)
 
 Later, the owner adds questions to a book that is already published: replacing weak questions,
-topping up alternates, or a seasonal series. The existing questions keep their IDs and wording.
+adding questions where a section has fewer than three, or a seasonal series. The existing questions keep their IDs and wording.
 Weak questions are retired, never deleted.
 
 **Why this priority**: Not needed for launch, but the pack format must support it from day one,
@@ -265,8 +275,8 @@ place and confirm the publish check refuses the version.
   natural break.
 - A boundary turns out wrong after a book is published: it stays as published. Fixing it needs a
   future feature that maps readers' progress from old sections to new ones.
-- A section where commentaries say almost nothing: fewer key ideas and fewer levels. The pipeline
-  never invents an idea to fill a level.
+- A section where commentaries say almost nothing: fewer key ideas and fewer questions (one per
+  idea at most). The pipeline never invents an idea to fill a question.
 - Commentators disagree on a point: the disagreement goes into a neutral "views differ" note, and
   questions on that point stay open.
 - A genealogy with narrative asides (Genesis 5: "and he died", Enoch, Lamech naming Noah): it gets
@@ -290,8 +300,8 @@ place and confirm the publish check refuses the version.
 - A source checksum mismatch: every stage halts, and nothing is generated from altered text.
 - The grader disagrees with the owner on the calibration set (under 85%): promotion is blocked
   until the rubric or grader prompt is fixed (a new prompt version) and the calibration is re-run.
-- The grader drops most of a section's questions: its alternates fill in; if none are left, the
-  section is regenerated once, then failed. The pipeline never ships a section it can't fill.
+- The grader drops most of a section's questions: the rest keep their order; if none are left,
+  the section is regenerated once, then failed. The pipeline never ships a section it can't fill.
 - A reader taps "Not a helpful question?": this never changes the pack. The tap is counted for the
   review queue (spec 007), and only the owner can retire the question in a later version.
 
@@ -332,21 +342,22 @@ place and confirm the publish check refuses the version.
   ideas rank first.
 - **FR-007**: Key ideas MUST restate only what the commentators say: no new interpretations, and no
   quoted translation wording. Verse references are placeholders the app resolves.
-- **FR-008**: For each prompted section the system MUST produce a question pool. Each question has a
-  permanent ID, a type (noticing, meaning, application), a level (1–3), a verse scope, the key idea
-  IDs it targets, a primary/alternate role within its level, a status (active or retired), the
-  pack version it was added in, and optional per-translation wording.
-- **FR-009**: The number of levels MUST follow the number of key ideas (1 → L1, 2 → L1–2,
-  3+ → L1–3), with one or two questions per level and a cap of 6 per section. Every section with 2+
-  levels MUST have at least one whole-passage question.
+- **FR-008**: For each prompted section the system MUST produce an ordered list of questions.
+  Each question has a permanent ID, a type (noticing, meaning, application), a verse scope, the
+  key idea IDs it targets, a status (active or retired), the pack version it was added in, and
+  optional per-translation wording. The order of active questions is the order a reader meets
+  them (the first on the first read, each next one a week after answering the one before).
+  Questions have no difficulty levels and no hidden alternates (revised 2026-11-17).
+- **FR-009**: A section MUST have between 1 and min(N, 3) active questions, where N is its number
+  of active key ideas. Questions SHOULD aim at the passage's main ideas, and the pipeline prefers
+  a set that covers different ideas and includes a question on the whole passage.
 - **FR-010**: Each question MUST target at least one key idea without giving it away, be
   answerable from the passage alone, be open-ended, short, not leading, and free of
   tradition-specific doctrinal assumptions. Its shape follows the passage kind (story, letter,
   poetry, prophecy). In genealogies, lists and laws, questions are scoped to the verses the
   commentaries single out.
-- **FR-011**: The level of each question MUST be set by a fixed rule from features the model
-  records (verse span, how directly the answer is stated, outside knowledge needed, commentator
-  agreement), then adjusted by the level check.
+- **FR-011**: *(Removed 2026-11-17: question levels and the level check. The generator writes
+  candidates in reading order and code keeps up to three, research R11.)*
 - **FR-012**: Each section MUST have a two-line context note (who wrote it, to whom, why) and, where
   commentators or traditions disagree, a short neutral "views differ" note.
 - **FR-013**: Generation MUST be driven by versioned prompts and a versioned question guide (quality
@@ -363,9 +374,8 @@ place and confirm the publish check refuses the version.
 - **FR-016**: The system MUST run the automatic checks listed in Story 2, scenario 1, including the
   evidence check, and drop every item that fails them, recording the reason.
 - **FR-017**: The system MUST grade every remaining key idea and question with a model grader
-  (a stronger model than the generator) against the fixed rubric in Story 2, scenario 2, and run
-  the level check. Items at or below the configured threshold are dropped or replaced by their
-  alternate; levels are adjusted; grades and reasons are recorded per item.
+  (a stronger model than the generator) against the fixed rubric in Story 2, scenario 2. Items
+  at or below the configured threshold are dropped; grades and reasons are recorded per item.
 - **FR-018**: The system MUST track each section's stage (generated, checked, graded, failed,
   published to the draft channel, promoted), keyed by book, section and prompt version, so runs are idempotent
   and resumable. A failed section is regenerated once before it is marked failed.
@@ -426,8 +436,8 @@ place and confirm the publish check refuses the version.
   ideas, questions, context note, views-differ note, manuscript notes and optional verse notes.
 - **Key idea**: a permanent ID, title, body, commentator sources, agreed flag, verse scope, status
   (active or retired), added-in version, retired-in version, and the ID it replaces, if any.
-- **Question**: a permanent ID, type, level, verse scope, targeted key ideas, primary/alternate
-  role, status, per-translation wording, added-in version, retired-in version, the ID it replaces
+- **Question**: a permanent ID, type, verse scope, targeted key ideas, status, its place in the
+  section's order, per-translation wording, added-in version, retired-in version, the ID it replaces
   (if any), optional series.
 - **Pipeline state**: per book, section and prompt version: stage, gate results (checks, grades,
   dropped items with reasons) and cost.
@@ -442,7 +452,7 @@ place and confirm the publish check refuses the version.
 ### Measurable Outcomes
 
 - **SC-001**: For Mark, 100% of verses belong to exactly one section, and 100% of prompted sections
-  have at least one Level 1 question and at least one key idea with a named source.
+  have at least one question and at least one key idea with a named source.
 - **SC-002**: Generating Mark (~100 sections) end to end takes under 30 minutes on demand and costs
   under $15 in model usage.
 - **SC-003**: Promoting Mark needs no item-by-item review: the owner's work is the one-time grader
@@ -472,8 +482,8 @@ place and confirm the publish check refuses the version.
   machine for a few sections at a time. Bedrock batch inference follows when later books are
   generated. All of these use the same stages and outputs.
 - The pack shape follows DESIGN.md ("Data the UI reads"): key ideas have title, body and verse
-  scope; questions have level, verse scope, targets, alternate role and status, and keep `type` as
-  pipeline metadata (confirmed 2026-11-04; the brief's example section matches).
+  scope; questions have verse scope, targets and status, and keep `type` as pipeline metadata
+  (confirmed 2026-11-04). Levels and alternates were removed on 2026-11-17.
 - Verse notes are stored in the format but not generated or shown in the MVP (DESIGN.md defers
   them to V2).
 - Seasonal series, question refresh runs and analytics-driven swaps reuse this pipeline but are

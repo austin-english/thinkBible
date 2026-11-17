@@ -6,9 +6,9 @@ Per section:
 2. Call 1, ``extract``: key ideas with evidence quotes, a context note, a views-differ note, or
    ``noPrompt`` when the commentators give nothing a question could target.
 3. Keep only grounded ideas (``generate_rules.process_ideas``); if none survive, extract once more.
-4. Unless ``noPrompt``, call 2, ``questions`` (with the question guide); code sets each question's
-   level and alternate and applies the pool rules. A pool that breaks a rule is regenerated once,
-   with the problem named; then the section fails (FR-018).
+4. Unless ``noPrompt``, call 2, ``questions`` (with the question guide): candidates in reading
+   order; code keeps up to 3 (``generate_rules.process_questions``). With no usable question the
+   questions are regenerated once, with the problem named; then the section fails (FR-018).
 5. Write the section: it replaces the previous machine output. IDs are never reused.
 """
 
@@ -198,11 +198,10 @@ class GenerateStage(SectionStage):
 
         draft.excerpts = {c: e.record() for c, e in excerpts.items()}
         draft.evidence = {i.id: i.evidence for i in ideas}
-        draft.features = {q.id: q.features for q in pool.questions}
         draft.no_prompt_reason = no_prompt_reason if no_prompt else None
         # New content replaces the old, and so does everything the gate recorded about it.
         draft.dropped = dropped
-        draft.grades, draft.level_changes, draft.checks = {}, [], []
+        draft.grades, draft.checks = {}, []
         draft.regenerated_for = regenerating_for
         draft.section = {
             "id": section_id,

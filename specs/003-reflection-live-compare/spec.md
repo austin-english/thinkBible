@@ -46,7 +46,7 @@ than him…" and tap Post. The note reads "Checking with the commentators…", t
 - an indented ThinkBible reply "· from Henry, JFB & Clarke": a short note, then the two caught
   ideas, each with a filled check and a "· v. 7" tag;
 - "— See what you missed (2)";
-- a footer line from spec 004 ("Harder question unlocks tomorrow") and the Enduring Word link.
+- a footer line from spec 004 ("Next question unlocks in a week") and the Enduring Word link.
 
 Tapping "See what you missed (2)" expands every idea, caught first and then missed (hollow circle),
 each with its body and sources, and the toggle reads "Hide details".
@@ -247,8 +247,8 @@ with nothing sent off the device for recognition.
   a ThinkBible comment with the scope label ("· question on verse N", "verses A–B", "the whole
   passage") in rubric small caps, the question in italic serif, always fully visible; an "Add your
   answer…" row with the user's avatar; and the meta line "<BOOK> <CH> · SECTION n OF N".
-- **FR-002**: The question shown first MUST be the section's Level 1 primary question, in the
-  reader's translation wording. Later levels are specified in 004.
+- **FR-002**: The question shown first MUST be the section's first active question (pack order),
+  in the reader's translation wording. Later questions are specified in 004.
 - **FR-003**: Tapping "Add your answer…" MUST open an inline composer in the card (rubric stroke,
   mic, Post) and tint the question's verses on the page while it is open. Post MUST be disabled
   below 15 characters and while a check is running.
@@ -275,7 +275,7 @@ with nothing sent off the device for recognition.
 - **FR-010**: With no covered ideas, the reply MUST use the fallback variant ("Your answer took its
   own angle…", "See N key ideas"), with the state-specific one-line message for offline, error and
   cap.
-- **FR-011**: Each reflection MUST be saved on the device with: section ID, question ID, level,
+- **FR-011**: Each reflection MUST be saved on the device with: section ID, question ID,
   answer text, covered idea IDs, highlight, note, translation, pack version, created time, check
   status (pending, checked, fallback), and a snapshot of the question and key ideas as shown.
 - **FR-012**: Pending (unchecked) reflections MUST be checked automatically when connectivity
@@ -360,8 +360,8 @@ with nothing sent off the device for recognition.
   option.
 - The paywall, the free-reflection count and its "N of 3 free reflections left" note are specified
   in spec 006. Until then, every device is treated as entitled.
-- "Not a helpful question?" (in the card's `…` menu), the unlock footer line and level progression
-  are specified in 004. Analytics events (shown, passed, not helpful) are specified in 007.
+- "Not a helpful question?" (in the card's `…` menu), the unlock footer line and the question
+  sequence are specified in 004. Analytics events (shown, passed, not helpful) are specified in 007.
 - Text checks for distress run on the server as part of the compare call. A conservative on-device
   check MAY also run so that the care response works offline.
 - The context note and views-differ note are not drawn in the book-feel screens. They sit at the

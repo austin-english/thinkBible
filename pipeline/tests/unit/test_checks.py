@@ -101,15 +101,12 @@ def section(**overrides: Any) -> dict[str, Any]:
          "verseEnd": 19, "status": "active"},
     ]  # fmt: skip
     questions = [
-        {"id": f"{SID}-q1", "level": 1, "type": "noticing", "verseStart": 15, "verseEnd": 15,
-         "text": "Jesus turns from food to the heart. What do you make of that?",
-         "targets": [f"{SID}-k1"], "isAlternate": False, "status": "active"},
-        {"id": f"{SID}-q2", "level": 1, "type": "noticing", "verseStart": 19, "verseEnd": 19,
-         "text": "Why might Jesus mention where food goes?", "targets": [f"{SID}-k2"],
-         "isAlternate": True, "status": "active"},
-        {"id": f"{SID}-q3", "level": 2, "type": "meaning", "verseStart": 14, "verseEnd": 23,
+        {"id": f"{SID}-q1", "type": "meaning", "verseStart": 14, "verseEnd": 23,
          "text": "What is Jesus saying about being clean in this passage?",
-         "targets": [f"{SID}-k1", f"{SID}-k2"], "isAlternate": False, "status": "active"},
+         "targets": [f"{SID}-k1", f"{SID}-k2"], "status": "active"},
+        {"id": f"{SID}-q2", "type": "noticing", "verseStart": 19, "verseEnd": 19,
+         "text": "Why might Jesus mention where food goes?", "targets": [f"{SID}-k2"],
+         "status": "active"},
     ]  # fmt: skip
     doc = {"id": SID, "ref": "Mark 7:14-23", "chapter": 7, "verseStart": 14, "verseEnd": 23,
            "title": "What Defiles a Man", "noPrompt": False, "context": "Mark wrote for Romans.",
@@ -135,36 +132,36 @@ def test_a_clean_section_passes_the_schema_and_cross_field_rules() -> None:
     assert apply_checks(d, CTX) == [] and d.dropped == []
 
 
-def test_unbacked_source_and_dropped_primary_with_alternate_standing_in() -> None:
+def test_an_unbacked_source_takes_its_idea_and_the_questions_that_need_it() -> None:
     d = draft(section())
     d.evidence[f"{SID}-k2"] = []  # Henry's quote for k2 was never verified
     problems = apply_checks(d, CTX)
     assert [(x.item_id, x.stage) for x in d.dropped][:1] == [(f"{SID}-k2", "check")]
     assert d.dropped[0].reason.startswith("evidence:")
-    # q2 targeted only k2: dropped. q3 keeps k1 only, and Level 2 is now above the 1-idea cap.
+    # q2 targeted only k2: dropped. q1 keeps k1, and one idea allows one question.
     dropped = {x.item_id: x.reason for x in d.dropped}
     assert dropped[f"{SID}-q2"] == "targets no key idea that was kept"
-    assert dropped[f"{SID}-q3"].startswith("Level 2 needs at least 2 key ideas")
-    assert [q["id"] for q in d.section["questions"]] == [f"{SID}-q1"]
-    assert problems == []  # one idea, one Level 1 question: a valid section
+    assert [(q["id"], q["targets"]) for q in d.section["questions"]] == [
+        (f"{SID}-q1", [f"{SID}-k1"])
+    ]
+    assert problems == []  # one idea, one question: a valid section
 
 
-def test_a_question_aimed_at_a_missing_idea_is_dropped_and_its_alternate_steps_up() -> None:
+def test_a_question_aimed_at_a_missing_idea_is_dropped_and_the_next_moves_up() -> None:
     doc = section()
     doc["questions"][0]["targets"] = [f"{SID}-k9"]
     d = draft(doc)
-    apply_checks(d, CTX)
+    assert apply_checks(d, CTX) == []
     assert d.dropped[0].item_id == f"{SID}-q1"
-    q2 = next(q for q in d.section["questions"] if q["id"] == f"{SID}-q2")
-    assert q2["isAlternate"] is False  # the alternate became the Level 1 primary
+    assert [q["id"] for q in d.section["questions"]] == [f"{SID}-q2"]
 
 
 def test_schema_and_cross_field_violations_are_section_problems() -> None:
     too_long = draft(section(context="x" * 281))
     assert any(p.startswith("schema:") for p in apply_checks(too_long, CTX))
     doc = section()
-    doc["questions"][2]["verseStart"] = 15  # no question on the whole passage any more
-    assert any("no whole-passage question" in p for p in apply_checks(draft(doc), CTX))
+    doc["questions"][0]["level"] = 1  # levels were removed from the contract
+    assert any(p.startswith("schema:") for p in apply_checks(draft(doc), CTX))
 
 
 def test_the_check_stage_flags_regeneration_then_fails(tmp_path: Path) -> None:
@@ -174,7 +171,7 @@ def test_the_check_stage_flags_regeneration_then_fails(tmp_path: Path) -> None:
                          title_source="bsb-heading")]
     )  # fmt: skip
     doc = section()
-    doc["questions"][2]["verseStart"] = 15
+    doc["questions"][0]["level"] = 1  # breaks the schema: levels were removed
     d = draft(doc)
     d.stages["generate"] = StageRecord.model_validate(
         {"promptVersion": "v3", "inputHash": "h", "completedAt": "t1", "costUsd": 0.1,

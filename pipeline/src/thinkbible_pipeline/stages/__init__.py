@@ -6,7 +6,6 @@ from thinkbible_pipeline.requests import STAGE_ORDER
 from thinkbible_pipeline.stages.base import BookStage, SectionStage
 from thinkbible_pipeline.stages.checks import CheckStage
 from thinkbible_pipeline.stages.generate import GenerateStage
-from thinkbible_pipeline.stages.levels import LevelsStage
 from thinkbible_pipeline.stages.report import ReportStage
 from thinkbible_pipeline.stages.review import ReviewStage
 from thinkbible_pipeline.stages.sections import SectionsStage
@@ -20,7 +19,6 @@ def registry() -> dict[str, SectionStage | BookStage]:
         GenerateStage(),
         CheckStage(),
         ReviewStage(),
-        LevelsStage(),
         ReportStage(),
     ]
     return {s.name: s for s in stages}

@@ -1,7 +1,8 @@
 """The quality gate's rule checks (FR-016, spec Story 2 scenario 1): code only, no model calls.
 
-Item checks run inside ``generate`` before the pool is chosen, so a failing item is replaced by an
-alternate or a regeneration like any other drop; they are recorded with ``stage: "check"``.
+Item checks run inside ``generate`` before the questions are chosen, so a failing item is
+replaced by the next candidate or a regeneration like any other drop; they are recorded with
+``stage: "check"``.
 Section checks (the pack schema and the shared cross-field rules) run in the ``check`` stage on the
 finished section, as the gate's last word before grading.
 

@@ -1,6 +1,8 @@
 # Book-feel reader: design spec
 
-**Status:** chosen direction (Nov 2026). This replaces the **Home + contents** and **Reader** screens in `docs/design/DESIGN.md` (sticky-header reader, results card, swipe-up answer sheet). Paywall, fallback rules, question levels, scope chips, re-check limits and the content/API contracts are unchanged.
+**Status:** chosen direction (Nov 2026). This replaces the **Home + contents** and **Reader** screens in `docs/design/DESIGN.md` (sticky-header reader, results card, swipe-up answer sheet). Paywall, fallback rules, scope chips, re-check limits and the content/API contracts are unchanged.
+
+> **Revised 2026-11-17 (constitution v1.3.0):** questions have no levels. A section has up to three questions in a fixed order, and the next one unlocks **a week** after the previous answer. The screens still show the older "Level 2" and "tomorrow" copy; this text is the source of truth.
 
 **What it is:** a single vertical feed of "pages," one card per passage section. Long passages swipe sideways inside their card. The question sits in the card footer as a comment from ThinkBible. You answer inline, and the commentators' reply appears as a threaded comment. One scroll, no sheets.
 
@@ -18,10 +20,10 @@
 | `08-book-list.png` | Book button tapped: the panel becomes the whole-Bible book list |
 | `09-genesis.png` | Unpublished book picked: chapter grid + "coming soon · Notify me" |
 | `10-you-settings.png` | You & settings (avatar in the header) |
-| `11-notify-prompt.png` | After the first answer: "Harder question unlocks tomorrow" + the notify prompt |
+| `11-notify-prompt.png` | After the first answer: the unlock line (now "Next question unlocks in a week") + the notify prompt |
 | `12-notification.png` | The next day: one notification per chapter (copy variants in the source) |
-| `13-level-2-unlocked.png` | Level 2 unlocked: new question at the top of the comments, "Show more" below |
-| `14-level-1-opened.png` | "Show more" tapped: the earlier thread opens under the new one |
+| `13-level-2-unlocked.png` | The next question unlocked: new question at the top of the comments, "Show more" below (drawn with the old "level 2" label) |
+| `14-level-1-opened.png` | "Show more" tapped: the earlier thread opens under the new one (drawn with the old "level 1" label) |
 | `15-panel-new.png` | Chapter panel: "New" on the unlocked section, dot on the chapter tile |
 
 `source/PostBook.dc.html`, `source/YouBook.dc.html` and `source/UnlockNotification.dc.html` are the design-tool sources. They hold the exact values, copy and state logic. **Read them for values; do not port the markup or JS.** They need the design tool's runtime to run.
@@ -105,45 +107,45 @@ There's no translation control in the header or on cards. Translation lives only
   - Collapsed: only caught ideas (filled rubric check + title + "· v. 7" scope chip). Then "— See what you missed (2)".
   - Expanded: caught first, then missed (hollow circle), each with body (13) and sources (12 tertiary). "Hide details".
   - No match: the note says "Your answer took its own angle. Here's what the commentators focused on." and the toggle reads "See 4 key ideas".
-  - Footer note: clock icon + "Harder question unlocks tomorrow · Enduring Word" (link). After Level 2 it says "Level 3 unlocks tomorrow". After Level 3: "All levels done".
+  - Footer note: clock icon + "Next question unlocks in a week · Enduring Word" (link). After the last question: "All questions done".
 
-## Next-level unlock (24 hours)
+## Next-question unlock (one week)
 
-Harder questions don't appear just because a section is opened again, since tapping out and back in isn't a re-read. Each level unlocks **24 hours after the previous level was answered**, and a notification brings the reader back. **Everything runs on the device; there's no backend or cron.**
+Follow-up questions don't appear just because a section is opened again, since tapping out and back in isn't a re-read. Each next question unlocks **a week after the previous one was answered** (people rarely return to the same passage within days), and a notification brings the reader back. **Everything runs on the device; there's no backend or cron.**
 
 **Rules**
-- **Two gates per level:** `now >= unlocksAt` AND the previous level was answered. A skipped day just waits; there's no streak penalty.
-- **Timing:** on a checked answer, set `unlocksAt = answeredAt + 24h` and recompute on launch and on return to the foreground. After Level 3: "All levels done", nothing more scheduled.
-- **Which question:** the next level, preferring a question aimed at an idea the reader hasn't caught yet. The mock's Level 2 targets "Water and the Spirit", the idea missed at Level 1.
+- **Two gates per question:** `now >= unlocksAt` AND the previous question was answered. A late return just waits; there's no streak penalty.
+- **Timing:** on a checked answer, set `unlocksAt = answeredAt + 7 days` and recompute on launch and on return to the foreground. After the section's last question: "All questions done", nothing more scheduled.
+- **Which question:** the next active question in the section's order (the pack's `questions[]` order). There are no alternates to choose between.
 - **Free users:** an unlocked question counts as a reflection. Post with none left opens the paywall.
 
 **Notifications** (local, `UNUserNotificationCenter`)
 - At most one per chapter and one per day. Each new answer cancels and reschedules that chapter's pending notification (`identifier = "unlock.<book>.<chapter>"`) with the new count. It fires at the earliest `unlocksAt` among that chapter's sections.
 - If the daily reading reminder is on, fold the unlock into it (rewrite that reminder's text) rather than sending a second notification.
 - **Copy** (variants in `source/UnlockNotification.dc.html`):
-  - Several sections: "3 harder questions are ready in Mark 1" / "You answered these yesterday. Each one asks a little more of the passage."
-  - One section: "A harder question is ready for Mark 1:1–8" / the question as a teaser.
-  - Free user with no reflections left: "Your harder question is ready · Premium" / "Mark 1:1–8 is waiting. You've used your 3 free reflections."
+  - Several sections: "3 new questions are ready in Mark 1" / "You answered these last week. Each one opens another side of the passage."
+  - One section: "A new question is ready for Mark 1:1–8" / the question as a teaser.
+  - Free user with no reflections left: "Your next question is ready · Premium" / "Mark 1:1–8 is waiting. You've used your 3 free reflections."
 - Tapping a notification opens the feed scrolled to the first unlocked section in that chapter.
 - **Permission:** the in-card prompt ("Want a nudge when it's ready?" / Not now / Notify me) appears **once, ever**, under the reader's first answer.
-  - Notify me opens the system prompt. The card then shows a one-line "✓ We'll let you know tomorrow when it's ready." for that session only.
+  - Notify me opens the system prompt. The card then shows a one-line "✓ We'll let you know when it's ready." for that session only.
   - Whichever button they tap, the prompt never returns; the switch lives in Settings.
   - Every other answered card shows only the small unlock line. Store a `notifyPromptShown` flag.
 - Users without notification permission still see unlocked questions when they next open the app.
 
 **On screen**
-- **Answered card:** footer note "Harder question unlocks tomorrow" (clock icon). The first time only, the notify prompt appears under the thread, indented to the reply.
+- **Answered card:** footer note "Next question unlocks in a week" (clock icon). The first time only, the notify prompt appears under the thread, indented to the reply.
 - **Unlocked card:** the comments read **newest first**, like a social thread.
-  1. ThinkBible's Level 2 question: label "· level 2 · verses 7–8" + "New" tag (`#FDF1E3` / `#9A4A06`).
+  1. ThinkBible's next question: label "· verses 7–8" + "New" tag (`#FDF1E3` / `#9A4A06`).
   2. "Add your answer…"
-  3. "—— Show more": the same hairline-link style as "See what you missed". Tapping it expands the earlier question ("· level 1 · verse 7"), the answer with its highlight, and the ThinkBible reply with caught ideas; it then reads "Show less".
-  - Once Level 2 is answered, its thread stacks above the Show more link, the same way.
-  - The meta line adds "· LEVEL 2".
-- **Chapter panel:** a "New" pill on the section row (before the ✓ fraction); a 7pt `#C2410C` dot top-right on the chapter tile. Both clear once that level is answered.
-- **Settings › Questions:** "Harder-question alerts" switch (on by default once permission is granted).
+  3. "—— Show more": the same hairline-link style as "See what you missed". Tapping it expands the earlier question ("· verse 7"), the answer with its highlight, and the ThinkBible reply with caught ideas; it then reads "Show less".
+  - Once it is answered, its thread stacks above the Show more link, the same way.
+  - The meta line adds "· QUESTION 2".
+- **Chapter panel:** a "New" pill on the section row (before the ✓ fraction); a 7pt `#C2410C` dot top-right on the chapter tile. Both clear once that question is answered.
+- **Settings › Questions:** "New-question alerts" switch (on by default once permission is granted).
 
 ### `…` menu (not drawn yet)
-Proposed contents: **Not a helpful question?** (hidden alternate, existing rule), Copy passage, Report a problem.
+Proposed contents: **Not a helpful question?** (moves on to the section's next question now, if there is one), Copy passage, Report a problem.
 
 ### Send
 Use the system share sheet with the passage text, the reference, the translation code and a `thinkbible.app` link. Don't include the user's answer unless they choose to.
@@ -183,7 +185,7 @@ In order:
   - Accent color Blue/Red
   - Justify text
   - Verse numbers
-- **Questions:** Show questions, Harder-question alerts
+- **Questions:** Show questions, New-question alerts
 - **Appearance**
 - **Reminder:** daily reading reminder + time
 - **Subscription:** Free · See plans · Restore purchases
@@ -200,8 +202,8 @@ SectionProgress
   state            // none | read | reflected
   ideasCaught      // best attempt
   ideasTotal       // from the section's content
-  level            // highest question level answered (1–3)
-  unlocksAt        // answeredAt + 24h for the next level; nil after Level 3
+  answered         // how many of the section's questions were answered (0–3)
+  unlocksAt        // answeredAt + 7 days for the next question; nil after the last
   saved            // bookmark
   updatedAt
 ```

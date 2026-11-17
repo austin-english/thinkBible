@@ -7,7 +7,7 @@ BSB and KJV texts and three public-domain commentaries) and, one book at a time,
 content the app shows:
 - sections;
 - key ideas attributed to the commentators;
-- levelled questions;
+- up to three questions per section, in the order a reader meets them;
 - context and "views differ" notes.
 
 An automatic quality gate checks every item before a book is published.
@@ -34,11 +34,10 @@ pipeline/
 ├── prompts/
 │   ├── _shared/context-v1.md       # opening text of every system prompt
 │   ├── summaries/v1.md             # one-line summary
-│   ├── extract/v1.md               # generate call 1: key ideas, context, views differ
-│   ├── questions/v1.md             # generate call 2: the question pool
-│   ├── question-guide/v2.md        # quality rules + example questions (DRAFT: owner approves)
-│   ├── review/v1.md                # the grader's rubric
-│   └── levels-answer/, levels-judge/  # the typical-reader level check
+│   ├── extract/v4.md               # generate call 1: key ideas, context, views differ
+│   ├── questions/v4.md             # generate call 2: candidate questions in reading order
+│   ├── question-guide/v3.md        # quality rules + example questions (DRAFT: owner approves)
+│   └── review/v2.md                # the grader's rubric
 ├── scripts/
 │   └── build_bundle.py             # `make lambda-bundle`: builds pipeline/out/lambda.zip
 ├── src/thinkbible_pipeline/
@@ -59,10 +58,9 @@ pipeline/
 │   │   ├── sections.py             # `sections`: writes the book's section map (no model calls)
 │   │   ├── summaries.py            # `summaries`: one line per section (Haiku)
 │   │   ├── generate.py             # `generate`: key ideas, context, questions (Sonnet)
-│   │   ├── generate_rules.py       # evidence check, ranking, levels, pool rules (no model calls)
+│   │   ├── generate_rules.py       # evidence check, ranking, choosing questions (no model calls)
 │   │   ├── checks.py               # `check`: the gate's rule checks on each finished section
 │   │   ├── review.py               # `review`: the grader (Opus) grades every item 1-5
-│   │   ├── levels.py               # `levels`: a typical reader (Haiku) checks question levels
 │   │   ├── report.py               # `report`: scorecard.json + review.html for the book
 │   │   └── __init__.py             # registry() of stage implementations
 │   ├── sections/
@@ -70,7 +68,7 @@ pipeline/
 │   │   └── passage.py              # a section's verses as prompt text
 │   ├── gate/
 │   │   ├── checks.py               # rule checks: lengths, "?", yes/no, giveaways, names, placeholders
-│   │   ├── outcomes.py             # drop items, re-pick alternates, flag a section for regeneration
+│   │   ├── outcomes.py             # drop items and what depends on them, flag a section for regeneration
 │   │   └── calibration.py          # your pass/fail grades vs the grader's (evals/calibration.json)
 │   ├── report/
 │   │   ├── scorecard.py            # the book's numbers: kept, dropped, failed, cost

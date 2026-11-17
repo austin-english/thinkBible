@@ -12,7 +12,7 @@ The batch content pipeline (spec 001). The root `CLAUDE.md` and the constitution
 - **Prompts are versioned files** in `prompts/{stage}/vN.md`. Never edit a version that has been
   used for a run. Add `vN+1.md` instead.
 - **Drafts are pipeline state in S3, not hand-edited** (2026-11-10). Quality comes from the
-  automatic gate (checks, evidence check, the calibrated Opus grader, level check), which drops
+  automatic gate (checks, evidence check, the calibrated Opus grader), which drops
   weak items and records why in the scorecard. To change content, add a prompt version and
   regenerate; after a promotion to live, retire and replace.
 - **Live content is frozen.** Never change the text of a promoted question or key idea.

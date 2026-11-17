@@ -7,8 +7,12 @@ endpoint by default, ``bedrock-mantle`` if settings say so) with structured outp
 
 from __future__ import annotations
 
+import asyncio
 import json
-from collections.abc import Mapping, Sequence
+import random
+import time
+from collections import deque
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol, TypeVar
@@ -122,12 +126,72 @@ def assert_no_tools(params: Mapping[str, Any]) -> None:
         raise ForbiddenRequest(f"model requests must not include {bad} (constitution II)")
 
 
-class BedrockRunner:
-    """On-demand Bedrock calls with structured output, prompt caching and refusal fallback."""
+class RateLimiter:
+    """At most ``per_minute`` request starts in any 60 seconds (a sliding window)."""
 
-    def __init__(self, settings: Settings, client: Any | None = None) -> None:
+    def __init__(
+        self,
+        per_minute: int,
+        *,
+        clock: Callable[[], float] = time.monotonic,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+    ) -> None:
+        self.per_minute = per_minute
+        self._clock = clock
+        self._sleep = sleep
+        self._starts: deque[float] = deque()
+        self._lock = asyncio.Lock()
+
+    async def wait(self) -> None:
+        async with self._lock:
+            while True:
+                now = self._clock()
+                while self._starts and now - self._starts[0] >= 60:
+                    self._starts.popleft()
+                if len(self._starts) < self.per_minute:
+                    self._starts.append(now)
+                    return
+                await self._sleep(60 - (now - self._starts[0]) + 0.1)
+
+
+def throttle_backoff(attempt: int) -> float:
+    """Seconds to wait before retry ``attempt`` (0-based): 10, 20, 40, 60, 60…, with jitter."""
+    base: float = min(60.0, 10.0 * float(2**attempt))
+    return base * random.uniform(0.9, 1.1)
+
+
+class BedrockRunner:
+    """On-demand Bedrock calls with structured output, prompt caching and refusal fallback.
+
+    Requests are paced per model to the account's requests-per-minute quota
+    (``requests_per_minute`` in settings.toml), and a throttled request is retried with backoff
+    (``throttle_retries``) before ``Throttled`` is raised. In the cloud each Lambda paces only
+    itself; Step Functions retries what still comes back throttled.
+    """
+
+    def __init__(
+        self,
+        settings: Settings,
+        client: Any | None = None,
+        *,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+    ) -> None:
         self._settings = settings
         self._client = client or self._make_client(settings)
+        self._sleep = sleep
+        self._limiters: dict[str, RateLimiter | None] = {}
+
+    def _limiter(self, stage: str) -> RateLimiter | None:
+        cfg = self._settings.stage(stage)
+        if cfg.model not in self._limiters:
+            # Stages sharing a model share its quota: use the lowest any of them sets.
+            rpms = [
+                s.requests_per_minute
+                for s in self._settings.stages.values()
+                if s.model == cfg.model and s.requests_per_minute
+            ]
+            self._limiters[cfg.model] = RateLimiter(min(rpms), sleep=self._sleep) if rpms else None
+        return self._limiters[cfg.model]
 
     @staticmethod
     def _make_client(settings: Settings) -> Any:
@@ -182,15 +246,26 @@ class BedrockRunner:
         what = f"{stage}.{call}" if call else stage
         last_error = "no attempt made"
         attempts = self._settings.invalid_output_retries + 1
-        for _ in range(attempts):
+        limiter = self._limiter(stage)
+        attempt = throttled = 0
+        while attempt < attempts:
+            if limiter is not None:
+                await limiter.wait()
             try:
                 resp = await self._client.beta.messages.parse(**params, output_format=output_model)
             except (ValidationError, json.JSONDecodeError) as e:
                 last_error = f"invalid structured output: {e}"
+                attempt += 1
                 continue
             except anthropic.APIStatusError as e:
                 if e.status_code in THROTTLE_STATUS:
-                    raise Throttled(f"{section_id}: {e.status_code}: {e}") from e
+                    if throttled < self._settings.throttle_retries:
+                        await self._sleep(throttle_backoff(throttled))
+                        throttled += 1
+                        continue
+                    raise Throttled(
+                        f"{section_id}: {e.status_code} after {throttled} retries: {e}"
+                    ) from e
                 raise ModelError(f"{section_id}: {type(e).__name__}: {e}") from e
             except anthropic.APIError as e:
                 raise ModelError(f"{section_id}: {type(e).__name__}: {e}") from e
@@ -199,10 +274,12 @@ class BedrockRunner:
                 raise Refused(category, resp.model)
             if resp.stop_reason == "max_tokens":
                 last_error = f"hit max_tokens ({self._settings.max_tokens})"
+                attempt += 1
                 continue
             parsed = resp.parsed_output
             if parsed is None:
                 last_error = "no parsed output"
+                attempt += 1
                 continue
             return parsed, Usage.from_api(resp.model, resp.usage)
         raise InvalidOutput(f"{section_id} {what}: {last_error} after {attempts} attempts")

@@ -6,7 +6,7 @@
 
 - Bible text, plain reading (questions off) and navigation of every published book MUST remain
   free, with no sign-in, no trial and no count limit.
-- Only the study experience (live comparison beyond the free allowance, unlocked Level 2–3
+- Only the study experience (live comparison beyond the free allowance, a section's follow-up
   questions, premium series) MAY be paid.
 - Reflections a user already saved MUST stay viewable after their free allowance runs out
   or their subscription lapses.
@@ -41,10 +41,10 @@ idea can be traced to a known text.
   and return the fields defined in `api/openapi.yaml` (covered idea IDs, a highlight phrase
   quoted from the user's answer, a short note, a contradicts-text flag). It MUST NOT
   generate questions, interpretations, verses or facts.
-- Follow-up questions are the section's next-level questions from the reviewed pool, already in
-  the content pack. The app unlocks the next level on the device 24 hours after the previous
-  level is answered; reopening or re-reading a section never advances it. They are never
-  generated or adapted live.
+- A section has up to three reviewed questions in a fixed order, with no difficulty levels, all
+  in the content pack. The first is asked on the first read. Each follow-up is the next question
+  in that order, unlocked on the device one week after the previous one is answered; reopening
+  or re-reading a section never advances it. Questions are never generated or adapted live.
 - The live model MUST receive the answer, the question, the stored key ideas and context,
   and never raw commentary text.
 - The live note MUST pass code checks (length limit, only commentator names attached to
@@ -172,7 +172,7 @@ and future theming correct by construction.
 - **Testing:**
   - Contract tests MUST cover the pack schema (pipeline output and app decoding) and the
     compare API (backend and APIClient).
-  - Business rules MUST have unit tests: free count, re-check limits, level selection,
+  - Business rules MUST have unit tests: free count, re-check limits, question unlocks,
     caching, fallbacks.
   - Prompt changes MUST be evaluated against a fixed set of sample sections before a new
     prompt version is used for publishing.
@@ -201,4 +201,4 @@ and future theming correct by construction.
   implementing any feature that touches content, privacy or payments.
 - Runtime guidance for agents lives in the root `CLAUDE.md` and per-area `CLAUDE.md` files.
 
-**Version**: 1.2.1 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-13
+**Version**: 1.3.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-17

@@ -46,12 +46,12 @@ def draft() -> SectionDraft:
         section={
             "keyIdeas": [{"id": "mrk-1-1-k1", "title": "John prepares the way", "body": "Why.",
                           "sources": ["matthew-henry"], "verseStart": 1, "verseEnd": 8}],
-            "questions": [{"id": "mrk-1-1-q1", "level": 1, "text": "Why might John come first?",
+            "questions": [{"id": "mrk-1-1-q1", "text": "Why might John come first?",
                            "targets": ["mrk-1-1-k1"], "verseStart": 2, "verseEnd": 3}],
         },
         evidence={"mrk-1-1-k1": [Evidence(commentator="matthew-henry", quote="he prepared")]},
         dropped=[DroppedItem(item_id="mrk-1-1-q2", stage="review", reason="graded 2",
-                             item={"text": "What does verse 6 say?", "level": 1,
+                             item={"text": "What does verse 6 say?",
                                    "targets": ["mrk-1-1-k1"]})],
     )  # fmt: skip
 

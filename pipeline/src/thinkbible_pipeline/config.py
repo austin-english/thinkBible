@@ -29,6 +29,9 @@ class StageSettings:
     default_cost_usd: float
     thinking: Thinking = "none"
     effort: Effort | None = None  # None: send no effort (models such as Haiku 4.5 reject it)
+    # The account's Bedrock requests-per-minute quota for this stage's model. The runner paces
+    # requests to stay under it; stages sharing a model share the budget. None: no pacing.
+    requests_per_minute: int | None = None
 
 
 @dataclass(frozen=True)
@@ -60,6 +63,8 @@ class Settings:
     stages: Mapping[str, StageSettings]
     endpoint: Endpoint = "runtime"  # bedrock-runtime, or bedrock-mantle
     gate: GateSettings = GateSettings()
+    # A throttled request (429/503/529) is retried this many times with backoff, then fails.
+    throttle_retries: int = 5
 
     def stage(self, name: str) -> StageSettings:
         try:
@@ -150,6 +155,9 @@ def load_settings(config_dir: Path | None = None) -> Settings:
             default_cost_usd=float(s["default_cost_usd"]),
             thinking=cast(Thinking, thinking),
             effort=cast(Effort, effort) if effort is not None else None,
+            requests_per_minute=int(s["requests_per_minute"])
+            if "requests_per_minute" in s
+            else None,
         )
     endpoint = raw.get("endpoint", "runtime")
     if endpoint not in ("runtime", "mantle"):
@@ -170,6 +178,7 @@ def load_settings(config_dir: Path | None = None) -> Settings:
         ),
         stages=MappingProxyType(stages),
         gate=GateSettings(**{k: v for k, v in raw.get("gate", {}).items()}),
+        throttle_retries=int(raw.get("throttle_retries", 5)),
     )
 
 

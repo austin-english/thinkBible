@@ -63,14 +63,16 @@ Field names are camelCase in JSON and snake_case in the Python models (Pydantic 
 | Field | Type | Rules |
 |---|---|---|
 | `id` | `mrk-1-1-q4` | Permanent. Never reused |
-| `level` | 1–3 | Set by the R11 rule, then adjusted by the level check |
 | `type` | noticing, meaning, application, seasonal | Pipeline metadata |
 | `verseStart`, `verseEnd` | int | Within the section. The full section range means "whole passage" |
 | `text` | 10–160 chars, ends with `?` | Frozen once published. Not yes/no. Does not repeat a target idea word for word |
 | `textByTranslation` | `{kjv: "…?"}` | Optional variants (R12) |
 | `targets[]` | key idea ids | ≥ 1. All in the same section and active at publish time |
-| `isAlternate` | bool | At most one primary and one alternate per level, among active questions |
 | `status`, `addedIn`, `retiredIn`, `replaces`, `series` | as for KeyIdea | |
+
+A section's `questions[]` are in reading order: the app asks the first active question on the
+first read and unlocks each next one a week after the previous answer. There are no levels and no
+hidden alternates (revised 2026-11-17).
 
 ### VerseText ([verses.schema.json](contracts/verses.schema.json))
 
@@ -89,10 +91,10 @@ The latest version per book, with the path, sha256 and byte size of every file.
 3. Every ID begins with its section's ID. IDs are unique across the whole book's history.
 4. `agreed == (len(sources) >= 2)`.
 5. Question targets name active key ideas in the same section.
-6. Level count follows the number of active key ideas (1 → L1, 2 → L1–2, 3+ → L1–3), with ≤ 6
-   active questions. A section with 2+ levels has at least one whole-passage question (FR-009).
+6. A section has at most min(N, 3) active questions, where N is its number of active key ideas
+   (FR-009).
 7. A `noPrompt` section has no active questions. A section that is not `noPrompt` has at least
-   one active Level 1 question.
+   one active key idea and at least one active question.
 8. Every `{{ref:C:V(-V)}}` placeholder resolves in every published translation.
 9. Retiring a key idea also retires the active questions that target only that idea (FR-024).
 
@@ -163,11 +165,9 @@ henryDivisions: [startVerse…]}`
 | `excerpts` | `{commentator: {sha256, tokens, items[], crossRefs[], trimmed}}`. A record of model inputs, not the text. `items` names the parts given (`MRK 1:1-8`, `MRK 3 intro`, `MAT 12:9-21` for a followed pointer) and `crossRefs` the pointer targets followed (R4) |
 | `summary` | One-line passage summary (from `summaries`) |
 | `noPromptReason` | Set when `noPrompt` is true |
-| `features` | `{questionId: {answerDirectness, outsideKnowledge, verseSpan, agreement}}` (R11) |
 | `checks` | `[{itemId, check, ok, detail}]` |
 | `grades` | `{itemId: {score: 1-5, notes}}` from the grader (`review`) |
-| `dropped` | `[{itemId, stage: "generate"\|"check"\|"review"\|"levels"\|"align", reason, item}]`: what the gate removed and why, with the item as generated (R16) |
-| `levelChanges` | `[{questionId, from, to, reason}]` from the level check (R11) |
+| `dropped` | `[{itemId, stage: "generate"\|"check"\|"review"\|"align", reason, item}]`: what the gate removed and why, with the item as generated (R16). Drafts from before 2026-11-17 may also show `"levels"` |
 | `failed` | null, or the reason the section failed after one regeneration (FR-018) |
 | `regenerate` | null, or why a gate stage wants the section regenerated: the next run's `generate` regenerates it once (its inputs include this) and clears it |
 | `regeneratedFor` | why the current content was regenerated, if it was; a second failure is then final |
@@ -278,7 +278,6 @@ text, refs[]}]}]}` where `Note = {text, refs[]}`.
 |---|---|
 | `summaries` | `{summary: str ≤ 120}` |
 | `generate` (1) ideas | `{keyIdeas: [{title, body, sources[], verseStart, verseEnd, evidence: [{commentator, quote}]}], context, viewsDiffer?, noPrompt: bool, noPromptReason?}` |
-| `generate` (2) questions | `{questions: [{text, type, verseStart, verseEnd, targets[] (indexes or ids), answerDirectness, outsideKnowledge}]}`. Code assigns levels, alternates and IDs |
+| `generate` (2) questions | `{questions: [{text, type, verseStart, verseEnd, targets[]}]}`: up to 6 candidates in reading order. Code assigns IDs and keeps up to 3 |
 | `align` | `{kjvText: str}` per item, or `{note: str}` per manuscript candidate |
 | `review` | `{items: [{itemId, score 1-5, flags: [reason]}]}` |
-| `levels` | `{answer: str}`, then `{coveredTargetIds: []}` |

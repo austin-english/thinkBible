@@ -14,9 +14,10 @@ helpful question?" lives in the card's `…` menu.
 counts (shown, answered, passed, 'not helpful', and how often each targeted idea was caught) feed
 a review queue for the content owner. The worst performers come first, and a maintenance run can
 retire or replace weak questions and swap levels whose difficulty is inverted. No answer text and
-no personal data."
+no personal data." (Revised 2026-11-17: questions have no levels, so level swaps and the
+"inverted difficulty" signal are gone.)
 
-**References**: brief "Question freshness → Feedback loop", "Level checks", "Validation", data
+**References**: brief "Question freshness → Feedback loop", "Validation", data
 model rows QuestionStats and PipelineState; constitution principles III, VI, VII. Depends on 003
 (compare), 004 ("Not a helpful question?") and 001 (refresh runs).
 
@@ -57,31 +58,29 @@ answer text or timestamp finer than a day.
 ### User Story 2 - Review queue, worst first (Priority: P1)
 
 The content owner opens a review report for a book and sees questions ranked worst first, by
-not-helpful rate, pass rate and catch-rate anomalies, each with its counts, section, level and
-text. They can choose to retire it, request a replacement, or swap levels.
+not-helpful rate, pass rate and catch-rate anomalies, each with its counts, section, place in
+the section's order and text. They can choose to retire it or request a replacement.
 
 **Why this priority**: Turns signals into better content. This is the brief's "feedback loop".
 
-**Independent Test**: Seed stats where one question has a 30% not-helpful rate and another has a
-Level 2 caught more often than its section's Level 1. Confirm both appear at the top with the right
+**Independent Test**: Seed stats where one question has a 30% not-helpful rate and another
+is passed without an answer 60% of the time. Confirm both appear at the top with the right
 reasons.
 
 **Acceptance Scenarios**:
 
 1. **Given** stats for a book, **When** the owner generates the review report, **Then** questions
    are ranked by a combined weakness score, with the reason shown (high not-helpful, high pass rate,
-   inverted level difficulty, low sample size flagged as such).
+   a target idea almost never caught, low sample size flagged as such).
 2. **Given** a question with too few shows (below a minimum sample), **When** ranked, **Then** it
    is listed separately as "not enough data", not ranked as weak.
-3. **Given** a section where Level 2 is caught more often than Level 1, **When** the report is
-   generated, **Then** that section is flagged "levels inverted" with both rates.
 
 ---
 
 ### User Story 3 - Maintenance run fixes weak questions (Priority: P2)
 
-From the review queue, the owner marks questions to retire and sections that need a replacement or
-level swap. A targeted refresh run produces new questions for only those sections, reusing the
+From the review queue, the owner marks questions to retire and sections that need a
+replacement. A targeted refresh run produces new questions for only those sections, reusing the
 stored key ideas. It goes through the normal checks and human review, and publishes an additive
 pack version.
 
@@ -98,8 +97,6 @@ question, and changes no key ideas.
    is present with status retired and is never served as a new question.
 2. **Given** a section marked for replacement, **When** the refresh runs, **Then** only that
    section's questions are generated, against its existing key ideas, with new IDs.
-3. **Given** a level swap, **When** it is approved, **Then** the two questions' levels change in the
-   next pack version, their IDs are unchanged, and saved reflections are unaffected.
 
 ### Edge Cases
 
@@ -133,9 +130,9 @@ question, and changes no key ideas.
   CLAUDE.md; (b) piggyback queued events on the next compare call, which loses data from readers who
   never post or are past the free limit; (c) use Apple's App Analytics / TelemetryDeck-style third-party analytics.]
 - **FR-005**: The owner MUST be able to produce a review report per book that ranks questions by
-  weakness (not-helpful rate, pass rate, inverted level difficulty) with a minimum sample size, and
+  weakness (not-helpful rate, pass rate, rarely caught target ideas) with a minimum sample size, and
   lists low-data questions separately.
-- **FR-006**: The owner MUST be able to mark questions for retirement, replacement or a level swap,
+- **FR-006**: The owner MUST be able to mark questions for retirement or replacement,
   and run a targeted refresh limited to those sections that reuses stored key ideas.
 - **FR-007**: Refresh output MUST go through the same checks, model review, human approval and
   additive publishing as spec 001, and never change or reuse IDs or key ideas.
@@ -145,8 +142,8 @@ question, and changes no key ideas.
 
 - **Question stats**: question ID, pack version, day, and counts of shown, answered, passed and not
   helpful, plus caught counts per target idea ID.
-- **Review item**: question ID, section, level, weakness reasons, counts, owner decision (retire,
-  replace, swap, keep).
+- **Review item**: question ID, section, place in the section's order, weakness reasons, counts,
+  owner decision (retire, replace, keep).
 - **Refresh run**: book, sections, prompt version, resulting pack version.
 
 ## Success Criteria *(mandatory)*

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from thinkbible_pipeline.jsonio import JsonModel
 
@@ -68,13 +68,6 @@ class ExcerptRecord(JsonModel):
     trimmed: bool = False
 
 
-class QuestionFeatures(JsonModel):
-    answer_directness: Literal["stated", "inferred", "beyond"]
-    outside_knowledge: Literal["none", "some", "required"]
-    verse_span: int
-    agreement: int
-
-
 class CheckResult(JsonModel):
     item_id: str
     check: str
@@ -86,16 +79,10 @@ class DroppedItem(JsonModel):
     """An item the quality gate removed, with why and the item as it was generated (R16)."""
 
     item_id: str
+    # "levels": the level check, removed 2026-11-17; kept so older drafts still load.
     stage: Literal["generate", "check", "review", "levels", "align"]
     reason: str
     item: dict[str, Any] = Field(default_factory=dict)
-
-
-class LevelChange(JsonModel):
-    question_id: str
-    from_level: int = Field(alias="from")
-    to_level: int = Field(alias="to")
-    reason: str
 
 
 class Grade(JsonModel):
@@ -120,6 +107,15 @@ class SectionDraft(JsonModel):
     plain JSON object here. ``publish`` validates it against the Section contract.
     """
 
+    @model_validator(mode="before")
+    @classmethod
+    def _forget_levels(cls, data: Any) -> Any:
+        """Drafts written before levels were removed (2026-11-17) still load; the next
+        ``generate`` replaces their content."""
+        if isinstance(data, dict):
+            data = {k: v for k, v in data.items() if k not in ("features", "levelChanges")}
+        return data
+
     section: dict[str, Any] = Field(default_factory=dict)
     # Only ever increases, so IDs are never reused, even for items dropped before publishing
     # (R13). Kept per section, not in book.json: sections run in parallel in the cloud.
@@ -128,11 +124,9 @@ class SectionDraft(JsonModel):
     excerpts: dict[str, ExcerptRecord] = Field(default_factory=dict)
     summary: str | None = None
     no_prompt_reason: str | None = None
-    features: dict[str, QuestionFeatures] = Field(default_factory=dict)
     checks: list[CheckResult] = Field(default_factory=list)
     grades: dict[str, Grade] = Field(default_factory=dict)
     dropped: list[DroppedItem] = Field(default_factory=list)
-    level_changes: list[LevelChange] = Field(default_factory=list)
     failed: str | None = None  # why the section failed after one regeneration (FR-018)
     # Set by a gate stage when the section broke a rule after generate ran: the next run's
     # generate regenerates it once (its inputs include this), then clears it (FR-018).

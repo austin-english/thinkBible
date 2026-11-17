@@ -25,14 +25,14 @@ Scope: **iOS only.** No backend, pipeline, infra or schema changes. If something
    - `ChapterPanel`: a top drop-down overlay with a single scroll. Chapters view and Books view (`LazyVStack(pinnedViews: .sectionHeaders)` + `ScrollViewReader` to the current book).
    - `SectionProgress` SwiftData model and the derived counts described in the README.
    - `YouView` for You & settings.
-   - `UnlockScheduler`: the 24-hour next-level unlock from the README. It's local notifications only, one pending per chapter (cancel and reschedule on each answer), folded into the daily reminder when that's on. It handles the in-card permission prompt and the deep link from a tapped notification to the first unlocked section.
+   - `UnlockScheduler`: the one-week next-question unlock from the README. It's local notifications only, one pending per chapter (cancel and reschedule on each answer), folded into the daily reminder when that's on. It handles the in-card permission prompt and the deep link from a tapped notification to the first unlocked section.
    - Tokens in one `Theme` with light values from the README and the proposed dark values, with Accent color (Blue/Red) as a user setting.
 4. **Keep existing rules:**
    - 15-character minimum
    - 3 free reflections, then the paywall on Post
    - 2 re-checks
-   - Level 2/3 questions **unlock 24 hours after the previous level is answered**, not on re-read. This replaces the old re-read rule.
-   - hidden alternates via "Not a helpful question?" in the `…` menu
+   - follow-up questions **unlock a week after the previous one is answered**, not on re-read (revised 2026-11-17: no levels)
+   - "Not a helpful question?" in the `…` menu moves on to the next question
    - translation only in settings
 5. **Verify.**
    - Build and run the app.
@@ -40,5 +40,5 @@ Scope: **iOS only.** No backend, pipeline, infra or schema changes. If something
    - Add unit tests for:
      - pagination: never splits a verse
      - progress derivation: read never overrides reflected; chapter fractions
-     - unlock logic: both gates, one notification per chapter, rescheduling on each new answer, nothing after Level 3. Inject a clock so tests don't depend on real time.
+     - unlock logic: both gates, one notification per chapter, rescheduling on each new answer, nothing after the last question. Inject a clock so tests don't depend on real time.
    - Compare simulator screenshots against the PNGs and list any differences.

@@ -18,15 +18,17 @@ on:
   quick prompt tuning on a few sections:
   - sections from BSB headings and Matthew Henry's divisions;
   - key ideas with verified commentator evidence;
-  - levelled question pools, context and views-differ notes;
+  - up to three questions per section in reading order (no levels), context and views-differ
+    notes;
   - KJV wording variants and manuscript notes.
 - An automatic quality gate replaces manual review (revised 2026-11-10, constitution v1.2.0):
-  rule checks, the evidence check, an Opus 5.5 grader calibrated against the owner's grades, and
-  a level check drop weak items and record why. Each run ends with a read-only scorecard.
+  rule checks, the evidence check and an Opus 5.5 grader calibrated against the owner's grades
+  drop weak items and record why (the level check was removed on 2026-11-17). Each run ends
+  with a read-only scorecard.
 - A run whose gate passes publishes the book to the draft channel. The owner reads it in the app and runs
   `promote`, which copies that exact pack to live after an additive "publish check"
   against the last live version. Packs are versioned JSON in S3 behind CloudFront.
-- Model calls go to Claude Sonnet 5.5 (generate), Haiku 5.5 (summaries, align, levels) and Opus
+- Model calls go to Claude Sonnet 5.5 (generate), Haiku 5.5 (summaries, align) and Opus
   5.5 (the grader, refusal fallback) on Bedrock, with structured outputs and no tools. Each run
   shows a cost estimate before it starts and stops at a spending cap.
 
@@ -155,7 +157,7 @@ pipeline/                         # uv package thinkbible-pipeline
 │   └── aws.toml                  # buckets, ledger table, state machine ARN, distribution id
 ├── prompts/
 │   ├── question-guide/v1.md      # quality rules + 10–20 approved examples
-│   └── {summaries,extract,questions,align,review,levels}/v1.md
+│   └── {summaries,extract,questions,align,review}/vN.md
 ├── evals/mark-sample.json        # 15–25 fixed sections for prompt evaluation
 ├── evals/calibration.json        # the owner's grades for ≥ 30 items; grader agreement per version
 ├── src/thinkbible_pipeline/
@@ -167,9 +169,9 @@ pipeline/                         # uv package thinkbible-pipeline
 │   ├── sections/builder.py
 │   ├── commentary/               # gather.py, crossrefs.py
 │   ├── llm/                      # runner.py (ModelRunner + Bedrock impl), outputs.py, prompts.py, budget.py
-│   ├── stages/                   # base.py (plan / run one section / finish), summaries, generate, align, checks, review, levels
+│   ├── stages/                   # base.py (plan / run one section / finish), summaries, generate, align, checks, review
 │   ├── drafts/                   # store.py, ids.py (counters)
-│   ├── gate/                     # rubric outcomes, drops, alternates, scorecard.py, calibration.py
+│   ├── gate/                     # rule checks, drops (outcomes.py), calibration.py
 │   ├── report/                   # render.py + templates/review.html.j2 (read-only scorecard)
 │   ├── evals/                    # run.py (prompt eval)
 │   └── publish/                  # build.py, publish_check.py, upload.py (draft), promote.py (draft → live)

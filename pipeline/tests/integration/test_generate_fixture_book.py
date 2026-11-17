@@ -59,8 +59,6 @@ _SECTION = re.compile(r"^Section (\S+): Mark (\d+):(\d+)-(\d+)", re.M)
 _NOTE = re.compile(r'<commentary commentator="([a-z-]+)"[^>]*>\n\[[^\]]+\]\n(.+?)\n', re.S)
 _IDEA = re.compile(r"^- (\S+-k\d+) \[verses (\d+)-(\d+)", re.M)
 _GRADED = re.compile(r"^- (\S+) \[(?:key idea|question);", re.M)
-_ASKED = re.compile(r"^- (\S+-q\d+): ", re.M)
-_JUDGED = re.compile(r"^Question (\S+): (.+)\n(?:.*\n)*?Target key ideas:\n((?:  - .+\n?)+)", re.M)
 
 
 @dataclass
@@ -79,16 +77,6 @@ class ScriptedRunner:
         if name == "review":  # every item is good, so the gate keeps them all
             value = {"items": [{"itemId": i, "score": 4, "reason": "Clear and faithful."}
                                for i in _GRADED.findall(user)]}  # fmt: skip
-        elif name == "levels.answer":
-            value = {"answers": [{"questionId": q, "answer": "A thoughtful answer."}
-                                 for q in _ASKED.findall(user)]}  # fmt: skip
-        elif name == "levels.judge":  # reaches the first target, except on the connecting question
-            judgments = []
-            for qid, text, targets in _JUDGED.findall(user):
-                first = re.findall(r"  - (\S+):", targets)[:1]
-                reached = [] if "Scripture" in text else first
-                judgments.append({"questionId": qid, "coveredTargetIds": reached})
-            value = {"judgments": judgments}
         elif name == "summaries":
             value: dict[str, Any] = {"summary": f"What happens in {section_id}."}
         elif name == "generate.extract":
@@ -109,14 +97,11 @@ class ScriptedRunner:
             ideas = [i[0] for i in _IDEA.findall(user)]
             value = {"questions": [
                 {"text": "What do you make of this detail?", "type": "noticing",
-                 "verseStart": start, "verseEnd": start, "targets": [ideas[0]],
-                 "answerDirectness": "inferred", "outsideKnowledge": "none"},
+                 "verseStart": start, "verseEnd": start, "targets": [ideas[0]]},
                 {"text": "Why might the whole passage be told this way?", "type": "meaning",
-                 "verseStart": start, "verseEnd": end, "targets": ideas[:2],
-                 "answerDirectness": "inferred", "outsideKnowledge": "none"},
+                 "verseStart": start, "verseEnd": end, "targets": ideas[:2]},
                 {"text": "How does this connect with the rest of Scripture?", "type": "application",
-                 "verseStart": start, "verseEnd": end, "targets": ideas[-1:],
-                 "answerDirectness": "beyond", "outsideKnowledge": "required"},
+                 "verseStart": start, "verseEnd": end, "targets": ideas[-1:]},
             ]}  # fmt: skip
         model = load_settings().stage(stage).model  # priced like the real call
         return output_model.model_validate(value), Usage(model=model, input_tokens=1000,
@@ -157,15 +142,15 @@ def test_fixture_book_end_to_end(tmp_path: Path, make_library: Any) -> None:
         assert (root / name).is_file(), name
     assert sorted(p.name for p in (root / "sections").iterdir()) == sorted(f"{i}.json" for i in ids)
     assert {p.name.split("-", 2)[-1] for p in (root / "runs").iterdir()} == {
-        "summaries.json", "generate.json", "check.json", "review.json", "levels.json"
+        "summaries.json", "generate.json", "check.json", "review.json"
     }  # fmt: skip
 
     for sid in ids:
         section = deps.store.read_draft_or_new(sid).section
         ideas = section["keyIdeas"]
         assert ideas and all(i["sources"] for i in ideas)  # every idea names a commentator
-        levels = {q["level"] for q in section["questions"]}
-        assert levels == set(range(1, min(3, len(ideas)) + 1))
+        questions = section["questions"]
+        assert 1 <= len(questions) <= min(3, len(ideas))  # one per idea at most, never more than 3
 
     card = json.loads((root / "scorecard.json").read_text())
     assert card["sections"] == len(ids) and card["failedSections"] == []
@@ -175,7 +160,7 @@ def test_fixture_book_end_to_end(tmp_path: Path, make_library: Any) -> None:
     assert json.loads((root / "book.json").read_text())["status"] == "gated"
     assert "Mark <span>scorecard</span>" in (root / "review.html").read_text()
     # summary, extract, questions, grade, answer, judge per section
-    assert len(runner.calls) == 6 * len(ids)
+    assert len(runner.calls) == 4 * len(ids)  # summaries, extract, questions, review
     assert card["ideaPassRate"] == 1.0 and card["questionPassRate"] == 1.0
     assert card["graded"] is True and not card["promotable"]  # no calibration yet
     assert any("calibrat" in b for b in card["blockers"])

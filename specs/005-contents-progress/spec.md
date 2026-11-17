@@ -12,7 +12,7 @@ profile and book progress at the top of You & settings.
 **Status**: Draft
 
 **Input**: User description: "Saved passages, reflections and progress (brief spec 6): each section
-has a progress record on the device (none, read, reflected; ideas caught; level; unlock time;
+has a progress record on the device (none, read, reflected; ideas caught; questions answered; unlock time;
 saved). The chapter panel's section rows show it as a pill (✓ 3/3, Read, Reading) with a bookmark
 for saved passages. Reflection counts appear only there. The avatar shows the reading streak. You &
 settings opens with a profile card (streak, reflections, ideas caught), your books with progress,
@@ -51,7 +51,7 @@ each row's pill and bookmark, and that tapping a row opens the feed at that card
 **Acceptance Scenarios**:
 
 1. **Given** a section with an evaluated answer, **When** its row shows, **Then** it shows "✓ c/t"
-   with the ideas caught across all levels and the section's total, even "✓ 0/4" when nothing
+   with the ideas caught across all of its questions and the section's total, even "✓ 0/4" when nothing
    matched.
 2. **Given** a section whose last page was on screen and that scrolled past without an answer,
    **When** its row shows, **Then** it shows "Read".
@@ -59,7 +59,7 @@ each row's pill and bookmark, and that tapping a row opens the feed at that card
    **Then** its row shows "Reading".
 4. **Given** a reflected section, **When** it is later scrolled past again, **Then** it stays
    reflected. Read never downgrades reflected.
-5. **Given** a section with an unlocked level (spec 004), **When** its row shows, **Then** "New"
+5. **Given** a section with an unlocked question (spec 004), **When** its row shows, **Then** "New"
    appears before the pill.
 
 ---
@@ -83,7 +83,7 @@ question and ideas from its snapshot.
    answer, highlight, note and idea list from the saved snapshot.
 2. **Given** the reader's free reflections are used up and they are not subscribed, **When** they
    open a saved reflection, **Then** it is fully viewable.
-3. **Given** a section with reflections at several levels, **When** reviewed, **Then** the newest
+3. **Given** a section with reflections on several of its questions, **When** reviewed, **Then** the newest
    thread shows first and each earlier one is reachable through "Show more" (spec 004).
 
 ---
@@ -112,7 +112,7 @@ panel count reads 2, unsave one, and confirm it's gone on both.
 ### User Story 4 - My reflections follow me to a new phone (Priority: P1)
 
 The reader signs into the same Apple ID on a new iPhone and installs ThinkBible. Their reflections,
-progress, levels, unlock times, saved passages and streak appear without any ThinkBible account.
+progress, questions answered, unlock times, saved passages and streak appear without any ThinkBible account.
 
 **Why this priority**: Losing reflections would break trust. No accounts is a privacy principle.
 
@@ -137,7 +137,7 @@ same Apple ID and confirm they appear, and that a change on B appears on A.
 The avatar in the header carries a small flame badge with "6". You & settings opens with a profile
 card: the initial, "You", "Reading Mark since Nov 3", and three tiles: 6 day streak · 4
 reflections · 9 ideas caught. Under "YOUR BOOKS", Mark shows a progress bar, "Chapter 1 of 16 · 5
-of 9 sections read · 2 ready for a harder question" and "Continue · 1:21". Upcoming books show
+of 9 sections read · 2 with a new question" and "Continue · 1:21". Upcoming books show
 in secondary ink, e.g. "John · Coming before Easter".
 
 **Why this priority**: A light habit cue and a sense of progress. Useful but not core.
@@ -196,14 +196,14 @@ second synced device.
 ### Functional Requirements
 
 - **FR-001**: The app MUST keep one progress record per section: `sectionId`, `state` (none, read,
-  reflected), `ideasCaught` (union across levels) and `ideasTotal`, `level` (highest answered),
+  reflected), `ideasCaught` (union across questions) and `ideasTotal`, `answered` (questions answered),
   `unlocksAt`, `saved`, `updatedAt`.
 - **FR-002**: `reflected` MUST be set when an answer is evaluated (live or fallback), even with 0
   ideas caught. `read` MUST be set when a card's last page has been on screen and the card has
   scrolled past without an answer. Read never downgrades reflected.
 - **FR-003**: Chapter panel section rows MUST show exactly one trailing state: "✓ c/t" (reflected),
   "Read", "Reading" (current, unanswered) or none, preceded by a bookmark when saved and "New" when
-  a level is unlocked. Counts MUST appear nowhere else in the panel.
+  a question is unlocked. Counts MUST appear nowhere else in the panel.
 - **FR-004**: Every row, saved passage and "Continue" MUST open the feed at that section.
 - **FR-005**: The Save bookmark in each card's action row MUST toggle `saved`. Saved passages MUST
   be listed newest first in You & settings and counted on the panel's "Saved passages" row.
@@ -213,12 +213,12 @@ second synced device.
   streak MUST be stored on the device (SwiftData) and synced through the user's own iCloud
   (CloudKit) when available, with no app account.
 - **FR-008**: Sync conflicts MUST never lose a reflection. Concurrent reflections are all kept, and
-  progress merges by taking the highest level, the furthest state (reflected > read > none), the
-  union of caught ideas, and the latest `unlocksAt` for the merged level.
+  progress merges by taking the most questions answered, the furthest state (reflected > read > none), the
+  union of caught ideas, and the latest `unlocksAt` for the merged count.
 - **FR-009**: The streak MUST count consecutive local calendar days with at least one section read
   or reflected, shown as a flame badge on the header avatar.
 - **FR-010**: You & settings MUST open with the profile card (start date, streak, reflections,
-  ideas caught), Your books (per-book progress, sections read, sections ready for a harder question,
+  ideas caught), Your books (per-book progress, sections read, sections with a new question,
   "Continue · <ref>", and upcoming books), and Saved passages. Published and upcoming books come from
   the content catalog.
 - **FR-011**: You & settings MUST show iCloud sync status and offer "Delete all reflections" with a
@@ -233,7 +233,7 @@ second synced device.
 - **Reading position**: book, chapter, section ID, updated time.
 - **Question history**: as defined in spec 004.
 - **Derived values** (computed, not stored): streak, per-book progress, reflections count, ideas
-  caught total, sections ready for a harder question.
+  caught total, sections with a new question.
 
 ## Success Criteria *(mandatory)*
 

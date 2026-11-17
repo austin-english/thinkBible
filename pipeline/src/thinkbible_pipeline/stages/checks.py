@@ -6,8 +6,8 @@ a section was generated:
 
 1. Every key idea and question again (``gate/checks.py``), plus each idea's sources against its
    evidence quotes and each question's targets against the ideas kept. Failing items are dropped
-   with ``stage: "check"``; questions above the level cap the remaining ideas allow are dropped;
-   an alternate whose primary was dropped takes its place.
+   with ``stage: "check"``, and so are questions left aiming at no kept idea, or beyond the one
+   question per kept idea a section may have.
 2. The section against the pack schema and the shared cross-field rules.
 
 A section that breaks a rule here is flagged for regeneration: the next run's ``generate``

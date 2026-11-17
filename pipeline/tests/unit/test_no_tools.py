@@ -142,3 +142,79 @@ def test_client_follows_the_endpoint_setting() -> None:
     assert type(runtime._client) is AsyncAnthropicBedrock
     mantle = BedrockRunner(dataclasses.replace(SETTINGS, endpoint="mantle"))
     assert type(mantle._client) is AsyncAnthropicBedrockMantle
+
+
+def _throttle() -> Exception:
+    """A Bedrock 429, as the SDK raises it (its response only needs these attributes here)."""
+    import anthropic
+
+    response = SimpleNamespace(status_code=429, headers={}, request=None)
+    return anthropic.RateLimitError("Too many requests", response=response, body=None)  # type: ignore[arg-type]
+
+
+def test_throttled_requests_are_retried_with_backoff() -> None:
+    client = FakeClient(_throttle(), _throttle(), _resp(Out(summary="after waiting")))
+    waits: list[float] = []
+
+    async def sleep(seconds: float) -> None:
+        waits.append(seconds)
+
+    out, _ = asyncio.run(
+        BedrockRunner(SETTINGS, client=client, sleep=sleep).parse(
+            "summaries", SYSTEM, "x", Out, section_id="mrk-1-1"
+        )
+    )
+    assert out.summary == "after waiting" and len(client.calls) == 3
+    throttle_waits = [w for w in waits if w >= 9]
+    assert 9 <= throttle_waits[0] <= 11 and 18 <= throttle_waits[1] <= 22  # 10s, then 20s
+
+
+def test_throttling_beyond_the_retries_raises_throttled() -> None:
+    from thinkbible_pipeline.llm.runner import Throttled
+
+    retries = SETTINGS.throttle_retries
+    client = FakeClient(*[_throttle() for _ in range(retries + 1)])
+
+    async def sleep(_seconds: float) -> None:
+        return None
+
+    with pytest.raises(Throttled, match=f"after {retries} retries"):
+        asyncio.run(
+            BedrockRunner(SETTINGS, client=client, sleep=sleep).parse(
+                "summaries", SYSTEM, "x", Out, section_id="mrk-1-1"
+            )
+        )
+    assert len(client.calls) == retries + 1
+
+
+def test_rate_limiter_keeps_starts_within_the_quota() -> None:
+    from thinkbible_pipeline.llm.runner import RateLimiter
+
+    now = [0.0]
+    waits: list[float] = []
+
+    async def sleep(seconds: float) -> None:
+        waits.append(seconds)
+        now[0] += seconds
+
+    limiter = RateLimiter(3, clock=lambda: now[0], sleep=sleep)
+
+    async def five_requests() -> list[float]:
+        starts = []
+        for _ in range(5):
+            await limiter.wait()
+            starts.append(now[0])
+            now[0] += 1  # each request takes a second to send
+        return starts
+
+    starts = asyncio.run(five_requests())
+    assert starts[:3] == [0.0, 1.0, 2.0]
+    assert starts[3] >= 60.0 and starts[4] >= 61.0  # the 4th waits for the 1st to age out
+
+
+def test_stages_sharing_a_model_share_its_quota() -> None:
+    runner = BedrockRunner(SETTINGS, client=FakeClient())
+    haiku = [s for s, c in SETTINGS.stages.items() if c.model == SETTINGS.stage("summaries").model]
+    assert len(haiku) > 1
+    assert all(runner._limiter(s) is runner._limiter(haiku[0]) for s in haiku)
+    assert runner._limiter("review").per_minute == 5  # type: ignore[union-attr]

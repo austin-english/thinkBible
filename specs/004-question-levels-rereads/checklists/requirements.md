@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Question Levels and 24-Hour Unlocks
+# Specification Quality Checklist: Question Sequence and Weekly Unlocks
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-11-03

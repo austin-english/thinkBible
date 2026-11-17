@@ -61,9 +61,8 @@ h1 span { color: var(--rubric); }
 details summary { cursor: pointer; color: var(--ink-2); font-size: 12.5px; }
 blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--rule); color: var(--ink-2); font-size: 13px; }
 .q { font: italic 15px/1.45 var(--serif); color: var(--ink-page); }
-.q.alt { opacity: .78; }
 .qmeta { font-size: 12px; color: var(--ink-3); }
-.level { display: flex; flex-direction: column; gap: 8px; }
+.qlist { display: flex; flex-direction: column; gap: 10px; margin: 0; padding-left: 20px; }
 .note { color: var(--ink-page); }
 .dropped li { margin-bottom: 4px; }
 .mono { font: 12px var(--mono); }
@@ -136,18 +135,16 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
           </div>
           {% else %}<div class="qmeta">No key ideas kept.</div>{% endfor %}
         </div>
-        {% if s.levels %}
-        <div><div class="label">Questions</div>
-          {% for level, qs in s.levels %}
-          <div class="level"><div class="qmeta"><b>Level {{ level }}</b></div>
-            {% for q in qs %}
-            <div>
-              <div class="q {{ 'alt' if q.isAlternate }}">{{ q.text }}</div>
-              <div class="qmeta">{% if q.grade %}<b>graded {{ q.grade.score }}</b>: {{ q.grade.notes }}<br>{% endif %}{{ "alternate · " if q.isAlternate }}{{ q.type }} · {{ q.scope }}{% if q.features %} · {{ q.features.answer_directness }}, outside knowledge {{ q.features.outside_knowledge }}{% endif %} · aims at: {{ q.targets|join("; ") }} · <span class="mono">{{ q.id }}</span></div>
-            </div>
+        {% if s.questions %}
+        <div><div class="label">Questions, in the order a reader meets them (one a week)</div>
+          <ol class="qlist">
+            {% for q in s.questions %}
+            <li>
+              <div class="q">{{ q.text }}</div>
+              <div class="qmeta">{% if q.grade %}<b>graded {{ q.grade.score }}</b>: {{ q.grade.notes }}<br>{% endif %}{{ q.type }} · {{ q.scope }} · aims at: {{ q.targets|join("; ") }} · <span class="mono">{{ q.id }}</span></div>
+            </li>
             {% endfor %}
-          </div>
-          {% endfor %}
+          </ol>
         </div>
         {% elif s.no_prompt %}<div class="note"><span class="label">No question</span><br>{{ s.no_prompt_reason }}</div>{% endif %}
         <div><div class="label">Background</div><div class="note">{{ s.context }}</div></div>
@@ -155,7 +152,6 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
         <details><summary>Pipeline details: summary, commentary given, dropped items ({{ s.dropped|length }})</summary>
           <p class="qmeta">Summary for the next section: “{{ s.summary or "" }}”</p>
           <p class="qmeta">Commentary given: {% for who, tokens, refs, trimmed in s.excerpts %}{{ who }} {{ "{:,}".format(tokens) }} tokens{% if refs %} (follows {{ refs|join(", ") }}){% endif %}{% if trimmed %}, trimmed{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}</p>
-          {% if s.level_changes %}<p class="qmeta">Level changes: {% for c in s.level_changes %}<span class="mono">{{ c.question_id }}</span> {{ c.from_level }}→{{ c.to_level }} ({{ c.reason }}){% if not loop.last %}; {% endif %}{% endfor %}</p>{% endif %}
           {% if s.dropped %}<ul class="dropped">{% for d in s.dropped %}<li><span class="mono">{{ d.id }}</span> · {{ d.reason }}<br><em>{{ d.text }}</em></li>{% endfor %}</ul>{% endif %}
         </details>
         {% else %}

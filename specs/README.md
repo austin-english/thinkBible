@@ -1,14 +1,14 @@
 # ThinkBible specs
 
 Spec Kit feature specs, in build order. The constitution lives at
-[`.specify/memory/constitution.md`](../.specify/memory/constitution.md) (v1.2.0).
+[`.specify/memory/constitution.md`](../.specify/memory/constitution.md) (v1.3.0).
 
 | # | Feature | Status | Open clarifications |
 |---|---|---|---|
 | 001 | [Content pack format and batch pipeline](001-content-pack-pipeline/spec.md) | Draft | Review surface for human review |
 | 002 | [Book-feel feed and chapter panel](002-reader-read-mode/spec.md) | Draft | none |
 | 003 | [Question footer, reply thread and live compare API](003-reflection-live-compare/spec.md) | Draft | Crisis resources; voice input in MVP? |
-| 004 | [Question levels and 24-hour unlocks](004-question-levels-rereads/spec.md) | Draft | none |
+| 004 | [Question sequence and weekly unlocks](004-question-levels-rereads/spec.md) | Draft | none |
 | 005 | [Section status, saved passages and progress](005-contents-progress/spec.md) | Draft | none |
 | 006 | [Subscription, paywall and You & settings](006-subscription-paywall-settings/spec.md) | Draft | none |
 | 007 | [Feedback and question analytics](007-feedback-question-analytics/spec.md) | Draft | Event ingestion path |
@@ -52,10 +52,12 @@ constitution and these specs:
 
 - **Free tier:** 3 reflections in total per device. After that, the reader must subscribe.
 - **Follow-up questions:** a section's next, harder question from the reviewed pool. The live
-  model never writes questions. *Superseded 2026-11-10:* it now unlocks 24 hours after the previous
-  level is answered, not on a re-read (see below).
-- **Pack shape:** follows DESIGN.md ("Data the UI reads"). Questions have `level`, verse scope,
-  `targets`, `isAlternate` and `status`, and keep `type` as pipeline metadata. Key ideas have
+  model never writes questions. *Superseded 2026-11-10:* it unlocks 24 hours after the previous
+  level is answered, not on a re-read. *Superseded 2026-11-17:* the section's next question in
+  order, a week after the previous answer, with no levels (see below).
+- **Pack shape:** follows DESIGN.md ("Data the UI reads"). Questions have verse scope, `targets`
+  and `status`, and keep `type` as pipeline metadata (`level` and `isAlternate` were removed on
+  2026-11-17, see below). Key ideas have
   `title`, `body` and verse scope. The brief's example section now uses this shape.
 
 ### Spec 001: cloud runs and an automatic quality gate (2026-11-10)
@@ -63,13 +65,25 @@ constitution and these specs:
 - **Runs execute in AWS**: Step Functions with one Lambda per section per stage, drafts in S3, a
   DynamoDB spend ledger. The CLI estimates, confirms and starts runs; `--local` runs a few
   sections in-process for prompt tuning.
-- **No manual review of generated JSON.** Rule checks, the evidence check, an Opus 5.5 grader and
-  a level check drop weak items and write a read-only scorecard. The grader is calibrated once
+- **No manual review of generated JSON.** Rule checks, the evidence check and an Opus 5.5 grader
+  drop weak items and write a read-only scorecard. The grader is calibrated once
   against the owner's grades (≥ 85% agreement on ≥ 30 items).
 - **Draft, then live.** A run whose gate passes publishes to the draft channel; the owner reads it
   in the app and runs `promote`. Frozen text and the additive publish check apply to live only.
 - Constitution amended to v1.2.0 for this. In v1.2.1 (2026-11-13), draft and live became two
   channels of one packs bucket in a single AWS environment, instead of two environments.
+
+### Questions without levels, a week apart (2026-11-17)
+
+- **No difficulty levels.** A section has up to three questions (never more than its key ideas)
+  in a fixed order, aimed at the passage's main ideas. Difficulty depends on the reader and
+  couldn't be measured reliably; the level check failed half of a 10-section Mark run.
+- **One week between questions.** The first is asked on the first read; the next unlocks a week
+  after the previous answer, matching how rarely people return to the same passage.
+- **No hidden alternates.** "Not a helpful question?" moves to the next question in the list.
+- **Premium** still covers a section's follow-up questions (the second and third).
+- Constitution amended to v1.3.0. The pack schema dropped `level` and `isAlternate`; specs 004–007,
+  the brief and the design docs were updated. Spec 004's folder name is kept.
 
 ### Book-feel redesign (2026-11-10)
 
@@ -82,11 +96,12 @@ existing branches still match; the titles changed.
 - **No Home, no Study / Read switch, no Skip.** The app opens on a feed of page cards. The chapter
   panel is the table of contents. Plain reading is Settings › Show questions. Scrolling past an
   unanswered card marks it Read, and analytics count it as "passed".
-- **Levels unlock 24 hours after an answer**, with one local notification per chapter. All on the
+- **Levels unlock 24 hours after an answer** (*now: the next question a week after an answer,
+  2026-11-17*), with one local notification per chapter. All on the
   device; no backend change.
 - **Settings:** translation and text size live only in You & settings. Scripture font, "Open in"
   and "Open questions automatically" are gone. Accent color, Justify text, Show questions and
-  Harder-question alerts are new.
+  Harder-question alerts (*now "New-question alerts"*) are new.
 - **No backend, API or schema changes.** Spec 001 and the compare-service requirements in spec 003
   are unchanged.
 
@@ -95,8 +110,8 @@ existing branches still match; the titles changed.
 These were found while drafting. The specs follow the resolution shown here, so update the source
 docs to match:
 
-1. **"Try a different question".** It is still in the brief's MVP table but was replaced by levels
-   and "Not a helpful question?". The specs drop it.
+1. **"Try a different question".** It is still in the brief's MVP table but was replaced by the
+   question sequence and "Not a helpful question?". The specs drop it.
 2. **Translations in MVP.** The brief's MVP summary says "one translation", but the MVP table and
    DESIGN.md include the BSB / KJV switch. The specs include both.
 3. **Verse notes.** Pipeline step 6 generates them, but DESIGN.md defers them to V2. The pack
@@ -108,7 +123,7 @@ docs to match:
    the first two during `/speckit-plan`.
 6. ~~Constitution behind the book-feel design.~~ Resolved in v1.1.0 (2026-11-10): Read mode is
    gone (plain reading is "questions off"), follow-ups unlock 24 hours after the previous level is
-   answered, and the UI source of truth is `docs/design/README.md` plus `DESIGN.md`.
+   answered (a week after the previous question since v1.3.0), and the UI source of truth is `docs/design/README.md` plus `DESIGN.md`.
 7. **Design handoff paths.** `docs/design/README.md` cites `source/PostBook.dc.html`,
    `source/YouBook.dc.html` and `source/UnlockNotification.dc.html`, which aren't in the repo, and
    `docs/design/CLAUDE_CODE_PROMPT.md` refers to `docs/design/book-feel/`. The files were placed in

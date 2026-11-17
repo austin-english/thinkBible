@@ -16,8 +16,6 @@ from pydantic.alias_generators import to_camel
 
 Commentator = Literal["matthew-henry", "jamieson-fausset-brown", "adam-clarke"]
 QuestionType = Literal["noticing", "meaning", "application"]
-AnswerDirectness = Literal["stated", "inferred", "beyond"]
-OutsideKnowledge = Literal["none", "some", "required"]
 
 
 class _Out(BaseModel):
@@ -68,14 +66,14 @@ class QuestionOut(_Out):
     verse_start: int
     verse_end: int
     targets: list[str] = Field(description="IDs of the key ideas this question aims at.")
-    answer_directness: AnswerDirectness
-    outside_knowledge: OutsideKnowledge
 
 
 class QuestionsOut(_Out):
-    """``generate`` call 2 (``questions``): the question pool; code sets levels and alternates."""
+    """``generate`` call 2 (``questions``): candidates in reading order; code keeps up to 3."""
 
-    questions: list[QuestionOut] = Field(description="Up to 8 candidate questions.")
+    questions: list[QuestionOut] = Field(
+        description="Up to 6 candidate questions, in the order a reader should meet them."
+    )
 
 
 class ItemGradeOut(_Out):
@@ -91,27 +89,3 @@ class ReviewOut(_Out):
     """``review``: the grader's 1-5 grade for every key idea and question of a section (R16)."""
 
     items: list[ItemGradeOut]
-
-
-class ReaderAnswerOut(_Out):
-    question_id: str
-    answer: str = Field(description="Two or three sentences, as a typical reader would answer.")
-
-
-class LevelsAnswerOut(_Out):
-    """``levels`` call 1: a typical reader answers every question using only the passage."""
-
-    answers: list[ReaderAnswerOut]
-
-
-class CoverageOut(_Out):
-    question_id: str
-    covered_target_ids: list[str] = Field(
-        description="The IDs of the question's target ideas this answer really reaches."
-    )
-
-
-class LevelsJudgeOut(_Out):
-    """``levels`` call 2: which target ideas each typical answer covers (R11)."""
-
-    judgments: list[CoverageOut]

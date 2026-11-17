@@ -167,33 +167,29 @@ def test_rule5_and_rule9_targets() -> None:
     assert 5 in rules_of(violations(lambda d: retire_idea(d, 1)))
 
 
-def test_rule6_pool_shape() -> None:
-    def two_primaries(d: dict[str, Any]) -> None:
-        sec(d)["questions"][1]["isAlternate"] = False
+def test_rule6_question_count() -> None:
+    """At most 3 active questions, and never more than the active key ideas (no levels)."""
 
-    def no_whole_passage(d: dict[str, Any]) -> None:
-        q = sec(d)["questions"][2]
-        q["verseStart"], q["verseEnd"] = 1, 7
+    def four_questions(d: dict[str, Any]) -> None:
+        extra = copy.deepcopy(sec(d)["questions"][0])
+        extra["id"] = "mrk-1-1-q9"
+        sec(d)["questions"].append(extra)
 
-    def too_few_ideas_for_level3(d: dict[str, Any]) -> None:
+    def two_ideas_three_questions(d: dict[str, Any]) -> None:
         for k in sec(d)["keyIdeas"][2:]:
             k["status"], k["retiredIn"] = "retired", "1.1.0"
-        q4 = sec(d)["questions"][3]
-        q4["status"], q4["retiredIn"] = "retired", "1.1.0"
-        sec(d)["questions"][2]["targets"] = ["mrk-1-1-k2"]
+        for q in sec(d)["questions"]:
+            q["targets"] = ["mrk-1-1-k1"]
 
-    assert any("exactly 1 active primary" in v.message for v in violations(two_primaries))
-    assert any("whole-passage" in v.message for v in violations(no_whole_passage))
-    assert violations(too_few_ideas_for_level3) == []  # 2 ideas -> levels 1-2, L3 retired: fine
+    def two_ideas_two_questions(d: dict[str, Any]) -> None:
+        two_ideas_three_questions(d)
+        q = sec(d)["questions"][2]
+        q["status"], q["retiredIn"] = "retired", "1.1.0"
 
-    def level3_with_two_ideas(d: dict[str, Any]) -> None:
-        too_few_ideas_for_level3(d)
-        q4 = sec(d)["questions"][3]
-        q4["status"] = "active"
-        del q4["retiredIn"]
-        q4["targets"] = ["mrk-1-1-k1"]
-
-    assert any("level 3 not allowed" in v.message for v in violations(level3_with_two_ideas))
+    assert any("at most 3" in v.message for v in violations(four_questions))
+    assert any("at most 2 with 2 key ideas" in v.message
+               for v in violations(two_ideas_three_questions))  # fmt: skip
+    assert violations(two_ideas_two_questions) == []
 
 
 def test_rule7_no_prompt() -> None:

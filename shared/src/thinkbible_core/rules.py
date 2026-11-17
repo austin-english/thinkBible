@@ -15,7 +15,7 @@ from itertools import pairwise
 from thinkbible_core.models import KeyIdea, Question, Section, StudyPack, VerseText
 from thinkbible_core.refs import malformed, unresolved
 
-MAX_ACTIVE_QUESTIONS = 6
+MAX_ACTIVE_QUESTIONS = 3
 
 
 @dataclass(frozen=True)
@@ -28,9 +28,13 @@ class Violation:
         return f"rule {self.rule} [{self.item_id}]: {self.message}"
 
 
-def allowed_levels(active_idea_count: int) -> set[int]:
-    """Levels a section gets from its number of active key ideas (FR-009)."""
-    return set(range(1, min(active_idea_count, 3) + 1))
+def max_questions(active_idea_count: int) -> int:
+    """How many active questions a section may have: one per active key idea, at most 3 (FR-009).
+
+    Questions are an ordered list with no levels (revised 2026-11-17): the reader meets the first
+    on the first read, and each next one a week after answering the one before.
+    """
+    return min(active_idea_count, MAX_ACTIVE_QUESTIONS)
 
 
 def cross_field_violations(
@@ -113,7 +117,6 @@ def _section_rules(
     ideas = {k.id: k for k in s.key_ideas}
     active_ideas = {k.id for k in s.key_ideas if k.status == "active"}
     active_qs = [q for q in s.questions if q.status == "active"]
-    whole = (s.verse_start, s.verse_end)
     items: list[KeyIdea | Question] = [*s.key_ideas, *s.questions]
 
     # 2: item ranges inside the section
@@ -156,12 +159,12 @@ def _section_rules(
         elif retired:
             out.append(Violation(5, q.id, f"targets retired ideas: {retired}"))
 
-    # 6 + 7: question pool shape
+    # 6 + 7: question list shape
     if s.no_prompt:
         if active_qs:
             out.append(Violation(7, s.id, "noPrompt section has active questions"))
     else:
-        out += _pool_rules(s.id, len(active_ideas), active_qs, whole)
+        out += _question_rules(s.id, len(active_ideas), active_qs)
 
     # 8: placeholders well-formed and resolvable
     for item_id, text in _texts(s):
@@ -172,39 +175,21 @@ def _section_rules(
     return out
 
 
-def _pool_rules(
-    section_id: str, n_ideas: int, qs: list[Question], whole: tuple[int, int]
-) -> list[Violation]:
-    out: list[Violation] = []
+def _question_rules(section_id: str, n_ideas: int, qs: list[Question]) -> list[Violation]:
     if n_ideas == 0:
         return [Violation(7, section_id, "prompted section has no active key ideas")]
-    levels = allowed_levels(n_ideas)
-    if len(qs) > MAX_ACTIVE_QUESTIONS:
-        out.append(
-            Violation(6, section_id, f"{len(qs)} active questions (max {MAX_ACTIVE_QUESTIONS})")
-        )
-    for q in qs:
-        if q.level not in levels:
-            out.append(Violation(6, q.id, f"level {q.level} not allowed with {n_ideas} key ideas"))
-    for level in sorted(levels):
-        at = [q for q in qs if q.level == level]
-        primaries = [q for q in at if not q.is_alternate]
-        alternates = [q for q in at if q.is_alternate]
-        if len(primaries) != 1:
-            out.append(
-                Violation(
-                    6 if level > 1 else 7,
-                    section_id,
-                    f"level {level} needs exactly 1 active primary question, has {len(primaries)}",
-                )
+    if not qs:
+        return [Violation(7, section_id, "prompted section has no active question")]
+    cap = max_questions(n_ideas)
+    if len(qs) > cap:
+        return [
+            Violation(
+                6,
+                section_id,
+                f"{len(qs)} active questions (at most {cap} with {n_ideas} key ideas)",
             )
-        if len(alternates) > 1:
-            out.append(
-                Violation(6, section_id, f"level {level} has {len(alternates)} alternates (max 1)")
-            )
-    if len(levels) >= 2 and not any((q.verse_start, q.verse_end) == whole for q in qs):
-        out.append(Violation(6, section_id, "2+ levels but no whole-passage question"))
-    return out
+        ]
+    return []
 
 
 def _texts(s: Section) -> list[tuple[str, str]]:

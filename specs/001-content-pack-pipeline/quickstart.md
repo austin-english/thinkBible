@@ -139,7 +139,7 @@ curl -s https://<distribution>/live/v1/index.json | jq .
 
 ## 7. Gate and promotion refusals (FR-021, FR-024)
 
-1. **Failed section**: make one section fail (a recorded fake output with no usable Level 1
+1. **Failed section**: make one section fail (a recorded fake output with no usable
    question in the integration test). **Expected**: nothing is published to the draft channel, exit code 3, and
    the scorecard names the section.
 2. **Below threshold**: set `gate.min_question_pass_rate` above the book's rate and `promote`.

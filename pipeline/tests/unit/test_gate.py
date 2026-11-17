@@ -1,4 +1,4 @@
-"""The grader and the level check (T059, R11, R16, FR-018) with FakeRunner: no model calls."""
+"""The grader and what the gate does with its grades (T059, R16, FR-018), with FakeRunner."""
 
 import asyncio
 import copy
@@ -27,12 +27,10 @@ def idea(n: int) -> dict[str, Any]:
             "status": "active"}  # fmt: skip
 
 
-def question(n: int, level: int, alt: bool, targets: list[int], start: int = 1, end: int = 8,
-             ) -> dict[str, Any]:  # fmt: skip
-    return {"id": f"{SID}-q{n}", "level": level, "type": "meaning", "verseStart": start,
-            "verseEnd": end, "text": f"What do you make of detail number {n} here?",
-            "targets": [f"{SID}-k{t}" for t in targets], "isAlternate": alt,
-            "status": "active"}  # fmt: skip
+def question(n: int, targets: list[int], start: int = 1, end: int = 8) -> dict[str, Any]:
+    return {"id": f"{SID}-q{n}", "type": "meaning", "verseStart": start, "verseEnd": end,
+            "text": f"What do you make of detail number {n} here?",
+            "targets": [f"{SID}-k{t}" for t in targets], "status": "active"}  # fmt: skip
 
 
 SECTION = {
@@ -40,10 +38,7 @@ SECTION = {
     "noPrompt": False, "context": "Mark wrote for Romans.", "viewsDiffer": None,
     "manuscriptNotes": [],
     "keyIdeas": [idea(1), idea(2), idea(3)],
-    "questions": [
-        question(1, 1, False, [1], 2, 2), question(2, 1, True, [2], 4, 4),
-        question(3, 2, False, [1, 2]), question(4, 3, False, [3]), question(5, 3, True, [1], 3, 5),
-    ],
+    "questions": [question(1, [1, 2]), question(2, [2], 4, 4), question(3, [3], 3, 5)],
 }  # fmt: skip
 
 
@@ -78,98 +73,70 @@ def grades(scores: dict[str, int]) -> dict[str, Any]:
                       for i, s in scores.items()]}  # fmt: skip
 
 
-ALL_GOOD = {"k1": 5, "k2": 4, "k3": 4, "q1": 4, "q2": 4, "q3": 5, "q4": 4, "q5": 4}
+ALL_GOOD = {"k1": 5, "k2": 4, "k3": 4, "q1": 4, "q2": 4, "q3": 5}
 
 
-def test_low_grades_are_dropped_and_an_alternate_takes_the_primarys_place(
+def ids(draft: SectionDraft) -> list[str]:
+    return [q["id"].rsplit("-", 1)[1] for q in draft.section["questions"]]
+
+
+def test_low_grades_are_dropped_and_the_rest_keep_their_order(
     tmp_path: Path, make_library: Any
 ) -> None:
-    deps = setup(tmp_path, make_library,
-                 {("review", SID): grades({**ALL_GOOD, "q1": 2, "q5": 1})})  # fmt: skip
+    deps = setup(tmp_path, make_library, {("review", SID): grades({**ALL_GOOD, "q2": 2})})
     result = asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
     assert result.exit_code == ExitCode.OK
     draft = deps.store.read_draft_or_new(SID)
-    assert draft.grades[f"{SID}-q1"] == Grade(score=2, notes="Reason for q1. (breaks: faithful)")
-    dropped = {d.item_id: (d.stage, d.reason) for d in draft.dropped}
-    assert dropped == {f"{SID}-q1": ("review", "graded 2: Reason for q1."),
-                       f"{SID}-q5": ("review", "graded 1: Reason for q5.")}  # fmt: skip
-    pool = [
-        (q["id"].rsplit("-", 1)[1], q["level"], q["isAlternate"])
-        for q in draft.section["questions"]
-    ]
-    assert pool == [("q2", 1, False), ("q3", 2, False), ("q4", 3, False)]  # q2 stepped up
+    assert draft.grades[f"{SID}-q2"] == Grade(score=2, notes="Reason for q2. (breaks: faithful)")
+    assert {d.item_id: (d.stage, d.reason) for d in draft.dropped} == {
+        f"{SID}-q2": ("review", "graded 2: Reason for q2.")
+    }
+    assert ids(draft) == ["q1", "q3"]
 
 
-def test_a_dropped_idea_takes_its_questions_and_lowers_the_level_cap(
+def test_a_dropped_idea_takes_its_questions_and_lowers_the_question_cap(
     tmp_path: Path, make_library: Any
 ) -> None:
-    deps = setup(tmp_path, make_library, {("review", SID): grades({**ALL_GOOD, "k3": 1})})
+    section = {**SECTION, "questions": [question(1, [1, 2]), question(2, [2], 4, 4),
+                                        question(3, [1, 3], 3, 5), question(4, [3])]}  # fmt: skip
+    deps = setup(tmp_path, make_library,
+                 {("review", SID): grades({**ALL_GOOD, "k3": 1, "q4": 4})}, section)  # fmt: skip
     asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
     draft = deps.store.read_draft_or_new(SID)
     reasons = {d.item_id: d.reason for d in draft.dropped}
     assert reasons[f"{SID}-q4"] == "targets no key idea that was kept"
-    assert reasons[f"{SID}-q5"].startswith("Level 3 needs at least 3 key ideas")
-    assert {q["level"] for q in draft.section["questions"]} == {1, 2}
+    # q3 keeps its other idea but comes third, and 2 ideas allow 2 questions.
+    assert reasons[f"{SID}-q3"] == "more than 2 questions for the 2 key ideas left"
+    assert ids(draft) == ["q1", "q2"]
 
 
 def test_pass_rates_count_grades_before_drops(tmp_path: Path, make_library: Any) -> None:
     deps = setup(tmp_path, make_library,
-                 {("review", SID): grades({**ALL_GOOD, "q1": 2, "q5": 1})})  # fmt: skip
+                 {("review", SID): grades({**ALL_GOOD, "q1": 2, "q3": 1})})  # fmt: skip
     asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
     draft = deps.store.read_draft_or_new(SID)
     from datetime import UTC, datetime
 
     card = build_scorecard("MRK", [ENTRY], {SID: draft}, [], datetime.now(UTC))
     assert (card.ideas.passed, card.ideas.total) == (3, 3) and card.idea_pass_rate == 1.0
-    assert (card.questions.passed, card.questions.total) == (3, 5)  # q1, q5 counted though dropped
-    assert card.question_pass_rate == 0.6
-    assert any("question pass rate 0.60 < 0.80" in b for b in card.blockers)
+    assert (card.questions.passed, card.questions.total) == (1, 3)  # q1, q3 counted though dropped
+    assert any("question pass rate 0.33 < 0.80" in b for b in card.blockers)
 
 
-def levels_responses(covered: dict[str, list[int]]) -> dict[tuple[str, str], Any]:
-    qs = [f"q{n}" for n in range(1, 6)]
-    return {
-        ("levels.answer", SID): {"answers": [{"questionId": f"{SID}-{q}", "answer": "An answer."}
-                                             for q in qs]},
-        ("levels.judge", SID): {"judgments": [
-            {"questionId": f"{SID}-{q}",
-             "coveredTargetIds": [f"{SID}-k{t}" for t in covered.get(q, [])]}
-            for q in qs]},
-    }  # fmt: skip
-
-
-def test_level_check_moves_an_easy_level_3_and_drops_a_hard_level_1(
+def test_a_section_left_without_a_question_is_regenerated_once_then_failed(
     tmp_path: Path, make_library: Any
 ) -> None:
-    covered = {"q1": [], "q2": [2], "q3": [1], "q4": [], "q5": [1]}  # q5 (L3, one target) reached
-    deps = setup(tmp_path, make_library, levels_responses(covered))
-    result = asyncio.run(run(RunRequest(book="mark", stages=["levels"]), deps))
-    assert result.exit_code == ExitCode.OK
-    draft = deps.store.read_draft_or_new(SID)
-    assert [(c.question_id, c.from_level, c.to_level) for c in draft.level_changes] == [
-        (f"{SID}-q5", 3, 2)
-    ]
-    assert [(d.item_id, d.stage) for d in draft.dropped] == [(f"{SID}-q1", "levels")]
-    pool = [
-        (q["id"].rsplit("-", 1)[1], q["level"], q["isAlternate"])
-        for q in draft.section["questions"]
-    ]
-    assert pool == [("q2", 1, False), ("q3", 2, False), ("q5", 2, True), ("q4", 3, False)]
-
-
-def test_a_section_left_without_a_level_is_regenerated_once_then_failed(
-    tmp_path: Path, make_library: Any
-) -> None:
-    covered = {"q1": [1], "q2": [2], "q3": [1], "q4": [3], "q5": [1]}  # both Level 3s too easy
-    deps = setup(tmp_path, make_library, levels_responses(covered))
-    result = asyncio.run(run(RunRequest(book="mark", stages=["levels"]), deps))
+    every_question_fails = {**ALL_GOOD, "q1": 1, "q2": 2, "q3": 1}
+    deps = setup(tmp_path, make_library, {("review", SID): grades(every_question_fails)})
+    result = asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
     assert result.exit_code == ExitCode.SECTIONS_FAILED
     first = deps.store.read_draft_or_new(SID)
-    assert first.regenerate and first.regenerate.startswith("levels: ")
+    assert first.regenerate and first.regenerate.startswith("review: ")
     assert first.failed and first.failed.endswith("(regenerates on the next run)")
 
-    again = setup(tmp_path / "second", make_library, levels_responses(covered), regenerated=True)
-    asyncio.run(run(RunRequest(book="mark", stages=["levels"]), again))
+    again = setup(tmp_path / "second", make_library,
+                  {("review", SID): grades(every_question_fails)}, regenerated=True)  # fmt: skip
+    asyncio.run(run(RunRequest(book="mark", stages=["review"]), again))
     second = again.store.read_draft_or_new(SID)
     assert second.regenerate is None
     assert second.failed and second.failed.endswith("(after one regeneration)")
