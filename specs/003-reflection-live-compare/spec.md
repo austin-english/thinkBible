@@ -40,16 +40,19 @@ straps of Jesus's sandals?" The reader taps "Add your answer…". An inline comp
 and a Post button, verse 7 gets a soft tint on the page, and the note under the field reads "A
 sentence or so · 2 of 3 free reflections left". They type "John knew Jesus was way more important
 than him…" and tap Post. The note reads "Checking with the commentators…", then the thread appears:
-- a status line, "✓ You caught 2 of 4 key ideas";
+- a status line, "✓ You caught 2 of 2 key ideas" (the two ideas this question aims at);
 - their answer as a "You" comment with "wasn't even good enough to be his servant" highlighted, and
   Edit under it;
 - an indented ThinkBible reply "· from Henry, JFB & Clarke": a short note, then the two caught
   ideas, each with a filled check and a "· v. 7" tag;
-- "— See what you missed (2)";
+- "— More from the commentators (2)" (nothing this question aimed at was missed);
 - a footer line from spec 004 ("Next question unlocks in a week") and the Enduring Word link.
 
-Tapping "See what you missed (2)" expands every idea, caught first and then missed (hollow circle),
-each with its body and sources, and the toggle reads "Hide details".
+Tapping it expands every idea: caught first, then any of the question's targets that were missed
+(hollow circle), then "More from the commentators" (the section's other ideas, including background
+ideas, with no check or circle), each with its body and sources, and the toggle reads "Hide
+details". Under each idea, "In their words (2)" opens Henry's and JFB's own words as nested
+replies.
 
 **Why this priority**: This is the product. Without the think-first, compare-second loop,
 ThinkBible is just a Bible reader.
@@ -73,13 +76,19 @@ as caught, the highlight, a note under 60 words, and sources taken from the pack
    "Checking with the commentators…" until the result arrives. A success haptic plays when the
    reply appears.
 5. **Given** a result with covered ideas, **When** the thread shows, **Then** it shows the status
-   line "✓ You caught N of M key ideas", the "You" comment with the returned phrase highlighted and
+   line "✓ You caught N of M key ideas" (M = the question's target ideas; N = those caught; another
+   caught idea adds ", and 1 more"), the "You" comment with the returned phrase highlighted and
    Edit, and the ThinkBible reply with the note and the caught ideas (filled check, title, scope
-   tag), then "See what you missed (n)" and the footer line.
-6. **Given** the collapsed reply, **When** the reader taps "See what you missed (n)", **Then** it
-   expands to every key idea, caught first then missed, each with body and sources ("Henry, JFB,
-   Clarke agree" for agreed ideas), then the context note and any views-differ note, and the toggle
-   reads "Hide details".
+   tag), then "See what you missed (n)" (n = targets not caught) or, with none missed, "More from
+   the commentators (k)", and the footer line.
+6. **Given** the collapsed reply, **When** the reader taps the toggle, **Then** it expands to the
+   caught ideas, then the question's missed targets, then "More from the commentators" (the other
+   key ideas and the background ideas, never marked missed), each with body and sources ("Henry,
+   JFB, Clarke agree" for agreed ideas), then the context note and any views-differ note, and the
+   toggle reads "Hide details".
+6a. **Given** an idea in the expanded reply, **When** the reader taps "In their words (n)", **Then**
+   each source commentator's quote opens under it as a nested reply (initial avatar, name and year,
+   the quote in the Scripture serif), and the link reads "Hide their words".
 7. **Given** the reader's very first Post, **When** they tap it, **Then** before anything is sent
    they are told plainly that answers are processed by a third-party AI model, and they must agree.
    If they decline, the answer is saved and they see the commentators-only reply.
@@ -265,15 +274,21 @@ with nothing sent off the device for recognition.
   agreed wording, scope tags, context, views-differ and the Enduring Word link. Only the covered
   idea IDs, highlight phrase, note and contradicts flag come from the live result.
 - **FR-008**: After a Post, the footer MUST show, in order: the status line ("✓ You caught N of M
-  key ideas", or "✓ Answered" when nothing matched); the "You" comment with the highlighted phrase
+  key ideas", M being the question's target ideas, or "✓ Answered" when nothing matched); the "You" comment with the highlighted phrase
   and Edit; the indented ThinkBible reply ("· from <commentators of the section's ideas>") with the
-  note, the caught ideas (filled check, title, scope tag), the "See what you missed (n)" toggle,
-  and the footer line (spec 004) with the Enduring Word link.
-- **FR-009**: The expanded reply MUST list caught ideas first, then missed ideas (hollow circle),
-  each with body and sources, then the context note and any views-differ note, with "Hide details"
-  to collapse.
+  note, the caught ideas (filled check, title, scope tag), the "See what you missed (n)" toggle
+  (n = the question's targets not caught; "More from the commentators (k)" when none were missed),
+  and the footer line (spec 004) with the Enduring Word link. Ideas the question didn't aim at and
+  background ideas MUST never be shown as missed (revised 2026-11-17).
+- **FR-009**: The expanded reply MUST list caught ideas first, then the question's missed targets
+  (hollow circle), then "More from the commentators" (other key ideas and background ideas, no
+  check or circle), each with body and sources, then the context note and any views-differ note,
+  with "Hide details" to collapse.
+- **FR-009a**: Each idea in the expanded reply MUST offer "In their words (n)", which opens the
+  idea's `quotes` from the pack as nested replies (one per source commentator: initial avatar, name
+  and year, the quote in the Scripture serif, original wording). Quotes come only from the pack.
 - **FR-010**: With no covered ideas, the reply MUST use the fallback variant ("Your answer took its
-  own angle…", "See N key ideas"), with the state-specific one-line message for offline, error and
+  own angle…", "See what the commentators focused on"), with the state-specific one-line message for offline, error and
   cap.
 - **FR-011**: Each reflection MUST be saved on the device with: section ID, question ID,
   answer text, covered idea IDs, highlight, note, translation, pack version, created time, check

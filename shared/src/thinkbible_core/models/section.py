@@ -44,11 +44,22 @@ class _VersionedItem(ContractModel):
         return self
 
 
+class Quote(ContractModel):
+    """A commentator's own words making a key idea's point ("In their words")."""
+
+    commentator: CommentatorId
+    text: Annotated[str, StringConstraints(min_length=1, max_length=300)]
+
+
 class KeyIdea(_VersionedItem):
     id: KeyIdeaId
+    # key: visible in the passage (questions target it, the app counts it); background: worth
+    # knowing, shown but never counted as missed.
+    kind: Literal["key", "background"]
     title: Annotated[str, StringConstraints(min_length=1, max_length=60)]
     body: Annotated[str, StringConstraints(min_length=1, max_length=240)]
     sources: Annotated[list[CommentatorId], Field(min_length=1, max_length=3)]
+    quotes: Annotated[list[Quote], Field(min_length=1, max_length=3)]
     agreed: bool
     verse_start: Verse
     verse_end: Verse
@@ -60,6 +71,8 @@ class KeyIdea(_VersionedItem):
             raise ValueError("sources must be unique")
         if self.agreed != (len(self.sources) >= 2):
             raise ValueError("agreed must be true exactly when sources has 2 or more entries")
+        if [q.commentator for q in self.quotes] != self.sources:
+            raise ValueError("quotes must give one quote per source, in the order of sources")
         if self.verse_start > self.verse_end:
             raise ValueError("verseStart must be <= verseEnd")
         return self

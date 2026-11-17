@@ -130,6 +130,8 @@
             "jamieson-fausset-brown",
             "adam-clarke"
           ],
+          "kind": "key",
+          "quotes": [{"commentator": "matthew-henry", "text": "Sample words from Henry making this point."}, {"commentator": "jamieson-fausset-brown", "text": "Sample words from JFB making this point."}, {"commentator": "adam-clarke", "text": "Sample words from Clarke making this point."}],
           "agreed": true,
           "verseStart": 7,
           "verseEnd": 7,
@@ -144,6 +146,8 @@
             "matthew-henry",
             "jamieson-fausset-brown"
           ],
+          "kind": "key",
+          "quotes": [{"commentator": "matthew-henry", "text": "Sample words from Henry making this point."}, {"commentator": "jamieson-fausset-brown", "text": "Sample words from JFB making this point."}],
           "agreed": true,
           "verseStart": 7,
           "verseEnd": 7,
@@ -158,6 +162,8 @@
             "jamieson-fausset-brown",
             "adam-clarke"
           ],
+          "kind": "key",
+          "quotes": [{"commentator": "jamieson-fausset-brown", "text": "Sample words from JFB making this point."}, {"commentator": "adam-clarke", "text": "Sample words from Clarke making this point."}],
           "agreed": true,
           "verseStart": 7,
           "verseEnd": 8,
@@ -172,6 +178,8 @@
             "matthew-henry",
             "jamieson-fausset-brown"
           ],
+          "kind": "key",
+          "quotes": [{"commentator": "matthew-henry", "text": "Sample words from Henry making this point."}, {"commentator": "jamieson-fausset-brown", "text": "Sample words from JFB making this point."}],
           "agreed": true,
           "verseStart": 1,
           "verseEnd": 8,
@@ -244,6 +252,8 @@
           "sources": [
             "matthew-henry"
           ],
+          "kind": "key",
+          "quotes": [{"commentator": "matthew-henry", "text": "Sample words from Henry making this point."}],
           "agreed": false,
           "verseStart": 11,
           "verseEnd": 11,
@@ -258,6 +268,8 @@
             "matthew-henry",
             "jamieson-fausset-brown"
           ],
+          "kind": "key",
+          "quotes": [{"commentator": "matthew-henry", "text": "Sample words from Henry making this point."}, {"commentator": "jamieson-fausset-brown", "text": "Sample words from JFB making this point."}],
           "agreed": true,
           "verseStart": 9,
           "verseEnd": 11,
@@ -271,6 +283,8 @@
           "sources": [
             "jamieson-fausset-brown"
           ],
+          "kind": "key",
+          "quotes": [{"commentator": "jamieson-fausset-brown", "text": "Sample words from JFB making this point."}],
           "agreed": false,
           "verseStart": 10,
           "verseEnd": 10,

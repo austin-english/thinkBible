@@ -50,8 +50,8 @@ requests_per_minute = 10  # this account's Bedrock quota for the model
 model = "us.anthropic.claude-sonnet-4-6"
 thinking = "adaptive"
 effort = "medium"
-prompt = "v5"  # extract/v5 (= v3) and questions/v5 (v4 + questions up to 200 characters)
-default_cost_usd = 0.17  # measured on Mark 1 (2026-11-16)
+prompt = "v9"  # questions/v9: ask about the people in plain words; extract/v9 = v8
+default_cost_usd = 0.22  # 0.17 measured on Mark 1 (2026-11-16), plus the notes and 8 candidates
 requests_per_minute = 10  # this account's Bedrock quota for the model
 
 [stages.align]
@@ -66,7 +66,7 @@ requests_per_minute = 10  # this account's Bedrock quota for the model
 model = "us.anthropic.claude-opus-4-6-v1"
 thinking = "adaptive"
 effort = "medium"
-prompt = "v2"  # v2 (2026-11-17): adds the big-picture rubric line
-default_cost_usd = 0.08
+prompt = "v5"  # v5: + natural (plain, about the people); v4 added reachable, quotes, notes
+default_cost_usd = 0.10  # grades every candidate question, not just three
 requests_per_minute = 5  # this account's Bedrock quota for the model
 

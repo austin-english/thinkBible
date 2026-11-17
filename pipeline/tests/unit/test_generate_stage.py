@@ -38,7 +38,8 @@ CLARKE = {"book": "MRK", "chapters": [{"number": 1, "items": [
 
 
 def idea(title: str, sources: dict[str, str], vs: int, ve: int) -> dict[str, Any]:
-    return {"title": title, "body": f"{title}.", "sources": list(sources), "verseStart": vs,
+    return {"kind": "key", "title": title, "body": f"{title}.", "sources": list(sources),
+            "verseStart": vs,
             "verseEnd": ve,
             "evidence": [{"commentator": c, "quote": q} for c, q in sources.items()]}  # fmt: skip
 
@@ -117,6 +118,7 @@ def test_generate_writes_a_section_with_grounded_ideas_and_a_pool(
     assert [(x["id"], x["verseStart"], x["verseEnd"]) for x in section["questions"]] == [
         (f"{S1}-q1", 1, 8), (f"{S1}-q2", 4, 5)
     ]  # fmt: skip
+    assert [c["id"] for c in draft.candidates] == [f"{S1}-q1", f"{S1}-q2"]  # for the grader
     assert set(draft.excerpts) == {"matthew-henry", "jamieson-fausset-brown", "adam-clarke"}
     assert draft.excerpts["jamieson-fausset-brown"].tokens == 0  # no JFB notes in this snapshot
     assert draft.stages["generate"].status == "done" and draft.failed is None
@@ -138,6 +140,7 @@ def test_prompts_carry_both_translations_the_notes_and_the_previous_summary(
     assert "John preaches and baptizes in the wilderness." in second  # S1's summary
     questions = prompts[("generate.questions", S1)]
     assert f"{S1}-k1 [verses 1-8; agreed: Matthew Henry, Adam Clarke]" in questions
+    assert "the morning star to the Sun" in questions  # the writer reads the notes too
 
 
 def test_no_prompt_sections_skip_the_questions_call(tmp_path: Path, make_library: Any) -> None:

@@ -49,9 +49,11 @@ Field names are camelCase in JSON and snake_case in the Python models (Pydantic 
 | Field | Type | Rules |
 |---|---|---|
 | `id` | `mrk-1-1-k3` | Permanent. Never reused |
+| `kind` | `key` or `background` | `key`: a careful reader can see it in the passage; questions target only these and the app counts them. `background`: worth knowing but needs another Gospel, the original language, history or other Scripture; shown, never counted as missed (2026-11-17). At most 5 key and 2 background per section |
 | `title` | ≤ 60 chars | Frozen once published |
 | `body` | ≤ 240 chars | Frozen once published. Neutral modern English, with no quoted translation wording |
 | `sources[]` | commentator ids | 1–3, unique. Each one is backed by an evidence quote in the draft (R10) |
+| `quotes[]` | `{commentator, text ≤ 300}` | One per source, in the order of `sources`: the verified evidence quote, published for "In their words" (2026-11-17, R10) |
 | `agreed` | bool | `= len(sources) ≥ 2` |
 | `verseStart`, `verseEnd` | int | Within the section |
 | `status` | `active` or `retired` | |
@@ -90,7 +92,7 @@ The latest version per book, with the path, sha256 and byte size of every file.
 2. Every key idea's and question's verse range lies inside its section.
 3. Every ID begins with its section's ID. IDs are unique across the whole book's history.
 4. `agreed == (len(sources) >= 2)`.
-5. Question targets name active key ideas in the same section.
+5. Question targets name active key ideas of kind `key` in the same section (never background).
 6. A section has at most min(N, 3) active questions, where N is its number of active key ideas
    (FR-009).
 7. A `noPrompt` section has no active questions. A section that is not `noPrompt` has at least
@@ -165,6 +167,7 @@ henryDivisions: [startVerse…]}`
 | `excerpts` | `{commentator: {sha256, tokens, items[], crossRefs[], trimmed}}`. A record of model inputs, not the text. `items` names the parts given (`MRK 1:1-8`, `MRK 3 intro`, `MAT 12:9-21` for a followed pointer) and `crossRefs` the pointer targets followed (R4) |
 | `summary` | One-line passage summary (from `summaries`) |
 | `noPromptReason` | Set when `noPrompt` is true |
+| `candidates` | Every question that passed generate's checks, in the writer's order (not published). `review` grades them all and keeps the best (R11) |
 | `checks` | `[{itemId, check, ok, detail}]` |
 | `grades` | `{itemId: {score: 1-5, notes}}` from the grader (`review`) |
 | `dropped` | `[{itemId, stage: "generate"\|"check"\|"review"\|"align", reason, item}]`: what the gate removed and why, with the item as generated (R16). Drafts from before 2026-11-17 may also show `"levels"` |

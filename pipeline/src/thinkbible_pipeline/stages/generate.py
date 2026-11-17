@@ -6,9 +6,11 @@ Per section:
 2. Call 1, ``extract``: key ideas with evidence quotes, a context note, a views-differ note, or
    ``noPrompt`` when the commentators give nothing a question could target.
 3. Keep only grounded ideas (``generate_rules.process_ideas``); if none survive, extract once more.
-4. Unless ``noPrompt``, call 2, ``questions`` (with the question guide): candidates in reading
-   order; code keeps up to 3 (``generate_rules.process_questions``). With no usable question the
-   questions are regenerated once, with the problem named; then the section fails (FR-018).
+4. Unless ``noPrompt``, call 2, ``questions`` (with the question guide), given the passage, the
+   commentators' notes and the kept ideas: up to 8 candidates in reading order. All that pass the
+   checks are kept for the grader, which picks the best 3 in ``review``
+   (``generate_rules.process_questions``). With no usable question the questions are regenerated
+   once, with the problem named; then the section fails (FR-018).
 5. Write the section: it replaces the previous machine output. IDs are never reused.
 """
 
@@ -71,15 +73,21 @@ def _commentary(excerpts: dict[str, Excerpt]) -> str:
 
 
 def _ideas_list(ideas: list[Idea]) -> str:
-    lines = []
-    for i in ideas:
+    def line(i: Idea) -> str:
         names = ", ".join(COMMENTATOR_NAMES[s] for s in i.sources)
         agreed = "agreed" if i.agreed else "one commentator"
-        lines.append(
-            f"- {i.id} [verses {i.verse_start}-{i.verse_end}; {agreed}: {names}] "
-            f"{i.title}: {i.body}"
+        scope = f"verses {i.verse_start}-{i.verse_end}"
+        return f"- {i.id} [{scope}; {agreed}: {names}] {i.title}: {i.body}"
+
+    key = [line(i) for i in ideas if i.kind == "key"]
+    background = [line(i) for i in ideas if i.kind == "background"]
+    text = "\n".join(key)
+    if background:
+        text += (
+            "\n\nBackground (worth knowing, but not visible in the passage; questions must not "
+            "target these):\n" + "\n".join(background)
         )
-    return "\n".join(lines)
+    return text
 
 
 class GenerateStage(SectionStage):
@@ -179,8 +187,11 @@ class GenerateStage(SectionStage):
             no_prompt_reason = None
             pool.problem = "no key idea passed the evidence check"
         elif not no_prompt:
+            # The writer reads the commentators' notes too, for what is worth asking and the angle
+            # to ask from (questions/v7). Their conclusions must stay out of the question.
             questions_user = (
                 f"{header}\n\n{passages}\n\n"
+                f"The commentators' notes (for you, not the reader):\n{_commentary(excerpts)}\n\n"
                 f"Key ideas, agreed ones first:\n{_ideas_list(ideas)}\n\n"
                 f"Views differ: {ideas_out.views_differ or '(none)'}"
             )
@@ -197,7 +208,7 @@ class GenerateStage(SectionStage):
                             item_id=q.id, stage="generate",
                             reason=f"regenerated: {first_problem}", item=q.publishable(),
                         )
-                        for q in pool.questions
+                        for q in pool.candidates
                     ]  # fmt: skip
                 pool = process_questions(questions_out, ideas, entry, draft, ctx)
                 dropped += pool.dropped
@@ -215,6 +226,7 @@ class GenerateStage(SectionStage):
         # New content replaces the old, and so does everything the gate recorded about it.
         draft.dropped = dropped
         draft.grades, draft.checks = {}, []
+        draft.candidates = [q.publishable() for q in pool.candidates]
         draft.regenerated_for = regenerating_for
         draft.section = {
             "id": section_id,

@@ -83,7 +83,7 @@ class ScriptedRunner:
             notes = {c: " ".join(text.split()[:8]) for c, text in _NOTE.findall(user)}
             value = {
                 "keyIdeas": [
-                    {"title": f"Point {n}", "body": f"Why point {n} matters.",
+                    {"kind": "key", "title": f"Point {n}", "body": f"Why point {n} matters.",
                      "sources": [c], "verseStart": start, "verseEnd": end,
                      "evidence": [{"commentator": c, "quote": q}]}
                     for n, (c, q) in enumerate(notes.items(), 1)

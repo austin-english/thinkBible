@@ -88,8 +88,10 @@ The first question is usually about the whole passage.
   "Next-question unlock".
 - "Not a helpful question?" in the card's `…` menu moves on to the section's next question right
   away, if there is one.
-- "You caught" counts ideas across all of a section's questions. After the last one the reply
-  footer reads "All questions done".
+- "You caught N of M" counts against the current question's targets (revised 2026-11-17). Section
+  progress ("✓ 2/4" in the chapter panel) counts the section's `key` ideas caught across all of
+  its questions; background ideas are never counted. After the last question the reply footer
+  reads "All questions done".
 
 ## Post, edit and cost rules
 
@@ -169,7 +171,7 @@ The content pack for each section (from the batch pipeline, cached offline) incl
 
 - `id`, `ref`, `title`
 - `verses` (BSB and KJV)
-- `keyIdeas[]`: `id`, `title`, `body`, `sources[]`, `verseStart`, `verseEnd`, `agreed`
+- `keyIdeas[]`: `id`, `kind` (`key`: visible in the passage, targeted and counted; `background`: shown under "More from the commentators", never counted), `title`, `body`, `sources[]`, `quotes[]` (`{commentator, text}`, one per source, for "In their words"), `verseStart`, `verseEnd`, `agreed`
 - `questions[]` (in reading order): `id`, `verseStart`, `verseEnd`, `text` (BSB and KJV variants), `targets[]` (key idea IDs)
 
 The compare API returns `coveredIdeaIds`, `highlightPhrase`, `note`, `contradictsText`.

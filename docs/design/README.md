@@ -90,7 +90,7 @@ There's no translation control in the header or on cards. Translation lives only
 3. **Action row:** Send (paper plane) leading, Save (bookmark, filled when saved) trailing. 44×44 targets. No other actions.
 4. **Footer** (padding 4/16, no divider above):
    - ThinkBible comment: 28 black circle "T" + "**ThinkBible** · question on verse 7" + the question in italic serif. The question is **always visible**, regardless of passage length.
-   - Status line once answered (13 bold rubric): "✓ You caught 2 of 4 key ideas", or "✓ Answered" when nothing matched.
+   - Status line once answered (13 bold rubric): "✓ You caught 1 of 2 key ideas", or "✓ Answered" when nothing matched. **Counted against the question's own targets** (revised 2026-11-17): M is the number of key ideas this question aims at, not every idea in the section, so a reader who nails the question never sees "missed" for ideas it wasn't about. A caught idea the question didn't aim at adds ", and 1 more".
    - Composer row ("Add your answer…" with the user avatar) → tap opens the composer.
    - Meta line: "MARK 1 · SECTION 1 OF 9" (11, uppercase, tertiary).
 
@@ -104,9 +104,28 @@ There's no translation control in the header or on cards. Translation lives only
 ### Answered thread
 - **You** comment: the answer, with the phrase that matched a key idea highlighted (`highlight`). "Edit" under it (edit counts against the 2 re-checks).
 - **ThinkBible** reply, indented 38: "ThinkBible · from Henry, JFB & Clarke" + a one-to-two-sentence note.
-  - Collapsed: only caught ideas (filled rubric check + title + "· v. 7" scope chip). Then "— See what you missed (2)".
-  - Expanded: caught first, then missed (hollow circle), each with body (13) and sources (12 tertiary). "Hide details".
-  - No match: the note says "Your answer took its own angle. Here's what the commentators focused on." and the toggle reads "See 4 key ideas".
+  - Collapsed: only caught ideas (filled rubric check + title + "· v. 7" scope chip). Then "— See what you missed (n)", where n counts only the question's targets that weren't caught. With none missed, the toggle reads "— More from the commentators (k)".
+  - Expanded, in three groups:
+    1. **Caught** (filled check), the question's targets first, then any other idea the answer reached.
+    2. **Missed** (hollow circle): the question's targets that weren't caught.
+    3. **More from the commentators** (a small `ink-3` dot, no check or circle; nothing here is a test): the section's other key ideas and its background ideas (`kind: "background"`, worth knowing but not visible in the passage). A 12 tertiary subheading introduces the group.
+
+    Each idea shows title, body (13) and sources (12 tertiary), then its **In their words** link (below). "Hide details" collapses.
+  - No match: the note says "Your answer took its own angle. Here's what the commentators focused on." and the toggle reads "See what the commentators focused on".
+
+### In their words (nested replies)
+The commentators' own words for an idea, shown the way a comment app shows replies to a comment.
+- Under each idea in the expanded reply: a hairline link in the same style as "See what you missed" and "Show more": "—— In their words (2)" (the count is the idea's quotes, one per source commentator). Tapping it opens the quotes under that idea and the link reads "—— Hide their words". Several ideas can be open at once.
+- Each quote is a **nested reply**, indented one more step (28 past the idea's text), like a reply to a reply:
+  - a 22 circle avatar with the commentator's initial (H, J, C) on `surface-2`, `ink-2` letter;
+  - "**Matthew Henry** · 1706" (13 semibold name, 12 tertiary year: Henry 1706, Clarke 1810, Jamieson-Fausset-Brown 1871);
+  - the quote in the Scripture serif, 15, `ink-page`, no quotation marks (the reply form already says who is speaking). Original spelling and wording, never modernised.
+- Quotes come only from the pack (`keyIdeas[].quotes`, verified word for word against the source snapshot); the app never fetches commentary.
+- VoiceOver: the link reads "In their words, 2 quotes, button"; each quote reads "Matthew Henry, 1706: …".
+- Not drawn yet: proposed values above; settle with the first build of the reply thread.
+
+### Future idea: the commentators as people in the thread (owner, 2026-11-17)
+Not for the MVP. Treat Matthew Henry, Jamieson-Fausset-Brown and Adam Clarke as participants in the comments, the way "ThinkBible" and "You" already are: their own avatars and names on their replies rather than only "from Henry, JFB & Clarke" on ThinkBible's reply; tapping a name opens a short profile (who they were, when they wrote, their tradition) and, later, everything they said on this chapter. "In their words" is a first step: quotes already appear as replies from each commentator. Needs a decision on how ThinkBible's own summary and the commentators' replies sit together so the thread doesn't get long.
   - Footer note: clock icon + "Next question unlocks in a week · Enduring Word" (link). After the last question: "All questions done".
 
 ## Next-question unlock (one week)

@@ -31,13 +31,19 @@ class SummaryOut(_Out):
 class EvidenceOut(_Out):
     commentator: Commentator
     quote: str = Field(
-        description="A short quote, at most 25 words, copied exactly from this commentator's notes."
+        description="The commentator's own words making this point, 8 to 30 words copied exactly "
+        "from their notes: a whole sentence or clause that reads well on its own (readers see it)."
     )
 
 
 class IdeaOut(_Out):
-    title: str = Field(description="At most 60 characters.")
-    body: str = Field(description="One or two sentences, at most 240 characters.")
+    kind: Literal["key", "background"] = Field(
+        description="key: a careful reader can see it in the passage itself. background: worth "
+        "knowing but needs something outside the passage (another Gospel, the original language, "
+        "history, other Scripture)."
+    )
+    title: str = Field(description="The point itself, at most 8 words.")
+    body: str = Field(description="One or two sentences, at most 30 words.")
     sources: list[Commentator] = Field(description="Every commentator who makes this point.")
     verse_start: int
     verse_end: int
@@ -48,11 +54,13 @@ class IdeasOut(_Out):
     """``generate`` call 1 (``extract``): the key ideas, context and views-differ notes."""
 
     key_ideas: list[IdeaOut] = Field(description="1 to 5 ideas, the most important first.")
-    context: str = Field(description="Two lines: who wrote it, to whom, and why. At most 280.")
+    context: str = Field(
+        description="Two short sentences, at most 35 words: who wrote it, to whom, and why."
+    )
     views_differ: str | None = Field(
         default=None,
         description="A neutral note where the commentators or traditions read the passage "
-        "differently, at most 400 characters; null when they don't.",
+        "differently, at most 55 words; null when they don't.",
     )
     no_prompt: bool = Field(
         description="True only when the commentators give nothing a question could target."
@@ -61,7 +69,7 @@ class IdeasOut(_Out):
 
 
 class QuestionOut(_Out):
-    text: str = Field(description="One open question, at most 200 characters, ending with '?'.")
+    text: str = Field(description="One open question, at most 30 words, ending with '?'.")
     type: QuestionType
     verse_start: int
     verse_end: int
@@ -69,10 +77,10 @@ class QuestionOut(_Out):
 
 
 class QuestionsOut(_Out):
-    """``generate`` call 2 (``questions``): candidates in reading order; code keeps up to 3."""
+    """``generate`` call 2 (``questions``): candidates in reading order; the grader picks 3."""
 
     questions: list[QuestionOut] = Field(
-        description="Up to 6 candidate questions, in the order a reader should meet them."
+        description="Up to 8 candidate questions, in the order a reader should meet them."
     )
 
 

@@ -342,6 +342,10 @@ place and confirm the publish check refuses the version.
   ideas rank first.
 - **FR-007**: Key ideas MUST restate only what the commentators say: no new interpretations, and no
   quoted translation wording. Verse references are placeholders the app resolves.
+- **FR-007a** (2026-11-17): Each idea MUST be marked `key` (a careful reader can see it in the
+  passage) or `background` (worth knowing, but needs something outside the passage), and MUST
+  publish each source commentator's verified words as `quotes` for "In their words". Questions
+  target only key ideas; the app never counts a background idea as missed.
 - **FR-008**: For each prompted section the system MUST produce an ordered list of questions.
   Each question has a permanent ID, a type (noticing, meaning, application), a verse scope, the
   key idea IDs it targets, a status (active or retired), the pack version it was added in, and

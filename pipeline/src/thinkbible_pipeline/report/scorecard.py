@@ -128,7 +128,10 @@ def build_scorecard(
         if has_items and (review is None or review.status != "done"):
             ungraded += 1
         for item_id, grade in draft.grades.items():
-            rate = card.ideas if item_id.rsplit("-", 1)[-1].startswith("k") else card.questions
+            kind = item_id.rsplit("-", 1)[-1][:1]
+            if kind not in ("k", "q"):
+                continue  # the context and views-differ notes: graded, but not in the pass rates
+            rate = card.ideas if kind == "k" else card.questions
             rate.total += 1
             if grade.score > threshold:
                 rate.passed += 1

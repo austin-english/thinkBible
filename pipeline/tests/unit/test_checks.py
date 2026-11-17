@@ -93,12 +93,15 @@ def test_open_questions_pass() -> None:
 
 def section(**overrides: Any) -> dict[str, Any]:
     ideas = [
-        {"id": f"{SID}-k1", "title": "What defiles comes from within", "body": "Purity begins in "
-         "the heart.", "sources": ["matthew-henry", "adam-clarke"], "agreed": True,
+        {"id": f"{SID}-k1", "kind": "key", "title": "What defiles comes from within",
+         "body": "Purity begins in the heart.", "sources": ["matthew-henry", "adam-clarke"],
+         "quotes": [{"commentator": "matthew-henry", "text": "q"},
+                    {"commentator": "adam-clarke", "text": "q"}], "agreed": True,
          "verseStart": 14, "verseEnd": 23, "status": "active"},
-        {"id": f"{SID}-k2", "title": "Food passes through", "body": "Food can't make a person "
-         "unclean.", "sources": ["matthew-henry"], "agreed": False, "verseStart": 18,
-         "verseEnd": 19, "status": "active"},
+        {"id": f"{SID}-k2", "kind": "key", "title": "Food passes through",
+         "body": "Food can't make a person unclean.", "sources": ["matthew-henry"],
+         "quotes": [{"commentator": "matthew-henry", "text": "q"}], "agreed": False,
+         "verseStart": 18, "verseEnd": 19, "status": "active"},
     ]  # fmt: skip
     questions = [
         {"id": f"{SID}-q1", "type": "meaning", "verseStart": 14, "verseEnd": 23,
@@ -154,6 +157,16 @@ def test_a_question_aimed_at_a_missing_idea_is_dropped_and_the_next_moves_up() -
     assert apply_checks(d, CTX) == []
     assert d.dropped[0].item_id == f"{SID}-q1"
     assert [q["id"] for q in d.section["questions"]] == [f"{SID}-q2"]
+
+
+def test_candidates_outside_the_section_are_checked_too() -> None:
+    d = draft(section())
+    spare = {**d.section["questions"][1], "id": f"{SID}-q3", "text": "Is food really clean?"}
+    d.candidates = [*d.section["questions"], spare]
+    assert apply_checks(d, CTX) == []
+    assert [(x.item_id, x.stage) for x in d.dropped] == [(f"{SID}-q3", "check")]
+    assert d.dropped[0].reason.startswith("yes/no")
+    assert [c["id"] for c in d.candidates] == [f"{SID}-q1", f"{SID}-q2"]
 
 
 def test_schema_and_cross_field_violations_are_section_problems() -> None:

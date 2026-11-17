@@ -100,9 +100,11 @@
       "additionalProperties": false,
       "required": [
         "id",
+        "kind",
         "title",
         "body",
         "sources",
+        "quotes",
         "agreed",
         "verseStart",
         "verseEnd",
@@ -111,6 +113,11 @@
       ],
       "properties": {
         "id": { "$ref": "#/$defs/keyIdeaId" },
+        "kind": {
+          "type": "string",
+          "enum": ["key", "background"],
+          "description": "key: a careful reader can see it in the passage itself; questions target only these, and the app counts them as caught or missed. background: worth knowing but not visible in the passage (another Gospel, the original language, history); shown under 'More from the commentators', never counted as missed."
+        },
         "title": { "type": "string", "minLength": 1, "maxLength": 60 },
         "body": { "type": "string", "minLength": 1, "maxLength": 240 },
         "sources": {
@@ -119,6 +126,21 @@
           "maxItems": 3,
           "uniqueItems": true,
           "items": { "$ref": "#/$defs/commentatorId" }
+        },
+        "quotes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "description": "Each source commentator's own words making this point, one per source, in the order of sources. Verified word for word against the source snapshot. Shown under 'In their words'.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["commentator", "text"],
+            "properties": {
+              "commentator": { "$ref": "#/$defs/commentatorId" },
+              "text": { "type": "string", "minLength": 1, "maxLength": 300 }
+            }
+          }
         },
         "agreed": {
           "type": "boolean",

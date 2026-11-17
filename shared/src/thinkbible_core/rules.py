@@ -116,6 +116,9 @@ def _section_rules(
     out: list[Violation] = []
     ideas = {k.id: k for k in s.key_ideas}
     active_ideas = {k.id for k in s.key_ideas if k.status == "active"}
+    # Only ideas a reader can see in the passage are targeted and counted (kind "key").
+    active_key = {k.id for k in s.key_ideas if k.status == "active" and k.kind == "key"}
+    background = {k.id for k in s.key_ideas if k.kind == "background"}
     active_qs = [q for q in s.questions if q.status == "active"]
     items: list[KeyIdea | Question] = [*s.key_ideas, *s.questions]
 
@@ -158,13 +161,17 @@ def _section_rules(
             out.append(Violation(9, q.id, "active question targets only retired ideas; retire it"))
         elif retired:
             out.append(Violation(5, q.id, f"targets retired ideas: {retired}"))
+        aimed_at_background = [t for t in q.targets if t in background]
+        if aimed_at_background:
+            message = f"targets background ideas (not in the passage): {aimed_at_background}"
+            out.append(Violation(5, q.id, message))
 
     # 6 + 7: question list shape
     if s.no_prompt:
         if active_qs:
             out.append(Violation(7, s.id, "noPrompt section has active questions"))
     else:
-        out += _question_rules(s.id, len(active_ideas), active_qs)
+        out += _question_rules(s.id, len(active_key), active_qs)
 
     # 8: placeholders well-formed and resolvable
     for item_id, text in _texts(s):
@@ -177,7 +184,7 @@ def _section_rules(
 
 def _question_rules(section_id: str, n_ideas: int, qs: list[Question]) -> list[Violation]:
     if n_ideas == 0:
-        return [Violation(7, section_id, "prompted section has no active key ideas")]
+        return [Violation(7, section_id, "prompted section has no active key idea of kind 'key'")]
     if not qs:
         return [Violation(7, section_id, "prompted section has no active question")]
     cap = max_questions(n_ideas)

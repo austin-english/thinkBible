@@ -130,6 +130,9 @@ class SectionDraft(JsonModel):
     checks: list[CheckResult] = Field(default_factory=list)
     grades: dict[str, Grade] = Field(default_factory=dict)
     dropped: list[DroppedItem] = Field(default_factory=list)
+    # Every question that passed generate's checks, in the writer's order (not published). The
+    # grader scores them all and ``review`` keeps the best (R11, 2026-11-17).
+    candidates: list[dict[str, Any]] = Field(default_factory=list)
     failed: str | None = None  # why the section failed after one regeneration (FR-018)
     # Set by a gate stage when the section broke a rule after generate ran: the next run's
     # generate regenerates it once (its inputs include this), then clears it (FR-018).

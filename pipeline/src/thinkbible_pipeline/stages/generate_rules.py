@@ -8,17 +8,20 @@ anything was dropped:
 - **Ideas**: ``agreed`` when two or more commentators make the point; agreed ideas rank first;
   at most 5; verses must lie inside the section.
 - **Questions (R11, revised 2026-11-17)**: an ordered list with no levels. The model writes
-  candidates in the order a reader should meet them; code keeps up to 3 (never more than the key
-  ideas), preferring questions aimed at an idea the earlier ones don't cover, and making sure a
-  question on the whole passage is among them when one passed. A section with no usable question
-  is regenerated once, then fails (FR-018).
+  up to 8 candidates in the order a reader should meet them. Every one that passes the checks is
+  kept as a candidate; the grader scores them all and ``review`` keeps the best 3 (never more than
+  the key ideas), one per idea first, in the writer's order (``gate.outcomes.pick_best``). Until
+  then the section holds the first ones, preferring questions aimed at an idea not yet covered.
+  A section with no usable question is regenerated once, then fails (FR-018). (A rule that
+  swapped in a whole-passage question was removed on 2026-11-17: in Mark 1:16-20 it replaced the
+  'fishers of men' question with a weaker repeat. The prompt asks for a whole-passage question
+  first.)
 - **IDs (R13)**: every generated item gets the next permanent ID, kept or dropped.
 """
 
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -29,7 +32,8 @@ from thinkbible_pipeline.gate.checks import CheckContext, idea_problem, question
 from thinkbible_pipeline.llm.outputs import IdeaOut, IdeasOut, QuestionOut, QuestionsOut
 from thinkbible_pipeline.text import normalize
 
-MAX_IDEAS = 5
+MAX_IDEAS = 5  # of kind "key"
+MAX_BACKGROUND = 2  # of kind "background"
 CONTEXT_MAX, VIEWS_DIFFER_MAX = 280, 400  # section.schema.json
 MAX_QUOTE_WORDS = 30  # stored evidence is cut to this many words (still a verbatim quote)
 MAX_MATCH_WORDS = 80  # a longer quote is checked whole, as long as it is found verbatim
@@ -39,6 +43,7 @@ MIN_QUOTE_WORDS = 3
 @dataclass
 class Idea:
     id: str
+    kind: str  # "key" (visible in the passage) or "background"
     title: str
     body: str
     sources: list[str]
@@ -53,9 +58,15 @@ class Idea:
     def publishable(self) -> dict[str, object]:
         return {
             "id": self.id,
+            "kind": self.kind,
             "title": self.title,
             "body": self.body,
             "sources": self.sources,
+            # "In their words": the verified evidence quotes, one per source, in source order.
+            "quotes": [
+                {"commentator": e.commentator, "text": display_quote(e.quote)}
+                for e in self.evidence
+            ],
             "agreed": self.agreed,
             "verseStart": self.verse_start,
             "verseEnd": self.verse_end,
@@ -86,7 +97,8 @@ class Question:
 
 @dataclass
 class QuestionPool:
-    questions: list[Question] = field(default_factory=list)
+    questions: list[Question] = field(default_factory=list)  # until review chooses: the first 3
+    candidates: list[Question] = field(default_factory=list)  # every question that passed
     dropped: list[DroppedItem] = field(default_factory=list)
     problem: str | None = None  # why the questions can't ship (regenerate once, then fail)
 
@@ -109,10 +121,42 @@ def quote_found(quote: str, excerpt: str) -> bool:
     return f" {' '.join(words)} " in f" {_match_text(excerpt)} "
 
 
+_STRONG_BREAK = re.compile(r"[.;:!?]$")
+_COMMA = re.compile(r",$")
+MIN_CUT_WORDS = 12  # a cut at a full stop or semicolon must keep at least this many words
+
+
 def short_quote(quote: str) -> str:
-    """The first ``MAX_QUOTE_WORDS`` words of a verified quote: still the commentator's words."""
+    """A verified quote cut to at most ``MAX_QUOTE_WORDS`` words: still the commentator's words.
+
+    A long quote is cut at a clause break within the limit, so readers don't see words that stop
+    mid-phrase ("…or the schools of"): the last full stop, semicolon or colon that keeps at least
+    ``MIN_CUT_WORDS`` words, else the last comma, else the limit itself.
+    """
     words = quote.split()
-    return quote.strip() if len(words) <= MAX_QUOTE_WORDS else " ".join(words[:MAX_QUOTE_WORDS])
+    if len(words) <= MAX_QUOTE_WORDS:
+        return quote.strip()
+    head = words[:MAX_QUOTE_WORDS]
+    for pattern, least in ((_STRONG_BREAK, MIN_CUT_WORDS), (_COMMA, MIN_QUOTE_WORDS)):
+        for n in range(len(head), least - 1, -1):
+            if pattern.search(head[n - 1]):
+                return " ".join(head[:n])
+    return " ".join(head)
+
+
+def display_quote(quote: str) -> str:
+    """How a verified quote reads under "In their words".
+
+    The words are the commentator's own; only the edges and dashes change: "…" where the quote
+    starts or stops mid-sentence (a trailing comma, semicolon or colon gives way to it), and the
+    old double hyphen as a dash (JFB's "pleased--The verb").
+    """
+    text = quote.strip().replace(" -- ", " — ").replace("--", "—")
+    if text and text[0].islower():
+        text = "…" + text
+    if not text.endswith((".", "!", "?", "…", "'", "\u2019", '"', "\u201d")):
+        text = text.rstrip(",;: ") + "…"
+    return text
 
 
 def _drop(
@@ -174,12 +218,25 @@ def process_ideas(
                                  "their notes", raw))  # fmt: skip
             continue
         kept.append(
-            Idea(idea_id, raw.title, raw.body, sources, raw.verse_start, raw.verse_end, evidence)
+            Idea(
+                idea_id,
+                raw.kind,
+                raw.title,
+                raw.body,
+                sources,
+                raw.verse_start,
+                raw.verse_end,
+                evidence,
+            )
         )
     kept.sort(key=lambda i: not i.agreed)  # stable: agreed first, otherwise the model's order
-    for extra in kept[MAX_IDEAS:]:
+    key = [i for i in kept if i.kind == "key"]
+    background = [i for i in kept if i.kind == "background"]
+    for extra in key[MAX_IDEAS:]:
         dropped.append(_drop(extra.id, f"more than {MAX_IDEAS} key ideas", extra))
-    return kept[:MAX_IDEAS], dropped
+    for extra in background[MAX_BACKGROUND:]:
+        dropped.append(_drop(extra.id, f"more than {MAX_BACKGROUND} background ideas", extra))
+    return key[:MAX_IDEAS] + background[:MAX_BACKGROUND], dropped
 
 
 def note_problem(out: IdeasOut) -> str | None:
@@ -211,7 +268,7 @@ def process_questions(
     """Give every candidate an ID, drop those that fail a check, and keep up to 3 in order."""
     ctx = ctx or CheckContext()
     pool = QuestionPool()
-    kept_ideas = {i.id for i in ideas}
+    kept_ideas = {i.id for i in ideas if i.kind == "key"}  # background ideas are never targeted
     idea_texts = [(i.title, i.body) for i in ideas]
     passed: list[tuple[QuestionOut, Question]] = []
     for raw in out.questions:
@@ -231,22 +288,18 @@ def process_questions(
         q = Question(qid, raw.type, raw.verse_start, raw.verse_end, raw.text.strip(), targets)
         passed.append((raw, q))
 
-    chosen = choose([q for _, q in passed], max_questions(len(ideas)), lambda q: _whole(q, section))
-    pool.questions = [q for _, q in passed if q.id in chosen]
-    for raw, q in passed:
-        if q.id not in chosen:
-            pool.dropped.append(_drop(q.id, f"more than {len(chosen)} questions passed; the "
-                                      "earlier ones were kept", raw))  # fmt: skip
+    pool.candidates = [q for _, q in passed]
+    # Until the grader picks the best (``review``), the section holds the first ones.
+    chosen = choose(pool.candidates, max_questions(len(kept_ideas)))
+    pool.questions = [q for q in pool.candidates if q.id in chosen]
     pool.problem = None if pool.questions else "no usable question"
     return pool
 
 
-def choose(questions: list[Question], cap: int, whole: Callable[[Question], bool]) -> set[str]:
+def choose(questions: list[Question], cap: int) -> set[str]:
     """The IDs of up to ``cap`` questions, kept in the model's order.
 
     First, each question that aims at a key idea the ones before it don't; then the rest in order.
-    If none of those covers the whole passage, the first whole-passage question takes the last
-    place.
     """
     chosen: list[Question] = []
     covered: set[str] = set()
@@ -257,12 +310,4 @@ def choose(questions: list[Question], cap: int, whole: Callable[[Question], bool
     for q in questions:
         if len(chosen) < cap and q not in chosen:
             chosen.append(q)
-    if cap >= 2 and chosen and not any(whole(q) for q in chosen):
-        spare = next((q for q in questions if whole(q) and q not in chosen), None)
-        if spare is not None:
-            chosen[-1] = spare
     return {q.id for q in chosen}
-
-
-def _whole(q: Question, section: SectionMapEntry) -> bool:
-    return q.verse_start == section.verse_start and q.verse_end == section.verse_end

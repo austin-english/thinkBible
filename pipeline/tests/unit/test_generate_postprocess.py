@@ -6,10 +6,12 @@ from thinkbible_pipeline.drafts.ids import next_id
 from thinkbible_pipeline.drafts.models import SectionDraft, SectionMapEntry
 from thinkbible_pipeline.llm.outputs import IdeasOut, QuestionsOut
 from thinkbible_pipeline.stages.generate_rules import (
+    display_quote,
     normalize,
     process_ideas,
     process_questions,
     quote_found,
+    short_quote,
 )
 
 SECTION = SectionMapEntry(
@@ -25,6 +27,7 @@ EXCERPTS = {
 def idea(sources: list[str], quotes: dict[str, str], vs: int = 1, ve: int = 8, title: str = "I"
          ) -> dict[str, Any]:  # fmt: skip
     return {
+        "kind": "key",
         "title": title,
         "body": "Body.",
         "sources": sources,
@@ -79,6 +82,55 @@ def test_agreed_ideas_rank_first_and_at_most_five_are_kept() -> None:
     assert len(kept) == 5 and [d.reason for d in dropped] == ["more than 5 key ideas"]
 
 
+def test_quotes_read_cleanly_under_in_their_words() -> None:
+    """Regression (Mark 1:16-20, 1:29-34): cutting at 30 words left "...or the schools of"."""
+    henry = ("The instruments Christ chose to employ in setting up his kingdom, were the weak and "
+             "foolish things of the world; not called from the great sanhedrim, or the schools of "
+             "the rabbin, but picked up from among the tarpaulins by the sea-side")  # fmt: skip
+    cut = short_quote(henry)
+    assert cut.endswith("of the world;") and cut in henry  # still word for word
+    assert display_quote(cut) == (
+        "The instruments Christ chose to employ in setting up his kingdom, were the weak and "
+        "foolish things of the world…"
+    )
+    assert display_quote("he recognized in Him the glory of the Only-begotten") == (
+        "…he recognized in Him the glory of the Only-begotten…"
+    )
+    assert display_quote(
+        "my beloved Son, in whom I am well pleased--The verb is put in the aorist."
+    ) == ("my beloved Son, in whom I am well pleased—The verb is put in the aorist.").replace(
+        "my", "…my", 1
+    )
+    assert display_quote("God keeps time.") == "God keeps time."
+
+
+def test_background_ideas_are_kept_apart_and_never_targeted() -> None:
+    both = {"matthew-henry": "he prepared the way", "adam-clarke": "a baptism of repentance"}
+    out = ideas_out(
+        {**idea(["matthew-henry", "adam-clarke"], both, title="in the passage")},
+        *[{**idea(["matthew-henry"], {"matthew-henry": "he prepared the way"},
+                  title=f"needs Matthew {n}"), "kind": "background"} for n in range(3)],
+    )  # fmt: skip
+    ideas, dropped = process_ideas(out, SECTION, EXCERPTS, SectionDraft())
+    assert [(i.title, i.kind) for i in ideas] == [
+        ("in the passage", "key"), ("needs Matthew 0", "background"),
+        ("needs Matthew 1", "background"),
+    ]  # fmt: skip
+    assert [d.reason for d in dropped] == ["more than 2 background ideas"]
+    # "In their words": one verified quote per source, in source order.
+    assert ideas[0].publishable()["quotes"] == [  # mid-sentence words get "…" at their edges
+        {"commentator": "matthew-henry", "text": "…he prepared the way…"},
+        {"commentator": "adam-clarke", "text": "…a baptism of repentance…"},
+    ]
+    questions = QuestionsOut.model_validate({"questions": [
+        q("Why does Mark begin here?", 1, 8, [ideas[1].id]),
+        q("What do you make of John's words?", 7, 7, [ideas[0].id]),
+    ]})  # fmt: skip
+    pool = process_questions(questions, ideas, SECTION, SectionDraft())
+    assert texts(pool) == ["What do you make of John's words?"]
+    assert pool.dropped[0].reason == "targets no key idea that was kept"
+
+
 def test_ideas_outside_the_section_are_dropped() -> None:
     out = ideas_out(idea(["matthew-henry"], {"matthew-henry": "he prepared the way"}, vs=7, ve=12))
     kept, dropped = process_ideas(out, SECTION, EXCERPTS, SectionDraft())
@@ -111,7 +163,12 @@ def test_one_question_per_idea_at_most_three_in_the_models_order() -> None:
     ]})  # fmt: skip
     pool = process_questions(out, one, SECTION, SectionDraft())
     assert texts(pool) == ["Why does Mark begin here?"] and pool.problem is None
-    assert pool.dropped[0].reason == "more than 1 questions passed; the earlier ones were kept"
+    # Both stay candidates for the grader; the section holds the first until review picks.
+    assert [x.text for x in pool.candidates] == [
+        "Why does Mark begin here?",
+        "What do you make of John's words?",
+    ]
+    assert pool.dropped == []
 
     ideas = _ideas(4)
     a, b, c, d = (i.id for i in ideas)
@@ -150,20 +207,23 @@ def test_questions_on_a_new_idea_come_before_repeats() -> None:
     ]  # fmt: skip
 
 
-def test_a_whole_passage_question_is_kept_when_one_passed() -> None:
+def test_no_whole_passage_question_is_swapped_in() -> None:
+    """Regression (Mark 1:16-20): swapping in a whole-passage question replaced the only question
+    on 'fishers of men' with a weaker repeat. The model's choice and order now stand."""
     ideas = _ideas(3)
     a, b, c = (i.id for i in ideas)
     out = QuestionsOut.model_validate({"questions": [
         q("What do you make of this detail?", 7, 7, [a]),
         q("Why might this word matter?", 4, 4, [b]),
         q("How does the wild setting shape it?", 5, 5, [c]),
-        q("What holds the whole passage together?", 1, 8, [a, b]),
+        q("What holds the whole passage together?", 1, 8, [a]),
     ]})  # fmt: skip
     pool = process_questions(out, ideas, SECTION, SectionDraft())
     assert texts(pool) == [
-        "What do you make of this detail?", "Why might this word matter?",
-        "What holds the whole passage together?",
-    ]  # fmt: skip
+        "What do you make of this detail?",
+        "Why might this word matter?",
+        "How does the wild setting shape it?",
+    ]
 
 
 def test_no_usable_question_triggers_regeneration() -> None:

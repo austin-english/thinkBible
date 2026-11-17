@@ -192,6 +192,21 @@ def test_rule6_question_count() -> None:
     assert violations(two_ideas_two_questions) == []
 
 
+def test_questions_never_target_background_ideas() -> None:
+    def background(d: dict[str, Any]) -> None:
+        sec(d)["keyIdeas"][2]["kind"] = "background"  # k3, the only target of q4
+
+    assert any("targets background ideas" in v.message for v in violations(background))
+
+
+def test_quotes_follow_the_sources() -> None:
+    doc = copy.deepcopy(BASE)
+    idea = doc["sections"][0]["keyIdeas"][0]
+    idea["quotes"] = list(reversed(idea["quotes"]))
+    with pytest.raises(ValueError, match="one quote per source"):
+        StudyPack.model_validate(doc)
+
+
 def test_rule7_no_prompt() -> None:
     def no_prompt_with_questions(d: dict[str, Any]) -> None:
         sec(d)["noPrompt"] = True

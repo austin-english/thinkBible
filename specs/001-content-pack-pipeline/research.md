@@ -412,7 +412,15 @@ or after a live publish, retire and replace (US6).
   when it is found verbatim (up to 80 words), and stored cut to its first 30 words.
 - An idea with a cited commentator whose quote isn't found loses that source. If no sources
   remain, the idea is rejected.
-- Evidence stays in the drafts and the scorecard, and is **not** published.
+- ~~Evidence stays in the drafts and the scorecard, and is **not** published.~~ Revised
+  2026-11-17: each idea publishes its evidence quotes as `quotes`, shown under "In their words" as
+  nested replies in the app. Because readers see them, the extract prompt (`extract/v8`) asks for
+  8-30 words that read well on their own (a whole sentence or clause, not a Bible verse the
+  commentator quotes, not Greek or Hebrew, not a fragment), and the grader checks them (`quotes`
+  line, `review/v4`). The public-domain texts allow this; the words are never modernised.
+  For display (`generate_rules.display_quote`), a long quote is cut at a clause break rather than
+  mid-phrase (`short_quote`), "…" marks a quote that starts or stops mid-sentence, and JFB's old
+  "--" becomes a dash. The words themselves stay the commentator's.
 
 **Rationale**: a cheap, deterministic guard against invented attribution, which is the core trust
 risk.
@@ -428,18 +436,55 @@ risk.
   without levels, 10 of 28 dropped questions were 161-170 characters, and they were mostly the
   whole-passage questions, which need a longer framing sentence. The prompt (`questions/v5`) asks
   for 200 at most and shorter where possible.
-- **Generation** (`questions/v5`, question guide v3): the model writes up to 6 candidates in
-  reading order, aimed at the passage's main ideas. The first opens the main idea, usually on the
-  whole passage; later ones take up other ideas and may connect to the rest of Scripture or to
-  life. Recall questions are never written.
-- **Choosing** (`generate_rules.choose`): code keeps the candidates that pass the checks, in the
-  model's order. A question aimed at a key idea the earlier ones don't cover comes before a repeat;
-  if none of the kept questions covers the whole passage and one passed, it takes the last place.
-  This is a preference, not a rule: a section never fails for want of a whole-passage question.
+- **Limits in words** (2026-11-17, `extract/v6`, `questions/v6`): models count characters
+  poorly, so prompts give word limits with headroom (question 30 words, idea title 8 and body 30,
+  context 35, views differ 55) and a "say it short" section with long-then-short examples. Code
+  still checks the characters the schema allows.
+- **Generation** (`questions/v7`, question guide v3): the writer sees the passage, the
+  commentators' notes (added 2026-11-17; before that only the 30-word idea summaries, which lost
+  the commentators' angles) and the kept ideas. It writes up to 6 candidates in reading order,
+  aimed at the passage's main ideas. The first opens the main idea, usually on the whole passage;
+  later ones take up other ideas and may connect to the rest of Scripture or to life. v7's rules,
+  from a read of the v6 output: **specific** (no stems that fit any passage), the **opening
+  sentence says what happens, not what it means**, background only when the reader needs it and
+  never the commentators' reading, and **worth answering**. Recall questions are never written.
+- **Choosing** (revised 2026-11-17: the grader picks): the writer drafts up to 8; every one that
+  passes the checks is kept as a candidate (`candidates` on the draft, not published). `review`
+  grades them all and keeps the best 3 above the threshold (`gate.outcomes.pick_best`): first the
+  best graded aimed at a key idea not yet covered, then the best of the rest, returned in the
+  writer's order. The others are recorded as "not chosen: graded N". Until review runs, the
+  section holds the writer's first ones (`generate_rules.choose`), so it is valid at every stage.
+  The question pass rate on the scorecard now counts every candidate. About $0.02-0.05 more per
+  section. (A whole-passage swap was removed on 2026-11-17 after it replaced Mark 1:16-20's only
+  'fishers of men' question with a weaker repeat.)
+- **Key and background ideas** (2026-11-17, `extract/v8`): ideas a careful reader can't reach from
+  the passage alone (only Mark records…, the original word is sharper…, two prophets centuries
+  apart) were being counted as "missed". Each idea now has a `kind`: `key` (up to 5; questions
+  target only these, the app counts them) or `background` (up to 2; shown under "More from the
+  commentators", never counted). The grader's `reachable` line drops a key idea that isn't
+  reachable. The app also scores an answer against the question's own targets, not every idea
+  (spec 003).
+- **A big-picture opener** (2026-11-17): the grader tends to prefer sharp one-verse questions, and
+  Mark 1:1-11 lost all three of its arc questions. The best-graded question about at least half of
+  the passage (or all of it) now takes the first place when it scores 4 or more
+  (`gate.outcomes.pick_opener`); the other two places are chosen as before. Without such a
+  question, the kept question spanning the most of the passage goes first.
+- **Plain wording** (2026-11-17, `questions/v9`, `review/v5` `natural`): questions had started
+  turning people and actions into abstract nouns ("Why might a true confession still be
+  rejected?", "What does that distinction say about the limits of John's ministry?"). v9 asks about
+  the people by name with plain verbs in one simple clause, with a read-aloud test and
+  before-and-after pairs; v7's "what each word adds" example, which taught a stilted "What does X
+  add to…" shape, is gone.
+- **Deferred: a question about the reader's own life.** The grader drops "in your own life"
+  questions as generic, so none survive. A specific application question as a section's third
+  question may help engagement, but it complicates tuning; revisit once the first two are steady
+  (owner, 2026-11-17).
+- **Notes are graded** (`review/v4`): the grader also scores the context and views-differ notes.
+  A weak views-differ note is removed; a weak context note regenerates the section once.
 - **Gate**: a question the grader drops leaves a gap the others close up; questions left aiming
   at no kept idea, or beyond the one-per-idea cap, are dropped. A section left with no question is
-  regenerated once, then failed (FR-018). The grader's rubric gained a `big-picture` line
-  (`review/v2`).
+  regenerated once, then failed (FR-018). The grader's rubric gained `big-picture` (`review/v2`),
+  then a stricter `not-leading` and the `specific` and `engaging` lines (`review/v3`).
 
 **Why the levels went** (history):
 - 2026-11-16: levels were redefined by reach (L1 a detail, L2 the passage, L3 beyond it), set by

@@ -125,15 +125,23 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
       </div>
       <div class="content">
         {% if s.generated %}
-        <div><div class="label">Key ideas</div>
-          {% for i in s.ideas %}
+        <div><div class="label">Key ideas (in the passage; questions aim at these)</div>
+          {% for i in s.ideas if not i.background %}
           <div class="idea">
             <div class="t">{{ i.title }} <span class="pill info">{{ i.scope }}</span>{% if i.agreed %} <span class="pill info">agreed</span>{% endif %}</div>
             <div class="b">{{ i.body }}</div>
             <div class="src">{{ i.names|join(" · ") }} · <span class="mono">{{ i.id }}</span>{% if i.grade %} · graded {{ i.grade.score }}: {{ i.grade.notes }}{% endif %}</div>
-            <details><summary>Evidence</summary>{% for who, quote in i.evidence %}<blockquote><b>{{ who }}:</b> “{{ quote }}”</blockquote>{% endfor %}</details>
+            <details><summary>In their words</summary>{% for who, quote in i.quotes %}<blockquote><b>{{ who }}:</b> “{{ quote }}”</blockquote>{% endfor %}</details>
           </div>
           {% else %}<div class="qmeta">No key ideas kept.</div>{% endfor %}
+          {% for i in s.ideas if i.background %}{% if loop.first %}<div class="label">More from the commentators (background, never counted as missed)</div>{% endif %}
+          <div class="idea">
+            <div class="t">{{ i.title }} <span class="pill info">{{ i.scope }}</span></div>
+            <div class="b">{{ i.body }}</div>
+            <div class="src">{{ i.names|join(" · ") }} · <span class="mono">{{ i.id }}</span>{% if i.grade %} · graded {{ i.grade.score }}: {{ i.grade.notes }}{% endif %}</div>
+            <details><summary>In their words</summary>{% for who, quote in i.quotes %}<blockquote><b>{{ who }}:</b> “{{ quote }}”</blockquote>{% endfor %}</details>
+          </div>
+          {% endfor %}
         </div>
         {% if s.questions %}
         <div><div class="label">Questions, in the order a reader meets them (one a week)</div>
@@ -147,8 +155,8 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
           </ol>
         </div>
         {% elif s.no_prompt %}<div class="note"><span class="label">No question</span><br>{{ s.no_prompt_reason }}</div>{% endif %}
-        <div><div class="label">Background</div><div class="note">{{ s.context }}</div></div>
-        {% if s.views_differ %}<div><div class="label">Views differ</div><div class="note">{{ s.views_differ }}</div></div>{% endif %}
+        <div><div class="label">Context</div><div class="note">{{ s.context }}</div>{% if s.context_grade %}<div class="qmeta">graded {{ s.context_grade.score }}: {{ s.context_grade.notes }}</div>{% endif %}</div>
+        {% if s.views_differ %}<div><div class="label">Views differ</div><div class="note">{{ s.views_differ }}</div>{% if s.views_grade %}<div class="qmeta">graded {{ s.views_grade.score }}: {{ s.views_grade.notes }}</div>{% endif %}</div>{% endif %}
         <details><summary>Pipeline details: summary, commentary given, dropped items ({{ s.dropped|length }})</summary>
           <p class="qmeta">Summary for the next section: “{{ s.summary or "" }}”</p>
           <p class="qmeta">Commentary given: {% for who, tokens, refs, trimmed in s.excerpts %}{{ who }} {{ "{:,}".format(tokens) }} tokens{% if refs %} (follows {{ refs|join(", ") }}){% endif %}{% if trimmed %}, trimmed{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}</p>

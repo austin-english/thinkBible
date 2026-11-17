@@ -1,10 +1,12 @@
 """The ``review`` stage (T062, R16): the quality gate's grader (Opus).
 
 One call per section: the grader sees the passage (BSB and KJV), each commentator's notes (the same
-excerpts ``generate`` was given) and every key idea and question, and grades each 1-5 against the
-rubric in ``prompts/review/vN.md``, with the rubric lines it breaks and a short reason. Grades are
-stored in ``grades``; items at or below ``review_flag_threshold`` are dropped. A section left
-unusable (no key idea or no question) is regenerated once on the next run, then failed (FR-018).
+excerpts ``generate`` was given), every key idea and every candidate question, and grades each 1-5
+against the rubric in ``prompts/review/vN.md``, with the rubric lines it breaks and a short reason.
+Grades are stored in ``grades``. Key ideas at or below ``review_flag_threshold`` are dropped. Of the
+candidate questions above it, the best graded are kept (up to 3, one per key idea first), in the
+writer's order; the rest are recorded as not chosen (R11, 2026-11-17). A section left unusable (no
+key idea or no question) is regenerated once on the next run, then failed (FR-018).
 
 ``grade_items`` is shared with ``calibrate``, so the calibrated grader is exactly this one.
 """
@@ -15,10 +17,17 @@ from dataclasses import dataclass
 from typing import Any
 
 from thinkbible_core.ids import resolve_book
+from thinkbible_core.rules import max_questions
 from thinkbible_pipeline.commentary.gather import gather_all
-from thinkbible_pipeline.drafts.models import Grade, SectionDraft, SectionMapEntry
+from thinkbible_pipeline.drafts.models import DroppedItem, Grade, SectionDraft, SectionMapEntry
 from thinkbible_pipeline.gate.checks import CheckContext, section_problems
-from thinkbible_pipeline.gate.outcomes import clear_earlier_failure, drop_items, regenerate_or_fail
+from thinkbible_pipeline.gate.outcomes import (
+    clear_earlier_failure,
+    drop_items,
+    pick_best,
+    pick_opener,
+    regenerate_or_fail,
+)
 from thinkbible_pipeline.llm.outputs import ReviewOut
 from thinkbible_pipeline.llm.prompts import system_prompt, version_tag
 from thinkbible_pipeline.llm.runner import Usage
@@ -45,6 +54,11 @@ def _item_lines(section: dict[str, Any], items: list[dict[str, Any]], chapter: i
     titles = {i["id"]: i["title"] for i in section.get("keyIdeas", [])}
     lines = []
     for item in items:
+        if "note" in item:  # the context or views-differ note
+            lines.append(
+                f"- {item['id']} [{item['note']} note]\n  {readable(item['text'], chapter)}"
+            )
+            continue
         verses = f"verses {item['verseStart']}-{item['verseEnd']}"
         if "targets" in item:  # a question
             aims = "; ".join(f"{t} ({titles.get(t, 'unknown idea')})" for t in item["targets"])
@@ -52,9 +66,15 @@ def _item_lines(section: dict[str, Any], items: list[dict[str, Any]], chapter: i
                          f"{aims}]\n  {readable(item['text'], chapter)}")  # fmt: skip
         else:
             names = ", ".join(COMMENTATOR_NAMES.get(s, s) for s in item["sources"])
-            lines.append(f"- {item['id']} [key idea; {verses}; sources: {names}]\n  "
+            kind = "background idea" if item.get("kind") == "background" else "key idea"
+            quotes = "".join(
+                f"\n  In their words ({COMMENTATOR_NAMES.get(q['commentator'], q['commentator'])})"
+                f": '{q['text']}'"
+                for q in item.get("quotes", [])
+            )
+            lines.append(f"- {item['id']} [{kind}; {verses}; sources: {names}]\n  "
                          f"{readable(item['title'], chapter)}: "
-                         f"{readable(item['body'], chapter)}")  # fmt: skip
+                         f"{readable(item['body'], chapter)}{quotes}")  # fmt: skip
     return "\n".join(lines)
 
 
@@ -89,6 +109,90 @@ async def grade_items(
     return grades, usage
 
 
+def choose_questions(
+    draft: SectionDraft,
+    candidates: list[dict[str, Any]],
+    grades: dict[str, ItemGrade],
+    threshold: int,
+) -> None:
+    """Keep the best-graded candidates as the section's questions; record why the rest went."""
+    kept_ideas = {
+        i["id"] for i in draft.section.get("keyIdeas", []) if i.get("kind", "key") == "key"
+    }
+    eligible: list[dict[str, Any]] = []
+    dropped: list[DroppedItem] = []
+
+    def drop(c: dict[str, Any], reason: str) -> None:
+        dropped.append(DroppedItem(item_id=c["id"], stage="review", reason=reason, item=c))
+
+    for c in candidates:
+        g = grades.get(c["id"])
+        targets = [t for t in c["targets"] if t in kept_ideas]
+        if g is not None and g.score <= threshold:
+            drop(c, f"graded {g.score}: {g.reason}")
+        elif not targets:
+            drop(c, "targets no key idea that was kept")
+        else:
+            eligible.append({**c, "targets": targets})
+    scores = {cid: g.score for cid, g in grades.items()}
+    start, end = draft.section["verseStart"], draft.section["verseEnd"]
+    opener = pick_opener(eligible, scores, start, end)
+    picked = set(pick_best(eligible, scores, max_questions(len(kept_ideas)), opener))
+    kept = [c for c in eligible if c["id"] in picked]
+    if kept:
+        # The first question opens the main idea: the reserved big-picture opener, or else the
+        # kept question spanning the most of the passage (Mark 1:12-15 led with a detail).
+        first = next((c for c in kept if c["id"] == opener), None) or max(
+            kept, key=lambda c: (c["verseEnd"] - c["verseStart"], -kept.index(c))
+        )
+        kept = [first, *(c for c in kept if c is not first)]
+    for c in eligible:
+        if c["id"] not in picked:
+            score = scores.get(c["id"])
+            graded = f"graded {score}" if score is not None else "not graded"
+            drop(c, f"not chosen: {graded}; better-graded questions were kept")
+    draft.section = {**draft.section, "questions": kept}
+    draft.dropped += dropped
+
+
+def note_items(section_id: str, section: dict[str, Any]) -> list[dict[str, Any]]:
+    """The context and views-differ notes as items for the grader (readers see both)."""
+    items = [{"id": f"{section_id}-context", "note": "context", "text": section.get("context", "")}]
+    if section.get("viewsDiffer"):
+        items.append(
+            {"id": f"{section_id}-views", "note": "views-differ", "text": section["viewsDiffer"]}
+        )
+    return items
+
+
+def judge_notes(
+    draft: SectionDraft,
+    section_id: str,
+    notes: list[dict[str, Any]],
+    grades: dict[str, ItemGrade],
+    threshold: int,
+) -> str | None:
+    """A weak views-differ note is removed; a weak context note is a problem for the section."""
+    problem = None
+    for note in notes:
+        g = grades.get(note["id"])
+        if g is None or g.score > threshold:
+            continue
+        if note["note"] == "views-differ":
+            draft.section = {**draft.section, "viewsDiffer": None}
+            draft.dropped.append(
+                DroppedItem(
+                    item_id=note["id"],
+                    stage="review",
+                    reason=f"graded {g.score}: {g.reason}",
+                    item={"viewsDiffer": note["text"]},
+                )
+            )
+        else:
+            problem = f"the context note graded {g.score}: {g.reason}"
+    return problem
+
+
 class ReviewStage(SectionStage):
     name = "review"
 
@@ -106,7 +210,11 @@ class ReviewStage(SectionStage):
     ) -> SectionResult:
         rec = draft.stages.get("generate")
         section = draft.section
-        items = [*section.get("keyIdeas", []), *section.get("questions", [])]
+        ideas = section.get("keyIdeas", [])
+        # Drafts from before 2026-11-17 have no candidates: their questions are the candidates.
+        candidates = draft.candidates or section.get("questions", [])
+        notes = note_items(section_id, section)
+        items = [*ideas, *candidates, *notes]
         if rec is None or rec.status != "done" or not items:
             return SectionResult()  # nothing generated, or nothing to grade
         entry = section_entry(section_id, deps)
@@ -120,14 +228,24 @@ class ReviewStage(SectionStage):
             )
             for item_id, g in grades.items()
         }
-        drops = {
-            item_id: f"graded {g.score}: {g.reason}"
-            for item_id, g in grades.items()
-            if g.score <= threshold
+        # A re-run (say, a new rubric) chooses again from all the candidates.
+        cand_ids = {c["id"] for c in candidates}
+        draft.dropped = [
+            d for d in draft.dropped if not (d.stage == "review" and d.item_id in cand_ids)
+        ]
+        idea_drops = {
+            i["id"]: f"graded {g.score}: {g.reason}"
+            for i in ideas
+            if (g := grades.get(i["id"])) is not None and g.score <= threshold
         }
-        drop_items(draft, drops, "review")
+        draft.section = {**section, "questions": []}
+        drop_items(draft, idea_drops, "review")
+        choose_questions(draft, candidates, grades, threshold)
+        context_problem = judge_notes(draft, section_id, notes, grades, threshold)
         book = resolve_book(deps.store.book)
         problems = section_problems(draft.section, CheckContext.for_book(deps.sources, book.code))
+        if context_problem:
+            problems.insert(0, context_problem)
         if problems:
             regenerate_or_fail(draft, deps.store, section_id, "review", problems[0])
         clear_earlier_failure(draft, "review")

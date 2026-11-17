@@ -27,7 +27,7 @@ NAMES = {
     "adam-clarke": "Adam Clarke",
 }
 # Drops that are part of choosing a pool, not a sign that something went wrong.
-ROUTINE_DROPS = ("regenerated:", "more than ")
+ROUTINE_DROPS = ("regenerated:", "more than ", "not chosen:")
 _REF = re.compile(r"\s*\{\{ref:(\d+):(\d+)(?:-(\d+))?\}\}")
 
 
@@ -85,10 +85,11 @@ def section_view(
                 "scope": _scope(i["verseStart"], i["verseEnd"], entry),
                 "names": [NAMES.get(c, c) for c in i["sources"]],
                 "grade": draft.grades.get(i["id"]),
-                "evidence": [
-                    (NAMES.get(e.commentator, e.commentator), e.quote)
-                    for e in draft.evidence.get(i["id"], [])
+                "quotes": [
+                    (NAMES.get(q["commentator"], q["commentator"]), q["text"])
+                    for q in i.get("quotes", [])
                 ],
+                "background": i.get("kind") == "background",
             }
         )
     titles = {i["id"]: i["title"] for i in ideas}
@@ -107,6 +108,8 @@ def section_view(
             "ideas": ideas,
             "questions": questions,
             "context": readable(s.get("context") or "", ch),
+            "context_grade": draft.grades.get(f"{entry.id}-context"),
+            "views_grade": draft.grades.get(f"{entry.id}-views"),
             "views_differ": readable(s["viewsDiffer"], ch) if s.get("viewsDiffer") else None,
             "no_prompt": s.get("noPrompt", False),
             "no_prompt_reason": draft.no_prompt_reason,

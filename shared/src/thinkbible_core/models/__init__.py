@@ -7,6 +7,7 @@ from thinkbible_core.models.section import (
     KeyIdea,
     ManuscriptNote,
     Question,
+    Quote,
     Section,
     VerseNote,
 )
@@ -33,6 +34,7 @@ __all__ = [
     "PackIndex",
     "PoetryLine",
     "Question",
+    "Quote",
     "Section",
     "Source",
     "StudyPack",

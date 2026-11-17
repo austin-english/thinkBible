@@ -20,7 +20,7 @@ from __future__ import annotations
 from typing import Any
 
 from thinkbible_core.ids import resolve_book
-from thinkbible_pipeline.drafts.models import CheckResult, SectionDraft
+from thinkbible_pipeline.drafts.models import CheckResult, DroppedItem, SectionDraft
 from thinkbible_pipeline.gate.checks import (
     CHECKS_VERSION,
     CheckContext,
@@ -54,7 +54,29 @@ def apply_checks(draft: SectionDraft, ctx: CheckContext) -> list[str]:
         )
         if problem:
             drops[q["id"]] = problem
+    # The candidates the section doesn't hold yet (``review`` chooses among them) are checked too.
+    in_section = {q["id"] for q in section.get("questions", [])}
+    later = []
+    for c in draft.candidates:
+        if c["id"] in in_section:
+            continue
+        problem = next(
+            (
+                p
+                for p in (
+                    question_problem(t, texts, ctx)
+                    for t in [c["text"], *(c.get("textByTranslation") or {}).values()]
+                )
+                if p
+            ),
+            None,
+        )
+        if problem:
+            later.append(DroppedItem(item_id=c["id"], stage="check", reason=problem, item=c))
     drop_items(draft, drops, "check")
+    draft.dropped += later
+    gone = set(drops) | {d.item_id for d in later}
+    draft.candidates = [c for c in draft.candidates if c["id"] not in gone]
     return section_problems(draft.section, ctx)
 
 
