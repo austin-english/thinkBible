@@ -285,6 +285,15 @@ later, from the extraction result (FR-005).
   | `align` (wording variants, manuscript notes) | Haiku 5.5 | Haiku 4.5 | The brief's "small model call" |
   | `review` (the quality gate's grader, R16) | Opus 5.5 | Opus 4.6 | A stronger model than the generator grades its output (revised 2026-11-10) |
 
+- **The Claude API directly** (2026-11-18): while Bedrock's 5.5 quota stays at 0 for this
+  account, the `anthropic` settings profile runs the same stages on the Claude API (Haiku 5.5
+  summaries, Sonnet 5.5 generate at effort high, Opus 5.5 review at effort high), chosen per run
+  with `THINKBIBLE_PROFILE=anthropic`. The API key is an SSM SecureString (`anthropic-api-key`)
+  read at run time with the caller's AWS credentials; it is never in the repo or the logs. Refusals
+  fall back server-side (`fallbacks: "default"`) rather than through the SDK middleware Bedrock
+  needs. Local runs only for now: a cloud run would need the Lambda role to read the parameter.
+  The model is part of every stage's input hash, so switching profiles re-runs everything, and
+  calibration results are kept per grader model.
 - **Pacing and throttling** (2026-11-17): this account's quotas are 10 requests a minute for
   Sonnet 4.6 and Haiku 4.5 and 5 for Opus 4.6. The runner paces requests per model to the
   `requests_per_minute` set per stage (stages sharing a model share it) and retries a throttled

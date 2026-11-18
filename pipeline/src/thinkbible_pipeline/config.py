@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import tomllib
 from collections.abc import Mapping
@@ -15,7 +16,10 @@ from thinkbible_pipeline.paths import repo_paths
 Effort = Literal["low", "medium", "high", "xhigh", "max"]
 EFFORTS: tuple[Effort, ...] = ("low", "medium", "high", "xhigh", "max")
 Thinking = Literal["adaptive", "none"]
-Endpoint = Literal["runtime", "mantle"]
+Endpoint = Literal["runtime", "mantle", "anthropic"]
+ENDPOINTS: tuple[Endpoint, ...] = ("runtime", "mantle", "anthropic")
+# Picks a [profiles.NAME] overlay in settings.toml, e.g. THINKBIBLE_PROFILE=anthropic.
+PROFILE_ENV = "THINKBIBLE_PROFILE"
 
 
 class ConfigError(ValueError):
@@ -61,7 +65,12 @@ class Settings:
     refusal_fallback_model: str
     prompts: PromptSettings
     stages: Mapping[str, StageSettings]
-    endpoint: Endpoint = "runtime"  # bedrock-runtime, or bedrock-mantle
+    # bedrock-runtime, bedrock-mantle, or the Claude API directly ("anthropic")
+    endpoint: Endpoint = "runtime"
+    # For the "anthropic" endpoint: the SSM Parameter Store SecureString holding the API key
+    # (ANTHROPIC_API_KEY in the environment wins). The key itself is never stored in the repo.
+    api_key_parameter: str | None = None
+    profile: str | None = None  # the [profiles.NAME] overlay in use, if any
     gate: GateSettings = GateSettings()
     # A throttled request (429/503/529) is retried this many times with backoff, then fails.
     throttle_retries: int = 5
@@ -139,8 +148,32 @@ def _config_dir(config_dir: Path | None) -> Path:
     return config_dir if config_dir is not None else repo_paths().config
 
 
-def load_settings(config_dir: Path | None = None) -> Settings:
+def _apply_profile(raw: dict[str, Any], profile: str) -> dict[str, Any]:
+    """``raw`` with ``[profiles.<profile>]`` laid over it: top-level keys replace, and each
+    ``[profiles.<profile>.stages.<name>]`` table updates that stage's keys."""
+    profiles = raw.get("profiles", {})
+    if profile not in profiles:
+        raise ConfigError(f"no [profiles.{profile}] in settings.toml (known: {sorted(profiles)})")
+    overlay = profiles[profile]
+    merged = {k: v for k, v in raw.items() if k != "profiles"}
+    for key, value in overlay.items():
+        if key == "stages":
+            stages = {name: dict(s) for name, s in raw.get("stages", {}).items()}
+            for name, changes in value.items():
+                stages.setdefault(name, {}).update(changes)
+            merged["stages"] = stages
+        else:
+            merged[key] = value
+    return merged
+
+
+def load_settings(config_dir: Path | None = None, profile: str | None = None) -> Settings:
+    """``settings.toml``, with the ``[profiles.<profile>]`` overlay if one is named (the
+    ``profile`` argument, else the ``THINKBIBLE_PROFILE`` environment variable)."""
     raw = _read(_config_dir(config_dir) / "settings.toml")
+    profile = profile or os.environ.get(PROFILE_ENV) or None
+    if profile:
+        raw = _apply_profile(raw, profile)
     stages: dict[str, StageSettings] = {}
     for name, s in raw.get("stages", {}).items():
         effort = s.get("effort")
@@ -160,8 +193,10 @@ def load_settings(config_dir: Path | None = None) -> Settings:
             else None,
         )
     endpoint = raw.get("endpoint", "runtime")
-    if endpoint not in ("runtime", "mantle"):
-        raise ConfigError("endpoint must be runtime or mantle")
+    if endpoint not in ENDPOINTS:
+        raise ConfigError(f"endpoint must be one of {ENDPOINTS}")
+    if endpoint == "anthropic" and not raw.get("api_key_parameter"):
+        raise ConfigError("the anthropic endpoint needs api_key_parameter")
     prompts = raw["prompts"]
     return Settings(
         region=str(raw["region"]),
@@ -179,6 +214,8 @@ def load_settings(config_dir: Path | None = None) -> Settings:
         stages=MappingProxyType(stages),
         gate=GateSettings(**{k: v for k, v in raw.get("gate", {}).items()}),
         throttle_retries=int(raw.get("throttle_retries", 5)),
+        api_key_parameter=str(raw["api_key_parameter"]) if raw.get("api_key_parameter") else None,
+        profile=profile,
     )
 
 

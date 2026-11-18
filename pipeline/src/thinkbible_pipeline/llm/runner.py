@@ -1,7 +1,8 @@
 """Model calls behind one interface (research R6).
 
-``BedrockRunner`` calls Claude in Amazon Bedrock through the Anthropic SDK (the ``bedrock-runtime``
-endpoint by default, ``bedrock-mantle`` if settings say so) with structured output.
+``BedrockRunner`` calls Claude through the Anthropic SDK with structured output: in Amazon Bedrock
+(the ``bedrock-runtime`` endpoint by default, ``bedrock-mantle`` if settings say so), or the Claude
+API directly (endpoint ``anthropic``, e.g. the ``anthropic`` settings profile for the 5.5 models).
 ``FakeRunner`` replays recorded outputs for tests; tests never call models.
 """
 
@@ -9,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import random
 import time
 from collections import deque
@@ -19,6 +21,7 @@ from typing import Any, Protocol, TypeVar
 
 import anthropic
 from anthropic import (
+    AsyncAnthropic,
     AsyncAnthropicBedrock,
     AsyncAnthropicBedrockMantle,
     BetaRefusalFallbackMiddleware,
@@ -29,6 +32,10 @@ from pydantic import BaseModel, ValidationError
 from thinkbible_pipeline.config import Settings
 
 T = TypeVar("T", bound=BaseModel)
+
+# The Claude API's server-side refusal fallback: a declined request is re-run on a fallback model
+# chosen by the refusal category, inside the same call (Bedrock uses the SDK middleware instead).
+SERVER_SIDE_FALLBACK_BETA = "server-side-fallback-2026-07-01"
 
 # Keys a request must never carry (constitution II: models get no tools or retrieval).
 FORBIDDEN_REQUEST_KEYS = ("tools", "tool_choice", "mcp_servers", "container")
@@ -126,6 +133,27 @@ def assert_no_tools(params: Mapping[str, Any]) -> None:
         raise ForbiddenRequest(f"model requests must not include {bad} (constitution II)")
 
 
+def anthropic_api_key(settings: Settings) -> str:
+    """The Claude API key: ``ANTHROPIC_API_KEY`` if set, else the SSM SecureString named in
+    settings (``api_key_parameter``), read with the caller's AWS credentials. Never logged."""
+    key = os.environ.get("ANTHROPIC_API_KEY")
+    if key:
+        return key
+    if not settings.api_key_parameter:
+        raise ModelError("the anthropic endpoint needs api_key_parameter in settings.toml")
+    import boto3
+
+    ssm = boto3.client("ssm", region_name=settings.region)
+    try:
+        value = ssm.get_parameter(Name=settings.api_key_parameter, WithDecryption=True)
+    except Exception as e:  # report which parameter failed, never the value
+        raise ModelError(
+            f"couldn't read the API key from SSM parameter {settings.api_key_parameter!r}: "
+            f"{type(e).__name__}"
+        ) from e
+    return str(value["Parameter"]["Value"])
+
+
 class RateLimiter:
     """At most ``per_minute`` request starts in any 60 seconds (a sliding window)."""
 
@@ -195,6 +223,8 @@ class BedrockRunner:
 
     @staticmethod
     def _make_client(settings: Settings) -> Any:
+        if settings.endpoint == "anthropic":
+            return AsyncAnthropic(api_key=anthropic_api_key(settings))
         # Bedrock has no server-side `fallbacks`: the SDK middleware retries a refused request on
         # the fallback model (research R6). It only handles `client.beta.messages` requests.
         # `betas=[]` keeps it from sending the fallback-credit beta header, which Bedrock may not
@@ -229,6 +259,9 @@ class BedrockRunner:
             params["thinking"] = {"type": "adaptive"}
         if cfg.effort is not None:
             params["output_config"] = {"effort": cfg.effort}
+        if self._settings.endpoint == "anthropic":
+            params["betas"] = [SERVER_SIDE_FALLBACK_BETA]
+            params["fallbacks"] = "default"
         assert_no_tools(params)
         return params
 

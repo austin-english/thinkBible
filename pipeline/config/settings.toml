@@ -70,3 +70,40 @@ prompt = "v9"  # v9: purpose-first question rubric; the owner's round 1 verdicts
 default_cost_usd = 0.10  # grades every candidate question, not just three
 requests_per_minute = 5  # this account's Bedrock quota for the model
 
+
+# The Claude 5.5 models through the Claude API directly, while Bedrock's 5.5 quota is 0 for this
+# account (2026-11-18). Use per run: `THINKBIBLE_PROFILE=anthropic uv run ... run ... --local`.
+# The key is the SSM SecureString below, read with your AWS credentials (or ANTHROPIC_API_KEY).
+# A new Claude API account starts with low per-minute limits, so pacing is conservative; throttled
+# calls are retried with backoff. Calibration results are kept per grader model, so this profile's
+# grader is calibrated separately.
+[profiles.anthropic]
+endpoint = "anthropic"
+api_key_parameter = "anthropic-api-key"
+concurrency = 3
+throttle_retries = 8
+refusal_fallback_model = "claude-opus-5"  # unused here: the Claude API falls back server-side
+
+[profiles.anthropic.stages.summaries]
+model = "claude-haiku-5-5"
+thinking = "adaptive"
+effort = "low"
+requests_per_minute = 10
+
+[profiles.anthropic.stages.generate]
+model = "claude-sonnet-5-5"
+thinking = "adaptive"
+effort = "high"
+requests_per_minute = 4
+
+[profiles.anthropic.stages.align]
+model = "claude-haiku-5-5"
+thinking = "adaptive"
+effort = "low"
+requests_per_minute = 10
+
+[profiles.anthropic.stages.review]
+model = "claude-opus-5-5"
+thinking = "adaptive"
+effort = "high"
+requests_per_minute = 4

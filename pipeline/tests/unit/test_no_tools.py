@@ -144,6 +144,41 @@ def test_client_follows_the_endpoint_setting() -> None:
     assert type(mantle._client) is AsyncAnthropicBedrockMantle
 
 
+def test_the_anthropic_profile_calls_the_claude_api_with_server_side_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from anthropic import AsyncAnthropic
+
+    from thinkbible_pipeline.llm.runner import SERVER_SIDE_FALLBACK_BETA
+
+    settings = load_settings(profile="anthropic")
+    assert settings.endpoint == "anthropic" and settings.profile == "anthropic"
+    assert settings.stage("generate").model == "claude-sonnet-5-5"
+    assert settings.stage("review").model == "claude-opus-5-5"
+    # The overlay changes models and pacing only; prompt versions come from the base settings.
+    assert settings.stage("generate").prompt == SETTINGS.stage("generate").prompt
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")  # no SSM call in tests
+    runner = BedrockRunner(settings)
+    assert type(runner._client) is AsyncAnthropic
+    params = runner.build_request("review", SYSTEM, "passage")
+    assert params["betas"] == [SERVER_SIDE_FALLBACK_BETA] and params["fallbacks"] == "default"
+    for key in FORBIDDEN_REQUEST_KEYS:
+        assert key not in params
+    # Bedrock requests carry neither.
+    bedrock = BedrockRunner(SETTINGS, client=FakeClient()).build_request("review", SYSTEM, "p")
+    assert "fallbacks" not in bedrock and "betas" not in bedrock
+
+
+def test_a_profile_can_come_from_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    from thinkbible_pipeline.config import ConfigError
+
+    monkeypatch.setenv("THINKBIBLE_PROFILE", "anthropic")
+    assert load_settings().endpoint == "anthropic"
+    monkeypatch.setenv("THINKBIBLE_PROFILE", "nope")
+    with pytest.raises(ConfigError, match=r"no \[profiles\.nope\]"):
+        load_settings()
+
+
 def _throttle() -> Exception:
     """A Bedrock 429, as the SDK raises it (its response only needs these attributes here)."""
     import anthropic
