@@ -176,7 +176,7 @@ def load_settings(config_dir: Path | None = None, profile: str | None = None) ->
         raw = _apply_profile(raw, profile)
     stages: dict[str, StageSettings] = {}
     for name, s in raw.get("stages", {}).items():
-        effort = s.get("effort")
+        effort = s.get("effort") or None  # "" lets a profile turn effort off
         if effort is not None and effort not in EFFORTS:
             raise ConfigError(f"stages.{name}.effort must be one of {EFFORTS}")
         thinking = s.get("thinking", "none")

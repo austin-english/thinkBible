@@ -16,6 +16,7 @@ from thinkbible_core.ids import BookInfo, UnknownBookError, resolve_book
 # `all` runs sections through report and stops at "ready for review" (contracts/cli.md).
 STAGE_ORDER: tuple[str, ...] = (
     "sections",
+    "intro",
     "summaries",
     "generate",
     "align",
@@ -23,7 +24,7 @@ STAGE_ORDER: tuple[str, ...] = (
     "review",
     "report",
 )
-MODEL_STAGES = frozenset({"summaries", "generate", "align", "review"})
+MODEL_STAGES = frozenset({"intro", "summaries", "generate", "align", "review"})
 
 
 class _Request(BaseModel):

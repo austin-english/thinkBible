@@ -125,6 +125,19 @@ regions:
 - Base model IDs: `anthropic.claude-sonnet-5-5`, `anthropic.claude-haiku-5-5`,
   `anthropic.claude-opus-5-5`.
 
+### Claude API key (ThinkBible, us-west-2)
+
+The pipeline runs on the Claude API by default (2026-11-18), with the 5.5 models Bedrock hasn't
+opened for this account. The key lives only in Parameter Store:
+
+- Parameter `anthropic-api-key`, type SecureString, encrypted with the AWS-managed `aws/ssm` key.
+  Created by hand in the console; never in the repo or Terraform state.
+- Local runs read it with your SSO credentials (`AWS_PROFILE=admin-thinkbible`). The pipeline
+  Lambdas may read only this parameter (`infra/modules/pipeline/iam.tf`, `ClaudeApiKey`).
+- To rotate: create a new key at console.anthropic.com, overwrite the parameter value, revoke the
+  old key. Nothing else changes.
+- Credit is prepaid in the Anthropic console; a full book is about $25 at current prices.
+
 ## Done
 
 - **Terraform state bucket**: `thinkbible-tfstate-<ThinkBible account id>` in **us-west-2**, with

@@ -353,6 +353,11 @@ place and confirm the publish check refuses the version.
   knowing that is not itself a meaning), and MUST
   publish each source commentator's verified words as `quotes` for "In their words". Questions
   target only key ideas; the app never counts a background idea as missed.
+- **FR-007b** (2026-11-18): Each book MUST get one introduction from the commentators' prefaces
+  (who wrote it, to whom, when, why, what to watch for; 80-120 words), held to the same rules as
+  key ideas (only what the commentators say, quotes verified, graded by the grader), published as
+  the pack's `introduction`. Section context notes MUST stay about their passage and never repeat
+  the book's background. A book whose commentators give no preface has no introduction.
 - **FR-008**: For each prompted section the system MUST produce an ordered list of questions.
   Each question has a permanent ID, a type (noticing, meaning, application), a verse scope, the
   key idea IDs it targets, a status (active or retired), the pack version it was added in, and

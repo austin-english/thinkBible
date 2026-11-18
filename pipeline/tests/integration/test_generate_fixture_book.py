@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+import pytest
 from pydantic import BaseModel
 
 from thinkbible_pipeline.config import load_pricing, load_settings
@@ -129,7 +130,14 @@ def make(tmp_path: Path, make_library: Any) -> tuple[Deps, ScriptedRunner]:
     return deps, runner
 
 
-def test_fixture_book_end_to_end(tmp_path: Path, make_library: Any) -> None:
+def test_fixture_book_end_to_end(
+    tmp_path: Path, make_library: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Independent of the repo's real calibration file: this book's grader is uncalibrated.
+    from thinkbible_pipeline.gate.calibration import CalibrationSet
+
+    monkeypatch.setattr("thinkbible_pipeline.stages.report.load_calibration",
+                        lambda _path: CalibrationSet())  # fmt: skip
     deps, runner = make(tmp_path, make_library)
     request = RunRequest(book="mark", stages=expand_all("all"))  # type: ignore[arg-type]
     result = asyncio.run(run(request, deps))
@@ -142,7 +150,7 @@ def test_fixture_book_end_to_end(tmp_path: Path, make_library: Any) -> None:
         assert (root / name).is_file(), name
     assert sorted(p.name for p in (root / "sections").iterdir()) == sorted(f"{i}.json" for i in ids)
     assert {p.name.split("-", 2)[-1] for p in (root / "runs").iterdir()} == {
-        "summaries.json", "generate.json", "check.json", "review.json"
+        "intro.json", "summaries.json", "generate.json", "check.json", "review.json"
     }  # fmt: skip
 
     for sid in ids:

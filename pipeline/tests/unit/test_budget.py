@@ -35,11 +35,18 @@ def _run(stage: str, done: int, spent: float) -> RunRecord:
 
 
 def test_settings_models_endpoint_and_prices() -> None:
-    assert SETTINGS.endpoint == "runtime"  # bedrock-runtime (research R6)
-    models = {SETTINGS.stage(n).model for n in SETTINGS.stages} | {SETTINGS.refusal_fallback_model}
-    for model in models:
-        assert model.startswith(("us.anthropic.claude-", "anthropic.claude-")), model
-        PRICING.for_model(model)  # every configured model has a price
+    from thinkbible_pipeline.config import load_settings
+
+    assert SETTINGS.endpoint == "anthropic"  # the Claude API by default (research R6, 2026-11-18)
+    bedrock = load_settings(profile="bedrock")
+    assert bedrock.endpoint == "runtime"  # bedrock-runtime
+    expected = {"default": (SETTINGS, ("claude-",)),
+                "bedrock": (bedrock, ("us.anthropic.claude-", "anthropic.claude-"))}  # fmt: skip
+    for settings, prefixes in expected.values():
+        models = {settings.stage(n).model for n in settings.stages}
+        for model in models | {settings.refusal_fallback_model}:
+            assert model.startswith(prefixes), model
+            PRICING.for_model(model)  # every configured model has a price
     # The grader is a stronger model than the generator (research R16).
     assert "opus" in SETTINGS.stage("review").model
     assert "sonnet" in SETTINGS.stage("generate").model

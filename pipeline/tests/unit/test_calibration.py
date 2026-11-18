@@ -39,6 +39,9 @@ def test_only_a_result_for_the_current_grader_prompt_and_model_counts() -> None:
     assert latest is not None and latest.agreement == 0.90  # the latest for that version
     assert cal.result_for("review@v1", "opus-5-5") is None  # a new model needs a new run
     assert cal.result_for("review@v3", "opus-4-6") is None
+    # The same model on another endpoint keeps its calibration.
+    api = CalibrationSet(results=[result("review@v9", "claude-opus-5-5", "2026-11-18T10:00")])
+    assert api.result_for("review@v9", "us.anthropic.claude-opus-5-5") is not None
 
 
 def draft() -> SectionDraft:

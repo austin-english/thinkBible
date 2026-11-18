@@ -79,6 +79,12 @@ There's no translation control in the header or on cards. Translation lives only
 - Chapter title row: serif 22 bold "Mark 1" + trailing "9 sections" (13, secondary). Padding 14/18.
 - Cards stack vertically, 12pt side margins, 20pt between, radius 4, `page` fill, page shadow.
 - After the last section: an "End of Mark 1 · Keep scrolling for Mark 2" page. Scrolling continues straight into the next chapter (endless through the book).
+- **The book's first post: "About Mark"** (2026-11-18). Before the first section of chapter 1, once per book, the feed shows the book introduction (`introduction` in the study pack): who wrote the book, to whom, when and why, and what to watch for, about 100 words. It is a page card like the others, without a question footer:
+  - header row: the book avatar, "About Mark" (14 bold), and the commentators it draws on (13 secondary, one line: "from Henry & Clarke");
+  - the text in the Scripture serif (17, `ink-page`), no drop cap;
+  - under it, "—— In their words (n)", opening each commentator's own words from their preface as nested replies, exactly as under a key idea.
+  - It never repeats: section context notes stay about their passage, because the book's background is said once, here. A book whose commentators give no preface has no such card.
+  - The chapter panel's book header links to it ("About this book").
 
 ### Card (one section)
 1. **Card header row** (padding 10/12/10/14): 36 circle book avatar (`rubric.tint`, serif "Mk"), ref "Mark 1:1–8" (14 bold), title (13 secondary, one line), `…` button 40×40.

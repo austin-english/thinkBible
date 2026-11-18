@@ -51,6 +51,22 @@ class Quote(ContractModel):
     text: Annotated[str, StringConstraints(min_length=1, max_length=300)]
 
 
+class BookIntroduction(ContractModel):
+    """About the book, from the commentators' prefaces; the first post of the book in the feed."""
+
+    text: Annotated[str, StringConstraints(min_length=1, max_length=900)]
+    sources: Annotated[list[CommentatorId], Field(min_length=1, max_length=3)]
+    quotes: Annotated[list[Quote], Field(min_length=1, max_length=3)]
+
+    @model_validator(mode="after")
+    def _check(self) -> BookIntroduction:
+        if len(set(self.sources)) != len(self.sources):
+            raise ValueError("sources must be unique")
+        if [q.commentator for q in self.quotes] != self.sources:
+            raise ValueError("quotes must give one quote per source, in the order of sources")
+        return self
+
+
 class KeyIdea(_VersionedItem):
     id: KeyIdeaId
     # key: a deeper meaning the passage points to (questions target it, the app counts it);

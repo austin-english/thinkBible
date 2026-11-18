@@ -18,6 +18,7 @@
   "properties": {
     "formatVersion": { "const": 1 },
     "book": { "$ref": "#/$defs/book" },
+    "introduction": { "$ref": "section.schema.json#/$defs/bookIntroduction" },
     "packVersion": { "$ref": "section.schema.json#/$defs/packVersion" },
     "publishedAt": { "type": "string", "format": "date-time" },
     "translations": {

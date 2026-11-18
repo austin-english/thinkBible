@@ -218,6 +218,11 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
   settings (spec 006).
 - **FR-002**: The feed MUST be one vertical scroll through the whole book: for each chapter, a
   title row and one page card per section, then an end-of-chapter page, then the next chapter.
+- **FR-002a** (2026-11-18): When the pack has a book `introduction`, the feed MUST open the book
+  with it as the first post, before the first section of chapter 1: a page card headed "About
+  <Book>" with the commentators it draws on, the text in the Scripture serif, and "In their
+  words (n)" opening each commentator's preface quote as a nested reply. It has no question
+  footer and appears once per book. The chapter panel's book header links to it.
 - **FR-003**: There MUST be no translation control, mode switch or text-size control in the header
   or on cards. Those live in You & settings.
 

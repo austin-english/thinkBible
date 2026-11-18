@@ -62,10 +62,17 @@ class CalibrationSet(JsonModel):
     results: list[CalibrationResult] = Field(default_factory=list)
 
     def result_for(self, prompt_version: str, model: str) -> CalibrationResult | None:
-        """The latest result for this grader prompt version and model, if any."""
+        """The latest result for this grader prompt version and model, if any.
+
+        Models compare by their bare ID, so the same model on another endpoint (`claude-opus-5-5`
+        on the Claude API, `us.anthropic.claude-opus-5-5` on Bedrock) keeps its calibration.
+        """
+        from thinkbible_pipeline.config import bare_model_id
+
         matching = [
             r for r in self.results
-            if r.grader_prompt_version == prompt_version and r.grader_model == model
+            if r.grader_prompt_version == prompt_version
+            and bare_model_id(r.grader_model) == bare_model_id(model)
         ]  # fmt: skip
         return max(matching, key=lambda r: r.run_at) if matching else None
 

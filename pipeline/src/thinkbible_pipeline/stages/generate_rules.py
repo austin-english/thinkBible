@@ -22,14 +22,20 @@ anything was dropped:
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, Protocol
 
 from thinkbible_core.rules import max_questions
 from thinkbible_pipeline.drafts.ids import next_id
 from thinkbible_pipeline.drafts.models import DroppedItem, Evidence, SectionDraft, SectionMapEntry
 from thinkbible_pipeline.gate.checks import CheckContext, idea_problem, question_problem
-from thinkbible_pipeline.llm.outputs import IdeaOut, IdeasOut, QuestionOut, QuestionsOut
+from thinkbible_pipeline.llm.outputs import (
+    EvidenceOut,
+    IdeasOut,
+    QuestionOut,
+    QuestionsOut,
+)
 from thinkbible_pipeline.text import normalize
 
 MAX_IDEAS = 5  # of kind "key"
@@ -170,7 +176,17 @@ def _in_section(start: int, end: int, section: SectionMapEntry) -> bool:
     return section.verse_start <= start <= end <= section.verse_end
 
 
-def check_evidence(idea: IdeaOut, excerpts: dict[str, str]) -> tuple[list[str], list[Evidence]]:
+class Cited(Protocol):
+    """Anything that names its sources and quotes them: a key idea, the book introduction."""
+
+    @property
+    def sources(self) -> Sequence[str]: ...
+
+    @property
+    def evidence(self) -> Sequence[EvidenceOut]: ...
+
+
+def check_evidence(idea: Cited, excerpts: dict[str, str]) -> tuple[list[str], list[Evidence]]:
     """The sources backed by a quote found in that commentator's excerpt, with those quotes."""
     sources: list[str] = []
     evidence: list[Evidence] = []

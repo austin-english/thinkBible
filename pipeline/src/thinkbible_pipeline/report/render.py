@@ -156,6 +156,12 @@ def render_review(
         lstrip_blocks=True,
     )
     views = [section_view(e, drafts.get(e.id), card.book, library) for e in sections]
+    first = drafts.get(sections[0].id) if sections else None
+    intro = first.book_intro if first is not None else None
     return env.get_template("review.html.j2").render(
-        card=card, sections=views, book_name=resolve_book(card.book).name
+        card=card,
+        sections=views,
+        book_name=resolve_book(card.book).name,
+        intro=intro,
+        names=NAMES,
     )

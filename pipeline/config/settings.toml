@@ -1,31 +1,29 @@
 # Pipeline settings (research R6, R7, R15).
 #
-# Models run on Amazon Bedrock's `bedrock-runtime` endpoint (AWS's recommendation for new
-# applications; this account can't use `bedrock-mantle`, research R6). Model IDs are US
-# cross-region inference profiles.
-#
-# 2026-11-12: the Claude 5.5 models are blocked for this account (quota 0, "account history"), so
-# the stages run on Claude 4.x for now. When 5.5 opens up, change the models here (Haiku 5.5:
-# effort "low", Sonnet/Opus 5.5: effort "medium"; thinking is always on for 5.5), add them to
-# `bedrock_models` in infra/main.tf, and re-apply.
+# Models: the Claude 5.5 models on the Claude API directly (default since 2026-11-18). Bedrock's 5.5
+# quota is still 0 for this account; [profiles.bedrock] below keeps the Claude 4.x setup on Bedrock
+# (`THINKBIBLE_PROFILE=bedrock`). The API key is the SSM SecureString `anthropic-api-key`, read at
+# run time with the caller's AWS credentials (ANTHROPIC_API_KEY wins). Refusals fall back
+# server-side. When Bedrock opens 5.5, the bedrock profile only needs its model IDs changed.
 
 region = "us-west-2"
-endpoint = "runtime"  # "runtime" (bedrock-runtime) or "mantle" (bedrock-mantle)
-concurrency = 10
+endpoint = "anthropic"  # "anthropic" (Claude API), "runtime" (bedrock-runtime), "mantle"
+api_key_parameter = "anthropic-api-key"
+# A new Claude API account starts with low per-minute limits: keep in step with max_concurrency
+# in infra/main.tf (tests/unit/test_infra_sync.py checks it).
+concurrency = 3
 excerpt_cap_tokens = 8000
 review_flag_threshold = 2
 # Non-streaming requests: keep max_tokens at about 16k so responses finish inside SDK timeouts.
 max_tokens = 16000
 # Structured output that fails validation is retried this many times, then the section fails.
 invalid_output_retries = 2
-# Throttled requests (Bedrock 429) are retried this many times, waiting 10s, 20s, 40s, then 60s.
-throttle_retries = 5
-# Client-side refusal fallback (Bedrock has no server-side `fallbacks`): one retry on this model.
-refusal_fallback_model = "us.anthropic.claude-opus-4-6-v1"
+# Throttled requests (429) are retried this many times, waiting 10s, 20s, 40s, then 60s.
+throttle_retries = 8
+# Only the Bedrock endpoints use this (client-side refusal fallback); the Claude API falls back
+# server-side.
+refusal_fallback_model = "claude-opus-5"
 
-# The quality gate (R16): a graded book may be promoted when its pass rates (items the grader
-# scores above review_flag_threshold, before drops) reach these, and the grader agrees with the
-# owner's calibration grades on at least min_agreement of at least min_calibration_items items.
 [gate]
 min_idea_pass_rate = 0.90
 min_question_pass_rate = 0.80
@@ -36,74 +34,90 @@ min_calibration_items = 30
 shared_context = "v1"
 question_guide = "v4"  # v4 (2026-11-17): the owner's favorites; deeper meaning (approved, not a draft)
 
-# Per stage: model; thinking ("adaptive" or "none"); effort (output_config.effort, omit for
-# models that don't accept it, such as Haiku 4.5); prompt version; and the default cost per
-# section used until the run records have history (estimates for the 4.x models).
-[stages.summaries]
-model = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
-thinking = "none"
-prompt = "v1"
-default_cost_usd = 0.02
-requests_per_minute = 10  # this account's Bedrock quota for the model
-
-[stages.generate]
-model = "us.anthropic.claude-sonnet-4-6"
-thinking = "adaptive"
-effort = "medium"
-prompt = "v12"  # questions/v12: purpose first (uncover the meaning beneath), few firm limits; extract/v12 = v11
-default_cost_usd = 0.22  # 0.17 measured on Mark 1 (2026-11-16), plus the notes and 8 candidates
-requests_per_minute = 10  # this account's Bedrock quota for the model
-
-[stages.align]
-model = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
-thinking = "none"
-prompt = "v1"
-default_cost_usd = 0.02
-requests_per_minute = 10  # this account's Bedrock quota for the model
-
-[stages.review]
-# The quality gate's grader: a stronger model than the generator (research R16).
-model = "us.anthropic.claude-opus-4-6-v1"
-thinking = "adaptive"
-effort = "medium"
-prompt = "v9"  # v9: purpose-first question rubric; the owner's round 1 verdicts as examples
-default_cost_usd = 0.10  # grades every candidate question, not just three
-requests_per_minute = 5  # this account's Bedrock quota for the model
-
-
-# The Claude 5.5 models through the Claude API directly, while Bedrock's 5.5 quota is 0 for this
-# account (2026-11-18). Use per run: `THINKBIBLE_PROFILE=anthropic uv run ... run ... --local`.
-# The key is the SSM SecureString below, read with your AWS credentials (or ANTHROPIC_API_KEY).
-# A new Claude API account starts with low per-minute limits, so pacing is conservative; throttled
-# calls are retried with backoff. Calibration results are kept per grader model, so this profile's
-# grader is calibrated separately.
-[profiles.anthropic]
-endpoint = "anthropic"
-api_key_parameter = "anthropic-api-key"
-concurrency = 3
-throttle_retries = 8
-refusal_fallback_model = "claude-opus-5"  # unused here: the Claude API falls back server-side
-
-[profiles.anthropic.stages.summaries]
-model = "claude-haiku-5-5"
-thinking = "adaptive"
-effort = "low"
-requests_per_minute = 10
-
-[profiles.anthropic.stages.generate]
+# Per stage: model; thinking ("adaptive" or "none"); effort (output_config.effort); prompt
+# version; the default cost per section used until the run records have history; and pacing.
+[stages.intro]
+# The book introduction: written once per book from the commentators' prefaces, graded by the
+# review model (prompts/intro, prompts/intro-review). Runs on the book's first section only.
 model = "claude-sonnet-5-5"
 thinking = "adaptive"
 effort = "high"
+prompt = "v1"
+default_cost_usd = 0.15
 requests_per_minute = 4
 
-[profiles.anthropic.stages.align]
+[stages.summaries]
 model = "claude-haiku-5-5"
 thinking = "adaptive"
 effort = "low"
+prompt = "v1"
+default_cost_usd = 0.002
 requests_per_minute = 10
 
-[profiles.anthropic.stages.review]
+[stages.generate]
+model = "claude-sonnet-5-5"
+thinking = "adaptive"
+effort = "high"
+prompt = "v13"  # extract/v13: section context notes (the book has its own introduction); questions/v13 = v12
+default_cost_usd = 0.12  # measured on 10 Mark sections with Sonnet 5.5 (2026-11-18)
+requests_per_minute = 4
+
+[stages.align]
+model = "claude-haiku-5-5"
+thinking = "adaptive"
+effort = "low"
+prompt = "v1"
+default_cost_usd = 0.002
+requests_per_minute = 10
+
+[stages.review]
+# The quality gate's grader: a stronger model than the generator (research R16). Calibrated:
+# Opus 5.5 with review/v9 agrees with the owner on 92% of 36 held-out ratings (2026-11-18).
 model = "claude-opus-5-5"
 thinking = "adaptive"
 effort = "high"
+prompt = "v9"  # v9: purpose-first question rubric; the owner's round 1 verdicts as examples
+default_cost_usd = 0.12  # measured on 9 Mark sections with Opus 5.5 (2026-11-18)
 requests_per_minute = 4
+
+
+# Claude 4.x on Amazon Bedrock (bedrock-runtime, US cross-region inference profiles), the setup
+# used until 2026-11-18. When Bedrock opens the 5.5 models for this account, change these model
+# IDs, add them to `bedrock_models` in infra/main.tf, and re-apply. This account can't use
+# `bedrock-mantle` (research R6).
+[profiles.bedrock]
+endpoint = "runtime"
+concurrency = 10
+throttle_retries = 5
+refusal_fallback_model = "us.anthropic.claude-opus-4-6-v1"
+
+[profiles.bedrock.stages.intro]
+model = "us.anthropic.claude-sonnet-4-6"
+effort = "medium"
+requests_per_minute = 10
+
+[profiles.bedrock.stages.summaries]
+model = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+thinking = "none"
+effort = ""  # Haiku 4.5 rejects an effort setting
+default_cost_usd = 0.02
+requests_per_minute = 10  # this account's Bedrock quota for the model
+
+[profiles.bedrock.stages.generate]
+model = "us.anthropic.claude-sonnet-4-6"
+effort = "medium"
+default_cost_usd = 0.22
+requests_per_minute = 10
+
+[profiles.bedrock.stages.align]
+model = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+thinking = "none"
+effort = ""
+default_cost_usd = 0.02
+requests_per_minute = 10
+
+[profiles.bedrock.stages.review]
+model = "us.anthropic.claude-opus-4-6-v1"
+effort = "medium"
+default_cost_usd = 0.10
+requests_per_minute = 5

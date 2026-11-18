@@ -31,6 +31,7 @@ from typing import Literal
 
 from thinkbible_core.ids import resolve_book
 from thinkbible_pipeline.commentary.crossrefs import find_pointers, parse_display_ref
+from thinkbible_pipeline.commentary.preface import split_preface
 from thinkbible_pipeline.drafts.models import ExcerptRecord, SectionMapEntry
 from thinkbible_pipeline.jsonio import sha256_hex
 from thinkbible_pipeline.sources.models import CommentaryChapter, NormalizedCommentaryBook
@@ -125,8 +126,14 @@ def _blocks(
     ]
 
 
-def _chapter_blocks(book: str, chapter: CommentaryChapter) -> tuple[list[_Block], list[_Block]]:
-    """A chapter's blocks: (introduction's opening text, every passage block)."""
+def _chapter_blocks(
+    book: str, chapter: CommentaryChapter, commentator: str
+) -> tuple[list[_Block], list[_Block]]:
+    """A chapter's blocks: (introduction's opening text, every passage block).
+
+    The book preface the first note carries (``commentary/preface.py``) is left out: it feeds the
+    book introduction, not the first section.
+    """
     opening: list[_Block] = []
     passages: list[_Block] = []
     if chapter.introduction is not None:
@@ -135,9 +142,12 @@ def _chapter_blocks(book: str, chapter: CommentaryChapter) -> tuple[list[_Block]
             intro.text, intro.refs, book, chapter.number, None, f"{book} {chapter.number} intro"
         ):
             (opening if b.passage is None else passages).append(b)
-    for item in chapter.items:
+    for n, item in enumerate(chapter.items):
         own = Ref(book, chapter.number, item.verse, end_verse=item.verse_end)
-        passages += _blocks(item.text, item.refs, book, chapter.number, own, own.compact())
+        text = item.text
+        if chapter.number == 1 and n == 0:
+            text = split_preface(commentator, text)[1]
+        passages += _blocks(text, item.refs, book, chapter.number, own, own.compact())
     return opening, passages
 
 
@@ -164,7 +174,7 @@ def _follow(target: Ref, commentator: str, library: SourceLibrary) -> tuple[str,
     chapter = _chapter(library.commentary(commentator, target.book), target.chapter)
     if chapter is None:
         return "", []
-    opening, passages = _chapter_blocks(target.book, chapter)
+    opening, passages = _chapter_blocks(target.book, chapter, commentator)
     if target.verse is not None:
         (_, first), (last_chapter, last) = target.span()
         end = last if last_chapter == target.chapter else 999
@@ -188,7 +198,7 @@ def gather(
     if chapter is None:
         return excerpt
     start, end = section.verse_start, section.verse_end
-    opening, passages = _chapter_blocks(book, chapter)
+    opening, passages = _chapter_blocks(book, chapter, commentator)
     intro_keys = {f"{book} {chapter.number} intro"}
 
     notes = [
@@ -261,6 +271,31 @@ def gather(
     included = {p.key for p in excerpt.parts}
     excerpt.cross_refs = [t for t, key in followed.items() if key in included]
     return excerpt
+
+
+def book_prefaces(book: str, library: SourceLibrary, *, cap_tokens: int) -> dict[str, str]:
+    """Each commentator's preface to ``book`` (who wrote it, to whom, when, why), for the book
+    introduction; commentators without one are left out. Each is cut to ``cap_tokens``."""
+    out: dict[str, str] = {}
+    for c in COMMENTATORS:
+        chapter = _chapter(library.commentary(c, book), 1)
+        if chapter is None or not chapter.items:
+            continue
+        preface, _rest = split_preface(c, chapter.items[0].text)
+        if preface:
+            out[c] = _cut_to_tokens(preface, cap_tokens)
+    return out
+
+
+def _cut_to_tokens(text: str, cap: int) -> str:
+    if tokens(text) <= cap:
+        return text
+    kept: list[str] = []
+    for para in text.split("\n\n"):
+        if tokens("\n\n".join([*kept, para])) > cap:
+            break
+        kept.append(para)
+    return "\n\n".join(kept)
 
 
 def gather_all(

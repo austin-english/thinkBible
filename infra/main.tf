@@ -25,8 +25,11 @@ module "pipeline" {
   lambda_zip_path     = "${path.root}/../pipeline/out/lambda.zip"
 
   # Keep in step with pipeline/config/settings.toml (checked by tests/unit/test_infra_sync.py).
-  max_concurrency = 10
-  # Claude 4.x until the 5.5 models open up for this account (settings.toml has the details).
+  # 3 sections at a time: the Claude API account's per-minute limits are still low.
+  max_concurrency = 3
+  # The Claude API key (an SSM SecureString created by hand, never in Terraform state).
+  anthropic_api_key_parameter = "anthropic-api-key"
+  # The `bedrock` profile's models (Claude 4.x until Bedrock opens 5.5 for this account).
   bedrock_models = [
     "us.anthropic.claude-haiku-4-5-20251001-v1:0",
     "us.anthropic.claude-sonnet-4-6",

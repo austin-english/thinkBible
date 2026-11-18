@@ -1,6 +1,11 @@
 {
   "formatVersion": 1,
   "book": { "id": "MRK", "name": "Mark" },
+  "introduction": {
+    "text": "Mark, also called John Mark, was a companion of Peter and of Paul. Early tradition says he wrote down Peter's preaching for believers in Rome. His Gospel is the shortest and moves quickly from one event to the next, showing Jesus at work.",
+    "sources": ["matthew-henry", "adam-clarke"],
+    "quotes": [{"commentator": "matthew-henry", "text": "Sample words from Henry's preface."}, {"commentator": "adam-clarke", "text": "Sample words from Clarke's preface."}]
+  },
   "packVersion": "1.1.0",
   "publishedAt": "2026-11-05T12:00:00Z",
   "translations": [

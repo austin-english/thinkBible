@@ -100,6 +100,19 @@ class StageRecord(JsonModel):
     error: str | None = None
 
 
+class BookIntro(JsonModel):
+    """The book introduction, kept on the draft of the book's first section (``stages/intro.py``).
+
+    ``introduction`` is the publishable BookIntroduction (text, sources, quotes), or None when the
+    commentators give no preface or the introduction failed (``problem`` says why).
+    """
+
+    introduction: dict[str, Any] | None = None
+    evidence: list[Evidence] = Field(default_factory=list)
+    grade: Grade | None = None
+    problem: str | None = None
+
+
 class SectionDraft(JsonModel):
     """One section's pipeline state (``sections/{id}.json``). Nobody edits it by hand.
 
@@ -130,6 +143,8 @@ class SectionDraft(JsonModel):
     checks: list[CheckResult] = Field(default_factory=list)
     grades: dict[str, Grade] = Field(default_factory=dict)
     dropped: list[DroppedItem] = Field(default_factory=list)
+    # Only on the book's first section: the book introduction (the first post of the book).
+    book_intro: BookIntro | None = None
     # Every question that passed generate's checks, in the writer's order (not published). The
     # grader scores them all and ``review`` keeps the best (R11, 2026-11-17).
     candidates: list[dict[str, Any]] = Field(default_factory=list)

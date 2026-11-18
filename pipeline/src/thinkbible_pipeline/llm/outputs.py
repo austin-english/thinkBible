@@ -68,6 +68,16 @@ class IdeasOut(_Out):
     no_prompt_reason: str | None = None
 
 
+class IntroOut(_Out):
+    """``intro``: the book introduction, from the commentators' prefaces."""
+
+    text: str = Field(
+        description="80 to 120 words: who wrote it, to whom, when, why, what to watch for."
+    )
+    sources: list[Commentator] = Field(description="Every commentator whose preface supports it.")
+    evidence: list[EvidenceOut] = Field(description="One quote from each source's preface.")
+
+
 class QuestionOut(_Out):
     text: str = Field(description="One open question, at most 30 words, ending with '?'.")
     type: QuestionType

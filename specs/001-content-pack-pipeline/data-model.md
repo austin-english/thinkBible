@@ -167,6 +167,7 @@ henryDivisions: [startVerse…]}`
 | `excerpts` | `{commentator: {sha256, tokens, items[], crossRefs[], trimmed}}`. A record of model inputs, not the text. `items` names the parts given (`MRK 1:1-8`, `MRK 3 intro`, `MAT 12:9-21` for a followed pointer) and `crossRefs` the pointer targets followed (R4) |
 | `summary` | One-line passage summary (from `summaries`) |
 | `noPromptReason` | Set when `noPrompt` is true |
+| `bookIntro` | First section only: `{introduction: {text, sources, quotes} or null, evidence, grade, problem}`, the book introduction (`stages/intro.py`); publishing lifts `introduction` into the pack |
 | `candidates` | Every question that passed generate's checks, in the writer's order (not published). `review` grades them all and keeps the best (R11) |
 | `checks` | `[{itemId, check, ok, detail}]` |
 | `grades` | `{itemId: {score: 1-5, notes}}` from the grader (`review`) |

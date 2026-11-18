@@ -19,6 +19,11 @@ variable "max_concurrency" {
   default     = 10
 }
 
+variable "anthropic_api_key_parameter" {
+  description = "Name of the SSM SecureString holding the Claude API key (settings.toml api_key_parameter). The Lambdas may read only this parameter."
+  type        = string
+}
+
 variable "bedrock_models" {
   description = "Bedrock model or inference-profile IDs the pipeline may invoke, exactly as in pipeline/config/settings.toml."
   type        = list(string)

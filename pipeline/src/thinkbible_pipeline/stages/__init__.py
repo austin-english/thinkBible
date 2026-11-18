@@ -6,6 +6,7 @@ from thinkbible_pipeline.requests import STAGE_ORDER
 from thinkbible_pipeline.stages.base import BookStage, SectionStage
 from thinkbible_pipeline.stages.checks import CheckStage
 from thinkbible_pipeline.stages.generate import GenerateStage
+from thinkbible_pipeline.stages.intro import IntroStage
 from thinkbible_pipeline.stages.report import ReportStage
 from thinkbible_pipeline.stages.review import ReviewStage
 from thinkbible_pipeline.stages.sections import SectionsStage
@@ -15,6 +16,7 @@ from thinkbible_pipeline.stages.summaries import SummariesStage
 def registry() -> dict[str, SectionStage | BookStage]:
     stages: list[SectionStage | BookStage] = [
         SectionsStage(),
+        IntroStage(),
         SummariesStage(),
         GenerateStage(),
         CheckStage(),

@@ -138,25 +138,27 @@ def test_client_follows_the_endpoint_setting() -> None:
 
     from anthropic import AsyncAnthropicBedrock, AsyncAnthropicBedrockMantle
 
-    runtime = BedrockRunner(SETTINGS)
+    bedrock = load_settings(profile="bedrock")
+    runtime = BedrockRunner(bedrock)
     assert type(runtime._client) is AsyncAnthropicBedrock
-    mantle = BedrockRunner(dataclasses.replace(SETTINGS, endpoint="mantle"))
+    mantle = BedrockRunner(dataclasses.replace(bedrock, endpoint="mantle"))
     assert type(mantle._client) is AsyncAnthropicBedrockMantle
 
 
-def test_the_anthropic_profile_calls_the_claude_api_with_server_side_fallback(
+def test_the_default_calls_the_claude_api_with_server_side_fallback(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from anthropic import AsyncAnthropic
 
     from thinkbible_pipeline.llm.runner import SERVER_SIDE_FALLBACK_BETA
 
-    settings = load_settings(profile="anthropic")
-    assert settings.endpoint == "anthropic" and settings.profile == "anthropic"
+    settings = SETTINGS
+    assert settings.endpoint == "anthropic" and settings.profile is None
     assert settings.stage("generate").model == "claude-sonnet-5-5"
     assert settings.stage("review").model == "claude-opus-5-5"
-    # The overlay changes models and pacing only; prompt versions come from the base settings.
-    assert settings.stage("generate").prompt == SETTINGS.stage("generate").prompt
+    # A profile changes models and pacing only; prompt versions come from the base settings.
+    bedrock = load_settings(profile="bedrock")
+    assert bedrock.stage("generate").prompt == settings.stage("generate").prompt
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")  # no SSM call in tests
     runner = BedrockRunner(settings)
     assert type(runner._client) is AsyncAnthropic
@@ -164,16 +166,16 @@ def test_the_anthropic_profile_calls_the_claude_api_with_server_side_fallback(
     assert params["betas"] == [SERVER_SIDE_FALLBACK_BETA] and params["fallbacks"] == "default"
     for key in FORBIDDEN_REQUEST_KEYS:
         assert key not in params
-    # Bedrock requests carry neither.
-    bedrock = BedrockRunner(SETTINGS, client=FakeClient()).build_request("review", SYSTEM, "p")
-    assert "fallbacks" not in bedrock and "betas" not in bedrock
+    # Bedrock requests carry neither (Bedrock falls back through the SDK middleware).
+    request = BedrockRunner(bedrock, client=FakeClient()).build_request("review", SYSTEM, "p")
+    assert "fallbacks" not in request and "betas" not in request
 
 
 def test_a_profile_can_come_from_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     from thinkbible_pipeline.config import ConfigError
 
-    monkeypatch.setenv("THINKBIBLE_PROFILE", "anthropic")
-    assert load_settings().endpoint == "anthropic"
+    monkeypatch.setenv("THINKBIBLE_PROFILE", "bedrock")
+    assert load_settings().endpoint == "runtime"
     monkeypatch.setenv("THINKBIBLE_PROFILE", "nope")
     with pytest.raises(ConfigError, match=r"no \[profiles\.nope\]"):
         load_settings()
@@ -252,4 +254,4 @@ def test_stages_sharing_a_model_share_its_quota() -> None:
     haiku = [s for s, c in SETTINGS.stages.items() if c.model == SETTINGS.stage("summaries").model]
     assert len(haiku) > 1
     assert all(runner._limiter(s) is runner._limiter(haiku[0]) for s in haiku)
-    assert runner._limiter("review").per_minute == 5  # type: ignore[union-attr]
+    assert runner._limiter("review").per_minute == SETTINGS.stage("review").requests_per_minute  # type: ignore[union-attr]

@@ -64,6 +64,10 @@ class SectionStage(ABC):
     def model(self, deps: Deps) -> str | None:
         """The model ID this stage calls, or None for stages without model calls."""
 
+    def applies_to(self, section_id: str, deps: Deps) -> bool:
+        """Whether this stage runs for the section at all (``intro``: only the first)."""
+        return True
+
     @abstractmethod
     def inputs(self, section_id: str, draft: SectionDraft, deps: Deps) -> Any:
         """Everything the output depends on, as JSON-ready data. Hashed to decide skips."""
@@ -261,6 +265,8 @@ def plan_stage(
     model = stage.model(deps)
     plan = StagePlan(stage=stage.name, prompt_version=pv, model=model)
     for sid in _section_ids(request, deps, planned_sections):
+        if not stage.applies_to(sid, deps):
+            continue
         if sid in assume_changed:
             # An earlier stage of this run will (re)write this section, or create it: it will be
             # processed whatever its inputs are, and they may not exist yet (no sections.json

@@ -14,7 +14,7 @@ from thinkbible_core.models._base import (
     Sha256,
     TranslationId,
 )
-from thinkbible_core.models.section import Section
+from thinkbible_core.models.section import BookIntroduction, Section
 
 
 class Book(ContractModel):
@@ -54,6 +54,7 @@ class Build(ContractModel):
 class StudyPack(ContractModel):
     format_version: Literal[1]
     book: Book
+    introduction: BookIntroduction | None = None
     pack_version: PackVersion
     published_at: datetime
     translations: Annotated[list[TranslationRef], Field(min_length=1)]

@@ -1,5 +1,6 @@
-# Least privilege (research R19): the Lambdas may invoke only the configured Claude models, read
-# the sources bucket, use the drafts bucket and the run ledger, and write their own logs.
+# Least privilege (research R19): the Lambdas may invoke only the configured Claude models (on
+# Bedrock) or read the one Claude API key parameter, read the sources bucket, use the drafts bucket
+# and the run ledger, and write their own logs.
 
 data "aws_iam_policy_document" "lambda_assume" {
   statement {
@@ -40,6 +41,25 @@ data "aws_iam_policy_document" "lambda" {
     sid       = "Ledger"
     actions   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem"]
     resources = [aws_dynamodb_table.runs.arn]
+  }
+
+  statement {
+    sid       = "ClaudeApiKey"
+    actions   = ["ssm:GetParameter"]
+    resources = ["arn:aws:ssm:${local.region}:${local.account_id}:parameter/${var.anthropic_api_key_parameter}"]
+  }
+
+  statement {
+    # The parameter is a SecureString: decrypting it through SSM needs its KMS key. The AWS-managed
+    # aws/ssm key already allows this; the statement also covers a customer-managed key later.
+    sid       = "ClaudeApiKeyDecrypt"
+    actions   = ["kms:Decrypt"]
+    resources = ["*"]
+    condition {
+      test     = "StringEquals"
+      variable = "kms:ViaService"
+      values   = ["ssm.${local.region}.amazonaws.com"]
+    }
   }
 
   statement {

@@ -285,15 +285,35 @@ later, from the extraction result (FR-005).
   | `align` (wording variants, manuscript notes) | Haiku 5.5 | Haiku 4.5 | The brief's "small model call" |
   | `review` (the quality gate's grader, R16) | Opus 5.5 | Opus 4.6 | A stronger model than the generator grades its output (revised 2026-11-10) |
 
-- **The Claude API directly** (2026-11-18): while Bedrock's 5.5 quota stays at 0 for this
-  account, the `anthropic` settings profile runs the same stages on the Claude API (Haiku 5.5
-  summaries, Sonnet 5.5 generate at effort high, Opus 5.5 review at effort high), chosen per run
-  with `THINKBIBLE_PROFILE=anthropic`. The API key is an SSM SecureString (`anthropic-api-key`)
-  read at run time with the caller's AWS credentials; it is never in the repo or the logs. Refusals
-  fall back server-side (`fallbacks: "default"`) rather than through the SDK middleware Bedrock
-  needs. Local runs only for now: a cloud run would need the Lambda role to read the parameter.
-  The model is part of every stage's input hash, so switching profiles re-runs everything, and
-  calibration results are kept per grader model.
+- **The Claude API directly, now the default** (2026-11-18): while Bedrock's 5.5 quota stays at 0
+  for this account, the pipeline runs on the Claude API (Haiku 5.5 summaries, Sonnet 5.5 generate
+  at effort high, Opus 5.5 review at effort high). On the same 10 Mark sections the 5.5 questions
+  read more naturally, and the Opus 5.5 grader agreed with the owner on 92% of the held-out
+  ratings (Opus 4.6: 75-83%). `[profiles.bedrock]` keeps the Claude 4.x Bedrock setup
+  (`THINKBIBLE_PROFILE=bedrock`); when Bedrock opens 5.5, that profile only needs its model IDs
+  changed, and calibration carries over because results match on the bare model ID. The API key
+  is an SSM SecureString (`anthropic-api-key`) read at run time with the caller's AWS
+  credentials, or by the Lambda role (`ssm:GetParameter` on that one parameter); it is never in
+  the repo, Terraform state or logs. Refusals fall back server-side (`fallbacks: "default"`).
+  Section concurrency is 3 (settings and Step Functions) until the account's limits rise.
+- **The book introduction** (2026-11-18): the commentators' prefaces to a book (who wrote it, to
+  whom, why) sit at the start of their first note in the SWORD modules, so only the first section
+  saw them, and every other section's context note filled "who wrote this book, to whom, and why"
+  from general knowledge: the same sentence in every section, and an invented purpose that failed
+  Mark 1:16-20. Now `commentary/preface.py` splits each preface from the first note when the
+  pipeline reads the snapshot (the snapshot is unchanged; prefaces found in 64/66 books for Henry,
+  48/66 for JFB, whose others have only a title, and 63/66 for Clarke). The `intro` stage writes
+  the introduction once per book, on the first section's draft (so it gets estimates, spend
+  tracking, skips and cloud runs like any section stage); the evidence check and the grader
+  (`prompts/intro-review`) apply, with one rewrite before it is reported as a blocker. The app
+  shows it as the book's first post ("About Mark"). `extract/v13` keeps section context notes
+  about the passage.
+- **Writer: Sonnet 5.5, not Opus 5.5** (owner decision, 2026-11-18): on 5 fresh Mark passages
+  Opus wrote somewhat sharper questions in places (notably Mark 1:40-45) and fewer weak candidates,
+  but the owner saw no large difference, and Opus doubles the writing cost (about $10 more per
+  Mark, about $500 more for the whole Bible). The grader's higher scores for Opus were not counted:
+  Opus would be grading its own writing. If some sections keep coming out weak, regenerating just
+  those is the cheaper lever.
 - **Pacing and throttling** (2026-11-17): this account's quotas are 10 requests a minute for
   Sonnet 4.6 and Haiku 4.5 and 5 for Opus 4.6. The runner paces requests per model to the
   `requests_per_minute` set per stage (stages sharing a model share it) and retries a throttled

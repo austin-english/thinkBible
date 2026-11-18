@@ -66,6 +66,8 @@ class Scorecard(JsonModel):
     thresholds: Thresholds | None = None
     promotable: bool = False
     promotable_reason: str = ""
+    # The book introduction (on the first section's draft): why it is missing or failed, if so.
+    introduction_problem: str | None = None
     blockers: list[str] = Field(default_factory=list)  # every unmet condition for promotion
     cost_usd: float = 0.0
     models: list[str] = Field(default_factory=list)
@@ -153,15 +155,36 @@ def build_scorecard(
             grader_model=model,
             current=result is not None,
         )
+    card.introduction_problem = _introduction_problem(sections, drafts)
     card.blockers = _blockers(card, settings, ungraded)
     card.promotable = not card.blockers
     card.promotable_reason = "; ".join(card.blockers)
     return card
 
 
+def _introduction_problem(
+    sections: list[SectionMapEntry], drafts: dict[str, SectionDraft]
+) -> str | None:
+    """Why the book has no usable introduction, or None (also None for a book whose
+    commentators give no preface, and before the first section is generated)."""
+    first = drafts.get(sections[0].id) if sections else None
+    if first is None or "generate" not in first.stages:
+        return None
+    rec = first.stages.get("intro")
+    if rec is None:
+        return "not written yet: run the intro stage"
+    if rec.status != "done":
+        return rec.error or "the intro stage failed"
+    if first.book_intro is not None and first.book_intro.problem:
+        return first.book_intro.problem
+    return None
+
+
 def _blockers(card: Scorecard, settings: Settings, ungraded: int) -> list[str]:
     gate = settings.gate
     out = []
+    if card.introduction_problem:
+        out.append(f"book introduction: {card.introduction_problem}")
     if card.not_generated:
         out.append(f"{len(card.not_generated)} sections not generated")
     if ungraded:

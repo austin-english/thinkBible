@@ -7,6 +7,7 @@ data "aws_region" "current" {}
 locals {
   prefix     = "thinkbible-pipeline"
   account_id = data.aws_caller_identity.current.account_id
+  region     = data.aws_region.current.region
   handlers   = "thinkbible_pipeline.cloud.handlers"
 
   # Function name suffix → handler and timeout (seconds).

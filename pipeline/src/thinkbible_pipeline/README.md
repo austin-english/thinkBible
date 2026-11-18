@@ -34,8 +34,8 @@ pipeline/
 ├── prompts/
 │   ├── _shared/context-v1.md       # opening text of every system prompt
 │   ├── summaries/v1.md             # one-line summary
-│   ├── extract/v12.md              # generate call 1: key ideas, context, views differ
-│   ├── questions/v12.md            # generate call 2: candidate questions in reading order
+│   ├── extract/v13.md              # generate call 1: key ideas, context, views differ
+│   ├── questions/v13.md            # generate call 2: candidate questions in reading order
 │   ├── question-guide/v4.md        # quality rules + the owner's favorite questions
 │   └── review/v9.md                # the grader's rubric + the owner's worked examples
 ├── scripts/
@@ -56,6 +56,7 @@ pipeline/
 │   ├── stages/
 │   │   ├── base.py                 # shared steps: estimate, plan, run one section, finish; local run()
 │   │   ├── sections.py             # `sections`: writes the book's section map (no model calls)
+│   │   ├── intro.py                # `intro`: the book introduction, once per book (first section)
 │   │   ├── summaries.py            # `summaries`: one line per section (Haiku)
 │   │   ├── generate.py             # `generate`: key ideas, context, questions (Sonnet)
 │   │   ├── generate_rules.py       # evidence check, ranking, choosing questions (no model calls)
@@ -76,6 +77,7 @@ pipeline/
 │   │   └── templates/review.html.j2
 │   ├── commentary/
 │   │   ├── crossrefs.py            # "See on Mt 4:1-11", "( = Lu …)": pointers to another note
+│   │   ├── preface.py              # each commentator's book preface, split from their first note
 │   │   └── gather.py               # each commentator's excerpt for a section (R4)
 │   ├── cloud/
 │   │   ├── handlers.py             # the five Lambda handlers the state machine calls

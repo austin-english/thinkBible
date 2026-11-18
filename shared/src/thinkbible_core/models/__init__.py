@@ -4,6 +4,7 @@ from thinkbible_core.models._base import CommentatorId, ContractModel
 from thinkbible_core.models.index import FileRef, IndexBook, PackIndex
 from thinkbible_core.models.pack import Book, Build, Source, StudyPack, TranslationRef
 from thinkbible_core.models.section import (
+    BookIntroduction,
     KeyIdea,
     ManuscriptNote,
     Question,
@@ -22,6 +23,7 @@ from thinkbible_core.models.verses import (
 
 __all__ = [
     "Book",
+    "BookIntroduction",
     "Build",
     "Chapter",
     "CommentatorId",

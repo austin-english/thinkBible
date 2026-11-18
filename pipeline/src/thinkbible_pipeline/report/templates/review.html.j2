@@ -100,6 +100,20 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
   {% if card.no_prompt %}
   <div class="panel"><h2>Sections with no question</h2><ul>{% for f in card.no_prompt %}<li><a href="#{{ f.section_id }}" class="mono">{{ f.section_id }}</a> · {{ f.reason or "no reason given" }}</li>{% endfor %}</ul></div>
   {% endif %}
+  <div class="panel" id="introduction"><h2>About {{ book_name }} <span class="qmeta">(the first post of the book)</span></h2>
+    {% if intro and intro.introduction %}
+      <div class="note">{{ intro.introduction.text }}</div>
+      <div class="qmeta">{% for c in intro.introduction.sources %}{{ names.get(c, c) }}{% if not loop.last %} · {% endif %}{% endfor %}{% if intro.grade %} · graded {{ intro.grade.score }}: {{ intro.grade.notes }}{% endif %}</div>
+      <details><summary>In their words</summary>{% for q in intro.introduction.quotes %}<blockquote><b>{{ names.get(q.commentator, q.commentator) }}:</b> “{{ q.text }}”</blockquote>{% endfor %}</details>
+    {% elif intro and intro.problem %}
+      <div class="qmeta"><b>Not usable:</b> {{ intro.problem }}{% if intro.grade %} (graded {{ intro.grade.score }}: {{ intro.grade.notes }}){% endif %}</div>
+    {% elif card.introduction_problem %}
+      <div class="qmeta">{{ card.introduction_problem }}</div>
+    {% else %}
+      <div class="qmeta">No introduction: the commentators give no preface to this book, or the first section isn't generated yet.</div>
+    {% endif %}
+  </div>
+
   <div class="controls" role="group" aria-label="View">
     <span>Passage</span>
     <button type="button" data-tr="bsb" aria-pressed="true">BSB</button>
