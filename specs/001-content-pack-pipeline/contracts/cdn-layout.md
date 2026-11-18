@@ -28,7 +28,9 @@ CloudFront distribution, with two **channels** (revised 2026-11-13: one AWS envi
 
 - **Compression**: CloudFront compression is on (gzip and brotli) for `application/json`.
 - **Integrity**: `index.json` gives the sha256 and byte size of every file. The app checks the
-  sha256 before replacing a cached pack.
+  sha256 before replacing a cached pack. Its paths are relative to the channel
+  (`v1/books/mrk/1.0.0/study.json` under `/live/`), so promotion copies the files unchanged.
+- **Encoding**: files are UTF-8 JSON with sorted keys and no whitespace.
 - **Access**: the bucket is private, and only CloudFront can read it (origin access control).
   There is no listing, and the path layout is the API.
 - **Record of what was published**: S3 itself. Live versioned paths are never overwritten, and

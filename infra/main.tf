@@ -18,11 +18,30 @@ module "sources" {
   name   = "thinkbible-sources-${local.account_id}"
 }
 
+# The published packs (specs/001 US3): prefixes draft/ and live/, readable only through the CDN.
+module "packs" {
+  source = "./modules/storage"
+  name   = "thinkbible-packs-${local.account_id}"
+}
+
+module "cdn" {
+  source                      = "./modules/cdn"
+  bucket_id                   = module.packs.id
+  bucket_arn                  = module.packs.arn
+  bucket_regional_domain_name = module.packs.bucket_regional_domain_name
+}
+
 module "pipeline" {
   source              = "./modules/pipeline"
   sources_bucket_name = module.sources.id
   sources_bucket_arn  = module.sources.arn
   lambda_zip_path     = "${path.root}/../pipeline/out/lambda.zip"
+
+  # A run that passes its gate publishes the book to the draft channel (R14).
+  packs_bucket_name = module.packs.id
+  packs_bucket_arn  = module.packs.arn
+  distribution_id   = module.cdn.distribution_id
+  distribution_arn  = module.cdn.distribution_arn
 
   # Keep in step with pipeline/config/settings.toml (checked by tests/unit/test_infra_sync.py).
   # 3 sections at a time: the Claude API account's per-minute limits are still low.
@@ -37,4 +56,3 @@ module "pipeline" {
   ]
 }
 
-# US3 adds the packs bucket (prefixes draft/ and live/) and one CloudFront distribution.

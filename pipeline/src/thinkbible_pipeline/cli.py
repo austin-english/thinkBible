@@ -284,14 +284,18 @@ def run(
     from thinkbible_pipeline import app as wiring
 
     if local:
+        from thinkbible_pipeline.publish.draft import publish_after_run
         from thinkbible_pipeline.stages.base import run as run_stages
 
-        result = asyncio.run(run_stages(request, wiring.local_deps(request, echo=typer.echo)))
+        deps = wiring.local_deps(request, echo=typer.echo)
+        result = asyncio.run(run_stages(request, deps))
         if result.error:
             _exit(result.exit_code, result.error)
         if result.declined:
             _exit(ExitCode.OK, "not run (estimate declined)")
         _print_stages(result.stages)
+        if "report" in request.stages and result.exit_code == ExitCode.OK:
+            publish_after_run(deps.store, deps.sources, wiring.channels(), deps.clock(), typer.echo)
         _exit(result.exit_code)
 
     started = wiring.start_cloud_run(request, echo=typer.echo)
@@ -307,6 +311,8 @@ def run(
     code, output = wiring.wait_for_execution(started.execution_arn, sfn, echo=typer.echo)
     if output:
         _print_stages([StageResult.model_validate(s) for s in output.get("stages", [])])
+        if output.get("publish"):
+            typer.echo(str(output["publish"]))
         typer.echo(f"spent ${float(output.get('spentUsd', 0)):.3f}")
     _exit(code)
 
@@ -430,21 +436,63 @@ def publish(
     dry_run: Annotated[bool, typer.Option("--dry-run")] = False,
 ) -> None:
     """Publish the book's drafts to the draft channel. A passing run with `report` does this."""
+    from thinkbible_pipeline import app as wiring
+    from thinkbible_pipeline.publish.build import BuildError, build_pack
+    from thinkbible_pipeline.publish.draft import problem_summary, publish_draft
+
     try:
-        PublishRequest(book=book, dry_run=dry_run)
+        request = PublishRequest(book=book, dry_run=dry_run)
     except ValidationError as e:
         _usage(e)
-    _not_implemented("publish")
+    store, library = wiring.publish_store(request.book_info.slug), wiring.library()
+    channels = wiring.channels()
+    now = wiring.now()
+    try:
+        if channels is None:
+            if not dry_run:
+                _exit(ExitCode.USAGE, wiring.NO_CHANNELS)
+            built = build_pack(store, library, previous=None, live=None, now=now)
+            assert built is not None
+            typer.echo(f"dry run: {request.book_info.name} builds as a valid pack")
+            _exit(ExitCode.OK)
+        result = publish_draft(store, library, *channels, now, dry_run=dry_run)
+    except BuildError as e:
+        for problem in e.problems:
+            typer.echo(f"  {problem}", err=True)
+        _exit(ExitCode.GATE_REFUSED, f"not published: {problem_summary(e.problems)}")
+    if not result.published and not dry_run:
+        _exit(ExitCode.OK, f"unchanged: {result.version} is already on the draft channel")
+    verb = "would publish" if dry_run else "published"
+    typer.echo(f"{verb} {request.book_info.name} {result.version} ({result.change})")
+    for path, size in result.files.items():
+        typer.echo(f"  draft/{path}  {size:,} bytes")
+    _exit(ExitCode.OK)
 
 
 @app.command()
 def promote(book: BookOpt) -> None:
     """Copy the book's current draft version, byte for byte, to the live channel (gated)."""
+    from thinkbible_pipeline import app as wiring
+    from thinkbible_pipeline.publish.promote import PromoteRefused, current_scorecard
+    from thinkbible_pipeline.publish.promote import promote as promote_book
+
     try:
-        PromoteRequest(book=book)
+        request = PromoteRequest(book=book)
     except ValidationError as e:
         _usage(e)
-    _not_implemented("promote")
+    channels = wiring.channels()
+    if channels is None:
+        _exit(ExitCode.USAGE, wiring.NO_CHANNELS)
+    store, now = wiring.publish_store(request.book_info.slug), wiring.now()
+    card = current_scorecard(store, wiring.settings(), wiring.calibration(), now)
+    try:
+        result = promote_book(store, wiring.library(), *channels, card, now)
+    except PromoteRefused as e:
+        for problem in e.problems:
+            typer.echo(f"  {problem}", err=True)
+        _exit(ExitCode.GATE_REFUSED, f"not promoted: {len(e.problems)} problem(s)")
+    was = f" (replacing {result.previous})" if result.previous else ""
+    _exit(ExitCode.OK, f"promoted {request.book_info.name} {result.version} to live{was}")
 
 
 @app.command()

@@ -68,6 +68,8 @@ resource "aws_lambda_function" "fn" {
       DRAFTS_BUCKET        = module.drafts.id
       SOURCES_BUCKET       = var.sources_bucket_name
       LEDGER_TABLE         = aws_dynamodb_table.runs.name
+      PACKS_BUCKET         = var.packs_bucket_name
+      DISTRIBUTION_ID      = var.distribution_id
       THINKBIBLE_REPO_ROOT = "/var/task"
     }
   }

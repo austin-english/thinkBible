@@ -242,3 +242,29 @@ def test_source_checksum_mismatch_fails_start_run(cloud: Cloud) -> None:
     cloud.manifest = manifest("0" * 64)
     with pytest.raises(handlers.SourceChecksumError):
         simulate(["summaries"])
+
+
+def test_a_passing_run_with_report_publishes_to_the_draft_channel(
+    cloud: Cloud, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[tuple[Any, ...]] = []
+
+    def fake_publish(store: Any, library: Any, channels: Any, now: Any, echo: Any) -> str:
+        calls.append((store.book, channels))
+        return "publish: 1.0.0 on the draft channel (first)"
+
+    monkeypatch.setattr(handlers, "publish_after_run", fake_publish)
+    monkeypatch.setattr(handlers, "CHANNELS_FACTORY", lambda: ("draft", "live"))
+    start = _json(handlers.start_run(_json({
+        "runId": "run-p", "capUsd": None,
+        "request": RunRequest(book="mark", stages=["summaries"]).model_dump(
+            mode="json", by_alias=True),
+    })))  # fmt: skip
+    start["request"]["stages"] = ["summaries", "report"]
+    out = _json(handlers.finish_run({**start, "stageResults": []}))
+    assert out["publishable"] and out["publish"] == "publish: 1.0.0 on the draft channel (first)"
+    assert calls == [("mrk", ("draft", "live"))]
+    # Without `report`, nothing is published.
+    start["request"]["stages"] = ["summaries"]
+    out = _json(handlers.finish_run({**start, "stageResults": []}))
+    assert not out["publishable"] and out.get("publish") is None and len(calls) == 1

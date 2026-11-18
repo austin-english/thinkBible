@@ -31,6 +31,8 @@ from thinkbible_pipeline.config import load_pricing, load_settings
 from thinkbible_pipeline.drafts.store import DraftStore
 from thinkbible_pipeline.llm.runner import BedrockRunner, ModelRunner, Throttled
 from thinkbible_pipeline.paths import repo_paths
+from thinkbible_pipeline.publish.channel import PackChannel, pack_channels
+from thinkbible_pipeline.publish.draft import publish_after_run
 from thinkbible_pipeline.requests import RunRequest
 from thinkbible_pipeline.sources.snapshot import (
     SourceError,
@@ -115,6 +117,14 @@ def cloud_deps(request: RunRequest, env: CloudEnv) -> Deps:
         library=SourceLibrary(sources, load_manifest(paths)),
     )
 
+
+def env_channels() -> tuple[PackChannel, PackChannel] | None:
+    """The packs bucket's channels from the Lambda environment (set by Terraform, US3)."""
+    return pack_channels(os.environ.get("PACKS_BUCKET", ""), os.environ.get("DISTRIBUTION_ID", ""))
+
+
+# Tests replace this to inject moto-backed channels.
+CHANNELS_FACTORY: Callable[[], tuple[PackChannel, PackChannel] | None] = env_channels
 
 # Tests replace this to inject moto-backed stores and a FakeRunner.
 DEPS_FACTORY: Callable[[RunRequest], Deps] = lambda request: cloud_deps(  # noqa: E731
@@ -217,4 +227,8 @@ def finish_run(event: Event, _context: object = None) -> Event:
         stages=stages,
         publishable="report" in inp.request.stages and not any(s.failed for s in stages),
     )
+    if out.publishable and not stopped:
+        out.publish = publish_after_run(
+            deps.store, deps.library, CHANNELS_FACTORY(), deps.clock(), deps.echo
+        )
     return _dump(out)

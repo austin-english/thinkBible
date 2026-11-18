@@ -54,3 +54,4 @@ class RunOutput(JsonModel):
     stages: list[StageResult]
     # True when the run included `report` and no section failed: publish to the draft channel (R14).
     publishable: bool
+    publish: str | None = None  # what publishing did (`publish: 1.0.0 on the draft channel`)

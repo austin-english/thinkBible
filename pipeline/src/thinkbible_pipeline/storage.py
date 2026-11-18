@@ -39,8 +39,13 @@ class BlobStore(Protocol):
         content_type: str = "application/json",
         if_match: str | None = None,
         if_none_match: bool = False,
+        cache_control: str | None = None,
     ) -> str:
-        """Write ``data`` and return the new ETag. Raises ``PreconditionFailed``."""
+        """Write ``data`` and return the new ETag. Raises ``PreconditionFailed``.
+
+        ``cache_control`` is the object's Cache-Control header (published packs, cdn-layout.md);
+        a local folder has no headers and ignores it.
+        """
         ...
 
     def list(self, prefix: str = "") -> list[tuple[str, str]]:
@@ -79,6 +84,7 @@ class LocalBlobStore:
         content_type: str = "application/json",
         if_match: str | None = None,
         if_none_match: bool = False,
+        cache_control: str | None = None,
     ) -> str:
         path = self._path(key)
         current = self.get(key)
@@ -143,6 +149,7 @@ class S3BlobStore:
         content_type: str = "application/json",
         if_match: str | None = None,
         if_none_match: bool = False,
+        cache_control: str | None = None,
     ) -> str:
         from botocore.exceptions import ClientError
 
@@ -156,6 +163,8 @@ class S3BlobStore:
             kwargs["IfMatch"] = f'"{if_match}"'
         if if_none_match:
             kwargs["IfNoneMatch"] = "*"
+        if cache_control is not None:
+            kwargs["CacheControl"] = cache_control
         try:
             resp = self._s3.put_object(**kwargs)
         except ClientError as e:

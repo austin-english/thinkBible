@@ -1,6 +1,6 @@
 # Least privilege (research R19): the Lambdas may invoke only the configured Claude models (on
 # Bedrock) or read the one Claude API key parameter, read the sources bucket, use the drafts bucket
-# and the run ledger, and write their own logs.
+# and the run ledger, publish to the draft channel of the packs bucket, and write their own logs.
 
 data "aws_iam_policy_document" "lambda_assume" {
   statement {
@@ -35,6 +35,32 @@ data "aws_iam_policy_document" "lambda" {
     sid       = "Drafts"
     actions   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
     resources = [module.drafts.arn, "${module.drafts.arn}/*"]
+  }
+
+  # Publishing (R14): the pipeline writes only the draft channel and reads the live one; only
+  # `promote`, run by the owner, writes live/.
+  statement {
+    sid       = "PacksList"
+    actions   = ["s3:ListBucket"]
+    resources = [var.packs_bucket_arn]
+  }
+
+  statement {
+    sid       = "PacksRead"
+    actions   = ["s3:GetObject"]
+    resources = ["${var.packs_bucket_arn}/draft/*", "${var.packs_bucket_arn}/live/*"]
+  }
+
+  statement {
+    sid       = "PacksWriteDraft"
+    actions   = ["s3:PutObject"]
+    resources = ["${var.packs_bucket_arn}/draft/*"]
+  }
+
+  statement {
+    sid       = "InvalidateDraftIndex"
+    actions   = ["cloudfront:CreateInvalidation"]
+    resources = [var.distribution_arn]
   }
 
   statement {

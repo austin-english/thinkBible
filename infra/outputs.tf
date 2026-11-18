@@ -15,3 +15,15 @@ output "ledger_table" {
 output "state_machine_arn" {
   value = module.pipeline.state_machine_arn
 }
+
+output "packs_bucket" {
+  value = module.packs.id
+}
+
+output "distribution_id" {
+  value = module.cdn.distribution_id
+}
+
+output "cdn_base_url" {
+  value = "https://${module.cdn.domain_name}"
+}

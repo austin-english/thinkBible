@@ -8,6 +8,26 @@ variable "sources_bucket_arn" {
   type        = string
 }
 
+variable "packs_bucket_name" {
+  description = "The packs bucket: the pipeline writes draft/ and reads live/ (R14)."
+  type        = string
+}
+
+variable "packs_bucket_arn" {
+  description = "ARN of the packs bucket."
+  type        = string
+}
+
+variable "distribution_id" {
+  description = "The CloudFront distribution in front of the packs bucket."
+  type        = string
+}
+
+variable "distribution_arn" {
+  description = "Its ARN, for the invalidation permission."
+  type        = string
+}
+
 variable "lambda_zip_path" {
   description = "Path to pipeline/out/lambda.zip (make lambda-bundle)."
   type        = string

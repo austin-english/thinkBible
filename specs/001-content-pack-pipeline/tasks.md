@@ -742,11 +742,11 @@ thresholds, with a stale calibration, and on an in-place text edit of a promoted
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T065 [P] [US3] Write `pipeline/tests/unit/test_promote.py`:
+- [x] T065 [P] [US3] Write `pipeline/tests/unit/test_promote.py`:
   - `promote` refuses when the scorecard isn't promotable (failed sections, pass rates below the
     thresholds) or the calibration is missing, under 85%, or for another grader version;
   - it copies the draft files without rebuilding (same sha256s).
-- [ ] T066 [P] [US3] Write `pipeline/tests/unit/test_publish_check.py`. Each data-model.md
+- [x] T066 [P] [US3] Write `pipeline/tests/unit/test_publish_check.py`. Each data-model.md
   publish-check rule refuses a promotion:
   - a missing section ID or a changed range;
   - a missing idea or question ID;
@@ -756,14 +756,15 @@ thresholds, with a stale calibration, and on an in-place text edit of a promoted
   - `replaces` pointing to an item that isn't retired.
 
   A valid retire-plus-replace passes. Draft publishes skip the check.
-- [ ] T067 [P] [US3] Write `pipeline/tests/unit/test_build_pack.py`:
+- [x] T067 [P] [US3] Write `pipeline/tests/unit/test_build_pack.py`:
   - the study pack is built from the drafts, without dropped items;
   - `addedIn` is set on new items, `packVersion` is `1.0.0` on first publish, and `minor` is
     bumped on later content changes;
-  - `sources` and `build` provenance are filled in, including the gate's pass rates;
+  - `sources` and `build` provenance are filled in (the schema's `build` has no field for the
+    gate's pass rates, so they stay in the scorecard);
   - verse files include `omittedVerses`, `lines` and `paragraphStart`;
   - every output validates against the schemas.
-- [ ] T068 [US3] Write `pipeline/tests/integration/test_publish_moto.py`:
+- [x] T068 [US3] Write `pipeline/tests/integration/test_publish_moto.py`:
   - a run ending with `report` and no failed section publishes to the draft channel: objects
     appear at `draft/v1/books/mrk/{version}/study.json` and `…/verses/{bsb,kjv}.json`, and
     `draft/v1/index.json`, all with `public, max-age=300`; a run with a failed section publishes
@@ -775,14 +776,14 @@ thresholds, with a stale calibration, and on an in-place text edit of a promoted
 
 ### Implementation for User Story 3
 
-- [ ] T070 [US3] Implement `pipeline/src/thinkbible_pipeline/publish/build.py`:
+- [x] T070 [US3] Implement `pipeline/src/thinkbible_pipeline/publish/build.py`:
   - a `StudyPack` from the drafts (dropped items excluded);
   - `VerseText` for `bsb` and `kjv` from the normalised snapshot;
   - the version rule: first publish `1.0.0`; added or retired content → minor; notes or verse
     text only → patch.
-- [ ] T071 [US3] Implement `pipeline/src/thinkbible_pipeline/publish/publish_check.py`
+- [x] T071 [US3] Implement `pipeline/src/thinkbible_pipeline/publish/publish_check.py`
   (data-model.md "Publish check", live only).
-- [ ] T072 [US3] Implement `pipeline/src/thinkbible_pipeline/publish/upload.py` (boto3), used for
+- [x] T072 [US3] Implement `pipeline/src/thinkbible_pipeline/publish/upload.py` (boto3), used for
   draft publishes:
   - `put_object` each file with `ContentType="application/json"` and the cdn-layout.md
     Cache-Control values;
@@ -792,19 +793,19 @@ thresholds, with a stale calibration, and on an in-place text edit of a promoted
     section failed (R14).
 
   Bucket and distribution IDs come from `aws.toml`.
-- [ ] T069 [US3] Implement `pipeline/src/thinkbible_pipeline/publish/promote.py`: check the
+- [x] T069 [US3] Implement `pipeline/src/thinkbible_pipeline/publish/promote.py`: check the
   scorecard and calibration, fetch the current `live/v1/index.json` and previous `study.json`,
   run the publish check, copy the draft files byte for byte to `live/`, update the live index and
   invalidate it.
   Set `BookState.lastPromoted`.
-- [ ] T073 [P] [US3] Write Terraform:
+- [x] T073 [P] [US3] Write Terraform:
   - **`infra/modules/cdn/`** (`main.tf`, `variables.tf`, `outputs.tf`): an
     `aws_cloudfront_distribution` with Origin Access Control to the packs bucket, `compress = true`,
     a cache policy that respects origin `Cache-Control`, `PriceClass_100`, HTTPS redirect, and the
     bucket policy allowing only this distribution. Outputs `distribution_id` and `domain_name`.
   - **`infra/main.tf`**: add `module "packs"` (storage, `thinkbible-packs-522779858032`)
     and `module "cdn"`, with outputs for `aws.toml`.
-- [ ] T074 [US3] Connect `publish --book [--dry-run]` (draft) and `promote --book` in `cli.py`. Their
+- [x] T074 [US3] Connect `publish --book [--dry-run]` (draft) and `promote --book` in `cli.py`. Their
   gates (failed sections; thresholds, calibration, publish check) exit 5.
 - [ ] T075 [US3] **Owner run**:
   1. `terraform apply` in `infra/`, then copy the outputs into `pipeline/config/aws.toml`.
@@ -929,6 +930,20 @@ text edit is refused.
   - the S3 buckets are private, with public access blocked (`aws s3api get-public-access-block`);
   - the pipeline Lambda role can invoke only the three Claude 5.5 models and touch only its own
     buckets and table.
+- [ ] T087 Claude Message Batches API for cloud runs (added 2026-11-18; before the Old Testament or
+  whole-Bible runs, about $500 saved over the Bible at 50% off; not needed for Mark):
+  - a batch runner mode: each model step (summaries, extract, questions, review, intro, and the
+    retries and regenerations) becomes one batch round across a book's sections, submitted, polled
+    and collected; prompts, output models and the gate are unchanged;
+  - the state machine waits between polls (a Wait state, no Lambda held open) and resumes from
+    the run records after a failure;
+  - cost estimates and the ledger use batch prices; `--local` keeps the standard API for tuning;
+  - verify on a few sections that content and grades match a standard run before switching.
+- [ ] T088 Psalm titles in the verse files (added 2026-11-18; before Psalms is published): the
+  snapshot keeps each psalm's title ("A Psalm of David, when he fled…") as a subtitle before
+  verse 1, but verses.schema.json has no field for it, so `publish/build.py` leaves it out. Add a
+  `title` to a chapter in the schema first, then the fixtures, `thinkbible_core`, the build and
+  the Swift `ContentKit` models (shared/CLAUDE.md).
 
 ---
 

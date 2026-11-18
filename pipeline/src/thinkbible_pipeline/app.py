@@ -11,14 +11,17 @@ import subprocess
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
-from thinkbible_pipeline.config import AwsConfig, load_aws, load_pricing, load_settings
+from thinkbible_pipeline.config import AwsConfig, Settings, load_aws, load_pricing, load_settings
 from thinkbible_pipeline.drafts.store import DraftStore
 from thinkbible_pipeline.exitcodes import ExitCode
+from thinkbible_pipeline.gate.calibration import CalibrationSet, load_calibration
 from thinkbible_pipeline.llm.budget import EstimateSummary, confirm
 from thinkbible_pipeline.llm.runner import BedrockRunner, ModelRunner
 from thinkbible_pipeline.paths import RepoPaths, repo_paths
+from thinkbible_pipeline.publish.channel import PackChannel, pack_channels
 from thinkbible_pipeline.requests import RunRequest
 from thinkbible_pipeline.sources.snapshot import (
     SourceError,
@@ -103,6 +106,41 @@ def local_deps(
         code_version=git_head(paths),
         library=SourceLibrary(SourceStore.local(paths), load_manifest(paths)),
     )
+
+
+# --- publish and promote (US3) ---
+
+NO_CHANNELS = (
+    "no packs bucket or CDN yet: `terraform apply` in infra/, then copy packs_bucket and "
+    "distribution_id from `terraform output` into pipeline/config/aws.toml"
+)
+
+
+def channels(env: AwsConfig | None = None) -> tuple[PackChannel, PackChannel] | None:
+    """The packs bucket's draft and live channels, from aws.toml; None until they exist."""
+    env = env or load_aws(repo_paths().config)
+    return pack_channels(env.packs_bucket, env.distribution_id)
+
+
+def publish_store(book_slug: str) -> DraftStore:
+    paths = repo_paths()
+    return DraftStore(book_slug, draft_blobs(load_aws(paths.config), paths))
+
+
+def library() -> SourceLibrary:
+    return SourceLibrary.local()
+
+
+def settings() -> Settings:
+    return load_settings(repo_paths().config)
+
+
+def calibration() -> CalibrationSet:
+    return load_calibration(repo_paths().calibration)
+
+
+def now() -> datetime:
+    return datetime.now(UTC)
 
 
 # --- cloud runs ---
