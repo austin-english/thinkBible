@@ -16,6 +16,7 @@
       "kind": "question",
       "note": "owner: fine",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-1",
       "targetIdeas": [
         {
@@ -65,6 +66,7 @@
       "kind": "question",
       "note": "owner: fine; Too vague",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-1",
       "targetIdeas": [
         {
@@ -114,6 +116,7 @@
       "kind": "question",
       "note": "owner: fine",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-1",
       "targetIdeas": [
         {
@@ -158,6 +161,7 @@
       "kind": "question",
       "note": "owner: loved; Leading",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-1",
       "targetIdeas": [
         {
@@ -202,6 +206,7 @@
       "kind": "question",
       "note": "owner: fine; Too vague",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-1",
       "targetIdeas": [
         {
@@ -247,6 +252,7 @@
       "kind": "question",
       "note": "owner: fine",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-1",
       "targetIdeas": [
         {
@@ -320,6 +326,7 @@
       "kind": "question",
       "note": "owner: rejected; Too vague",
       "ownerGrade": "fail",
+      "role": "example",
       "sectionId": "mrk-1-1",
       "targetIdeas": [
         {
@@ -369,6 +376,7 @@
       "kind": "question",
       "note": "owner: loved",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-1",
       "targetIdeas": [
         {
@@ -413,6 +421,7 @@
       "kind": "question",
       "note": "owner: fine",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-1",
       "targetIdeas": [
         {
@@ -458,6 +467,7 @@
       "kind": "question",
       "note": "owner: fine; Too vague",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-1",
       "targetIdeas": [
         {
@@ -531,6 +541,7 @@
       "kind": "question",
       "note": "owner: rejected; Clunky wording",
       "ownerGrade": "fail",
+      "role": "example",
       "sectionId": "mrk-1-1",
       "targetIdeas": [
         {
@@ -580,6 +591,7 @@
       "kind": "question",
       "note": "owner: rejected; Clunky wording; Kind of reveals the answer in the question.",
       "ownerGrade": "fail",
+      "role": "example",
       "sectionId": "mrk-1-12",
       "targetIdeas": [
         {
@@ -619,6 +631,7 @@
       "kind": "question",
       "note": "owner: fine; Clunky wording",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-12",
       "targetIdeas": [
         {
@@ -663,6 +676,7 @@
       "kind": "question",
       "note": "owner: loved",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-12",
       "targetIdeas": [
         {
@@ -702,6 +716,7 @@
       "kind": "question",
       "note": "owner: loved; Leading",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-12",
       "targetIdeas": [
         {
@@ -746,6 +761,7 @@
       "kind": "question",
       "note": "owner: fine; Clunky wording",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-12",
       "targetIdeas": [
         {
@@ -790,6 +806,7 @@
       "kind": "question",
       "note": "owner: rejected; Too vague",
       "ownerGrade": "fail",
+      "role": "example",
       "sectionId": "mrk-1-12",
       "targetIdeas": [
         {
@@ -834,6 +851,7 @@
       "kind": "question",
       "note": "owner: rejected; Too narrow",
       "ownerGrade": "fail",
+      "role": "example",
       "sectionId": "mrk-1-12",
       "targetIdeas": [
         {
@@ -873,6 +891,7 @@
       "kind": "question",
       "note": "owner: fine",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-12",
       "targetIdeas": [
         {
@@ -917,6 +936,7 @@
       "kind": "question",
       "note": "owner: fine",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-12",
       "targetIdeas": [
         {
@@ -961,6 +981,7 @@
       "kind": "question",
       "note": "owner: loved",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-16",
       "targetIdeas": [
         {
@@ -1010,6 +1031,7 @@
       "kind": "question",
       "note": "owner: rejected; Clunky wording, Too vague; Who is the other pair? \"what the other pair's response already showed\"",
       "ownerGrade": "fail",
+      "role": "example",
       "sectionId": "mrk-1-16",
       "targetIdeas": [
         {
@@ -1054,6 +1076,7 @@
       "kind": "question",
       "note": "owner: loved",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-16",
       "targetIdeas": [
         {
@@ -1098,6 +1121,7 @@
       "kind": "question",
       "note": "owner: fine; Too vague",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-16",
       "targetIdeas": [
         {
@@ -1142,6 +1166,7 @@
       "kind": "question",
       "note": "owner: rejected; Clunky wording; The above was worded much clearer",
       "ownerGrade": "fail",
+      "role": "example",
       "sectionId": "mrk-1-16",
       "targetIdeas": [
         {
@@ -1181,6 +1206,7 @@
       "kind": "question",
       "note": "owner: rejected; Clunky wording; The hired workers seem not relevant to the question.",
       "ownerGrade": "fail",
+      "role": "example",
       "sectionId": "mrk-1-16",
       "targetIdeas": [
         {
@@ -1225,6 +1251,7 @@
       "kind": "question",
       "note": "owner: loved",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-16",
       "targetIdeas": [
         {
@@ -1269,6 +1296,7 @@
       "kind": "question",
       "note": "owner: rejected",
       "ownerGrade": "fail",
+      "role": "example",
       "sectionId": "mrk-1-16",
       "targetIdeas": [
         {
@@ -1314,6 +1342,7 @@
       "kind": "question",
       "note": "owner: loved",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-16",
       "targetIdeas": [
         {
@@ -1382,6 +1411,7 @@
       "kind": "question",
       "note": "owner: fine",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-16",
       "targetIdeas": [
         {
@@ -1427,6 +1457,7 @@
       "kind": "question",
       "note": "owner: rejected; Too vague",
       "ownerGrade": "fail",
+      "role": "example",
       "sectionId": "mrk-1-21",
       "targetIdeas": [
         {
@@ -1505,6 +1536,7 @@
       "kind": "question",
       "note": "owner: fine; Better wording than the above same question.",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-21",
       "targetIdeas": [
         {
@@ -1550,6 +1582,7 @@
       "kind": "question",
       "note": "owner: rejected; Clunky wording",
       "ownerGrade": "fail",
+      "role": "example",
       "sectionId": "mrk-1-21",
       "targetIdeas": [
         {
@@ -1629,6 +1662,7 @@
       "kind": "question",
       "note": "owner: rejected; Too vague",
       "ownerGrade": "fail",
+      "role": "example",
       "sectionId": "mrk-1-21",
       "targetIdeas": [
         {
@@ -1702,6 +1736,7 @@
       "kind": "question",
       "note": "owner: fine; Clunky wording",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-21",
       "targetIdeas": [
         {
@@ -1750,6 +1785,7 @@
       "kind": "question",
       "note": "owner: fine",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-21",
       "targetIdeas": [
         {
@@ -1794,6 +1830,7 @@
       "kind": "question",
       "note": "owner: fine",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-21",
       "targetIdeas": [
         {
@@ -1838,6 +1875,7 @@
       "kind": "question",
       "note": "owner: fine; I like where this question is going. It is just worded a bit weird",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-21",
       "targetIdeas": [
         {
@@ -1882,6 +1920,7 @@
       "kind": "question",
       "note": "owner: loved; Better than the one above because it includes the ",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-29",
       "targetIdeas": [
         {
@@ -1926,6 +1965,7 @@
       "kind": "question",
       "note": "owner: rejected; Clunky wording",
       "ownerGrade": "fail",
+      "role": "example",
       "sectionId": "mrk-1-29",
       "targetIdeas": [
         {
@@ -1970,6 +2010,7 @@
       "kind": "question",
       "note": "owner: loved",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-29",
       "targetIdeas": [
         {
@@ -2014,6 +2055,7 @@
       "kind": "question",
       "note": "owner: rejected; Clunky wording; After Jesus heals her a bit vauge, who is \"her\"",
       "ownerGrade": "fail",
+      "role": "example",
       "sectionId": "mrk-1-29",
       "targetIdeas": [
         {
@@ -2058,6 +2100,7 @@
       "kind": "question",
       "note": "owner: fine",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-29",
       "targetIdeas": [
         {
@@ -2102,6 +2145,7 @@
       "kind": "question",
       "note": "owner: fine; Good wording here ",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-29",
       "targetIdeas": [
         {
@@ -2146,6 +2190,7 @@
       "kind": "question",
       "note": "owner: rejected; Too vague, Clunky wording",
       "ownerGrade": "fail",
+      "role": "example",
       "sectionId": "mrk-1-29",
       "targetIdeas": [
         {
@@ -2190,6 +2235,7 @@
       "kind": "question",
       "note": "owner: loved",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-29",
       "targetIdeas": [
         {
@@ -2234,6 +2280,7 @@
       "kind": "question",
       "note": "owner: fine",
       "ownerGrade": "pass",
+      "role": "example",
       "sectionId": "mrk-1-29",
       "targetIdeas": [
         {
@@ -2278,6 +2325,7 @@
       "kind": "question",
       "note": "owner: rejected; Too vague, Clunky wording",
       "ownerGrade": "fail",
+      "role": "example",
       "sectionId": "mrk-1-29",
       "targetIdeas": [
         {
@@ -2303,6 +2351,1706 @@
           "title": "The whole town gathered for healing",
           "verseEnd": 34,
           "verseStart": 32
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-1-q107",
+        "status": "active",
+        "targets": [
+          "mrk-1-1-k57"
+        ],
+        "text": "Mark opens with two prophecies from centuries apart both pointing to John. What does that double witness suggest about how God had been preparing for this moment?",
+        "type": "meaning",
+        "verseEnd": 3,
+        "verseStart": 1
+      },
+      "itemId": "mrk-1-1-q107",
+      "kind": "question",
+      "note": "owner: fine; Clunky wording; Wording is a bit weird here, but I like where the question is going.",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-1",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "Mark anchors the gospel in ancient prophecy from the very start. Isaiah and Malachi both foretold a herald who would prepare the Messiah's way, and John fulfills that role exactly.",
+          "id": "mrk-1-1-k57",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…the gospel of Jesus Christ begins, and so we shall find it goes on, just as it is written in the prophets…"
+            },
+            {
+              "commentator": "jamieson-fausset-brown",
+              "text": "…the predicted forerunner as the connecting link between the old and the new economies…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "This is quoted from Isa 40:3, which clearly proves that John the Baptist was the person of whom the prophet spoke."
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "The gospel fulfills centuries-old prophecy",
+          "verseEnd": 3,
+          "verseStart": 1
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-1-q108",
+        "status": "active",
+        "targets": [
+          "mrk-1-1-k59"
+        ],
+        "text": "John says the one coming after him will baptize with the Holy Spirit, not with water. What does that contrast say about what water baptism alone cannot do?",
+        "type": "meaning",
+        "verseEnd": 8,
+        "verseStart": 8
+      },
+      "itemId": "mrk-1-1-q108",
+      "kind": "question",
+      "note": "owner: fine",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-1",
+      "targetIdeas": [
+        {
+          "agreed": false,
+          "body": "John's water baptism was real and meaningful, but it pointed beyond itself. Only Jesus can give the Holy Spirit, and that gift is what his baptism truly promises.",
+          "id": "mrk-1-1-k59",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "adam-clarke",
+              "text": "This baptism is not to be rested in; it is only an emblem of that which you must receive from him who is mightier than I."
+            }
+          ],
+          "sources": [
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "Water baptism points to Spirit baptism",
+          "verseEnd": 8,
+          "verseStart": 8
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-1-q109",
+        "status": "active",
+        "targets": [
+          "mrk-1-1-k58"
+        ],
+        "text": "Carrying sandals was the work of the lowest slaves. John says he is not worthy even of that. What does that claim say about how John understood Jesus?",
+        "type": "meaning",
+        "verseEnd": 7,
+        "verseStart": 7
+      },
+      "itemId": "mrk-1-1-q109",
+      "kind": "question",
+      "note": "owner: fine",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-1",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "Carrying sandals was a job for the lowest slaves. John says he is not worthy even of this, which shows how great he understood Jesus to be.",
+          "id": "mrk-1-1-k58",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…thinks himself unworthy to be employed in the meanest office about him, even to stoop down, and untie his shoes…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "This saying is expressive of the most profound humility and reverence."
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "John's humility reveals Christ's greatness",
+          "verseEnd": 7,
+          "verseStart": 7
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-1-q110",
+        "status": "active",
+        "targets": [
+          "mrk-1-1-k60"
+        ],
+        "text": "Jesus had no sin to confess, yet he stepped into the Jordan alongside everyone else. What might that choice reveal about what he was taking on?",
+        "type": "meaning",
+        "verseEnd": 9,
+        "verseStart": 9
+      },
+      "itemId": "mrk-1-1-q110",
+      "kind": "question",
+      "note": "owner: fine",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-1",
+      "targetIdeas": [
+        {
+          "agreed": false,
+          "body": "Jesus had no sin to confess, yet he submitted to baptism alongside everyone else. By doing this, he identified fully with sinners and consecrated himself for their sake.",
+          "id": "mrk-1-1-k60",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…he was washed as if he had been polluted; and thus for our sakes he sanctified himself, that we also might be sanctified, and be baptized with him…"
+            }
+          ],
+          "sources": [
+            "matthew-henry"
+          ],
+          "status": "active",
+          "title": "Jesus was baptized to identify with sinners",
+          "verseEnd": 9,
+          "verseStart": 9
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-1-q111",
+        "status": "active",
+        "targets": [
+          "mrk-1-1-k56"
+        ],
+        "text": "The Father's voice calls Jesus 'my beloved Son, in whom I am well pleased.' What does it mean that these words come at the start of Jesus' public work, before he has done any of it?",
+        "type": "meaning",
+        "verseEnd": 11,
+        "verseStart": 11
+      },
+      "itemId": "mrk-1-1-q111",
+      "kind": "question",
+      "note": "owner: fine",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-1",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "The Father's words at Jesus' baptism express total, permanent delight in his Son. God is so pleased with Jesus that he is pleased with all who trust in him.",
+          "id": "mrk-1-1-k56",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…so well pleased in him, as to be well pleased with us in him…"
+            },
+            {
+              "commentator": "jamieson-fausset-brown",
+              "text": "The verb is put in the aorist to express absolute complacency, once and for ever felt towards Him…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown"
+          ],
+          "status": "active",
+          "title": "God's delight in Jesus covers believers",
+          "verseEnd": 11,
+          "verseStart": 11
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-1-q112",
+        "status": "active",
+        "targets": [
+          "mrk-1-1-k56"
+        ],
+        "text": "The commentators note that God is so pleased with Jesus that he is pleased with those who trust in him. How does the Father's declaration at the baptism open that possibility?",
+        "type": "application",
+        "verseEnd": 11,
+        "verseStart": 11
+      },
+      "itemId": "mrk-1-1-q112",
+      "kind": "question",
+      "note": "owner: rejected; Clunky wording; Not sure if opening with thw commentators is good practice here?",
+      "ownerGrade": "fail",
+      "role": "test",
+      "sectionId": "mrk-1-1",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "The Father's words at Jesus' baptism express total, permanent delight in his Son. God is so pleased with Jesus that he is pleased with all who trust in him.",
+          "id": "mrk-1-1-k56",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…so well pleased in him, as to be well pleased with us in him…"
+            },
+            {
+              "commentator": "jamieson-fausset-brown",
+              "text": "The verb is put in the aorist to express absolute complacency, once and for ever felt towards Him…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown"
+          ],
+          "status": "active",
+          "title": "God's delight in Jesus covers believers",
+          "verseEnd": 11,
+          "verseStart": 11
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-1-q113",
+        "status": "active",
+        "targets": [
+          "mrk-1-1-k58",
+          "mrk-1-1-k59"
+        ],
+        "text": "John preaches repentance, then points to one far greater than himself. What would be missing from his message if he had done only one of those things?",
+        "type": "meaning",
+        "verseEnd": 8,
+        "verseStart": 4
+      },
+      "itemId": "mrk-1-1-q113",
+      "kind": "question",
+      "note": "owner: fine",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-1",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "Carrying sandals was a job for the lowest slaves. John says he is not worthy even of this, which shows how great he understood Jesus to be.",
+          "id": "mrk-1-1-k58",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…thinks himself unworthy to be employed in the meanest office about him, even to stoop down, and untie his shoes…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "This saying is expressive of the most profound humility and reverence."
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "John's humility reveals Christ's greatness",
+          "verseEnd": 7,
+          "verseStart": 7
+        },
+        {
+          "agreed": false,
+          "body": "John's water baptism was real and meaningful, but it pointed beyond itself. Only Jesus can give the Holy Spirit, and that gift is what his baptism truly promises.",
+          "id": "mrk-1-1-k59",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "adam-clarke",
+              "text": "This baptism is not to be rested in; it is only an emblem of that which you must receive from him who is mightier than I."
+            }
+          ],
+          "sources": [
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "Water baptism points to Spirit baptism",
+          "verseEnd": 8,
+          "verseStart": 8
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-12-q104",
+        "status": "active",
+        "targets": [
+          "mrk-1-12-k57"
+        ],
+        "text": "Jesus went through real temptation before anyone came to him with their own. What might that order mean for someone who brings their struggles to him?",
+        "type": "meaning",
+        "verseEnd": 13,
+        "verseStart": 12
+      },
+      "itemId": "mrk-1-12-q104",
+      "kind": "question",
+      "note": "owner: fine",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-12",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "Jesus faced real temptation so he understands it from the inside. When we are tempted, we can go to him knowing he suffered it too and can help us.",
+          "id": "mrk-1-12-k57",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…to direct us whither to go for succour when we are tempted, even to him that suffered, being tempted; that he might experimentally sympathize with us…"
+            },
+            {
+              "commentator": "jamieson-fausset-brown",
+              "text": "…that He might acquire experimental ability 'to succor them that are tempted'"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown"
+          ],
+          "status": "active",
+          "title": "Jesus was tempted to help those who are tempted",
+          "verseEnd": 13,
+          "verseStart": 12
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-12-q105",
+        "status": "active",
+        "targets": [
+          "mrk-1-12-k57"
+        ],
+        "text": "Mark says Jesus was with the wild animals during his forty days. What does that detail add to what the temptation cost him?",
+        "type": "noticing",
+        "verseEnd": 13,
+        "verseStart": 13
+      },
+      "itemId": "mrk-1-12-q105",
+      "kind": "question",
+      "note": "owner: fine; Might be a tad bit too vague?",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-12",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "Jesus faced real temptation so he understands it from the inside. When we are tempted, we can go to him knowing he suffered it too and can help us.",
+          "id": "mrk-1-12-k57",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…to direct us whither to go for succour when we are tempted, even to him that suffered, being tempted; that he might experimentally sympathize with us…"
+            },
+            {
+              "commentator": "jamieson-fausset-brown",
+              "text": "…that He might acquire experimental ability 'to succor them that are tempted'"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown"
+          ],
+          "status": "active",
+          "title": "Jesus was tempted to help those who are tempted",
+          "verseEnd": 13,
+          "verseStart": 12
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-12-q106",
+        "status": "active",
+        "targets": [
+          "mrk-1-12-k58"
+        ],
+        "text": "Jesus announces that 'the time is fulfilled.' What does that claim say about how God had been moving through history up to that moment?",
+        "type": "meaning",
+        "verseEnd": 15,
+        "verseStart": 15
+      },
+      "itemId": "mrk-1-12-q106",
+      "kind": "question",
+      "note": "owner: fine",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-12",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "Jesus' words about God's appointed time being filled point to prophecies, especially Daniel's, that fixed when the Messiah would come. God acts on a preset schedule.",
+          "id": "mrk-1-12-k58",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "God keeps time; when the time is fulfilled, the kingdom of God is at hand, for the vision is for an appointed time…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "Every thing that is done is according to a plan laid by the Divine wisdom, and never performed till the time appointed was filled up."
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "God's timetable for the Messiah was precise",
+          "verseEnd": 15,
+          "verseStart": 15
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-12-q107",
+        "status": "active",
+        "targets": [
+          "mrk-1-12-k60"
+        ],
+        "text": "John is imprisoned, and Jesus immediately steps out preaching the same message. What does that say about what can and cannot stop the gospel?",
+        "type": "meaning",
+        "verseEnd": 14,
+        "verseStart": 14
+      },
+      "itemId": "mrk-1-12-q107",
+      "kind": "question",
+      "note": "owner: rejected; This might be a bit too doirect based off the text? Not deep enough. My answer is \"Nothing can\"??",
+      "ownerGrade": "fail",
+      "role": "test",
+      "sectionId": "mrk-1-12",
+      "targetIdeas": [
+        {
+          "agreed": false,
+          "body": "When John was imprisoned, Jesus stepped forward with the same message. No matter how many ministers are silenced, God raises up others to carry his gospel forward.",
+          "id": "mrk-1-12-k60",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "The silencing of Christ's ministers shall not be the suppressing of Christ's gospel; if some be laid aside, others shall be raised up…"
+            }
+          ],
+          "sources": [
+            "matthew-henry"
+          ],
+          "status": "active",
+          "title": "Imprisoning John did not silence the gospel",
+          "verseEnd": 14,
+          "verseStart": 14
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-12-q108",
+        "status": "active",
+        "targets": [
+          "mrk-1-12-k59"
+        ],
+        "text": "Jesus calls people to both repent and believe. What would be missing if someone did only one of those two things?",
+        "type": "meaning",
+        "verseEnd": 15,
+        "verseStart": 15
+      },
+      "itemId": "mrk-1-12-q108",
+      "kind": "question",
+      "note": "owner: loved",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-12",
+      "targetIdeas": [
+        {
+          "agreed": false,
+          "body": "Jesus calls for both repentance and belief together. Changing your life without trusting Christ is insufficient, and trusting Christ without changing your life is also insufficient.",
+          "id": "mrk-1-12-k59",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "Christ hath joined these two together, and let no man think to put them asunder."
+            }
+          ],
+          "sources": [
+            "matthew-henry"
+          ],
+          "status": "active",
+          "title": "Repentance and faith must both be present",
+          "verseEnd": 15,
+          "verseStart": 15
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-12-q109",
+        "status": "active",
+        "targets": [
+          "mrk-1-12-k59"
+        ],
+        "text": "Jesus calls for repentance first and belief second. Why might that order matter for someone hearing his message for the first time?",
+        "type": "application",
+        "verseEnd": 15,
+        "verseStart": 15
+      },
+      "itemId": "mrk-1-12-q109",
+      "kind": "question",
+      "note": "owner: fine",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-12",
+      "targetIdeas": [
+        {
+          "agreed": false,
+          "body": "Jesus calls for both repentance and belief together. Changing your life without trusting Christ is insufficient, and trusting Christ without changing your life is also insufficient.",
+          "id": "mrk-1-12-k59",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "Christ hath joined these two together, and let no man think to put them asunder."
+            }
+          ],
+          "sources": [
+            "matthew-henry"
+          ],
+          "status": "active",
+          "title": "Repentance and faith must both be present",
+          "verseEnd": 15,
+          "verseStart": 15
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-12-q110",
+        "status": "active",
+        "targets": [
+          "mrk-1-12-k57"
+        ],
+        "text": "The Spirit drives Jesus into the wilderness immediately after his baptism. What does that sequence say about what lay ahead for him in his ministry?",
+        "type": "meaning",
+        "verseEnd": 13,
+        "verseStart": 12
+      },
+      "itemId": "mrk-1-12-q110",
+      "kind": "question",
+      "note": "owner: rejected; Too vague",
+      "ownerGrade": "fail",
+      "role": "test",
+      "sectionId": "mrk-1-12",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "Jesus faced real temptation so he understands it from the inside. When we are tempted, we can go to him knowing he suffered it too and can help us.",
+          "id": "mrk-1-12-k57",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…to direct us whither to go for succour when we are tempted, even to him that suffered, being tempted; that he might experimentally sympathize with us…"
+            },
+            {
+              "commentator": "jamieson-fausset-brown",
+              "text": "…that He might acquire experimental ability 'to succor them that are tempted'"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown"
+          ],
+          "status": "active",
+          "title": "Jesus was tempted to help those who are tempted",
+          "verseEnd": 13,
+          "verseStart": 12
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-12-q111",
+        "status": "active",
+        "targets": [
+          "mrk-1-12-k59",
+          "mrk-1-12-k58"
+        ],
+        "text": "Jesus announces the kingdom of God is near, then calls people to repent and believe. What do those commands say about how someone enters that kingdom?",
+        "type": "meaning",
+        "verseEnd": 15,
+        "verseStart": 15
+      },
+      "itemId": "mrk-1-12-q111",
+      "kind": "question",
+      "note": "owner: rejected; The question kind of answers itself?",
+      "ownerGrade": "fail",
+      "role": "test",
+      "sectionId": "mrk-1-12",
+      "targetIdeas": [
+        {
+          "agreed": false,
+          "body": "Jesus calls for both repentance and belief together. Changing your life without trusting Christ is insufficient, and trusting Christ without changing your life is also insufficient.",
+          "id": "mrk-1-12-k59",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "Christ hath joined these two together, and let no man think to put them asunder."
+            }
+          ],
+          "sources": [
+            "matthew-henry"
+          ],
+          "status": "active",
+          "title": "Repentance and faith must both be present",
+          "verseEnd": 15,
+          "verseStart": 15
+        },
+        {
+          "agreed": true,
+          "body": "Jesus' words about God's appointed time being filled point to prophecies, especially Daniel's, that fixed when the Messiah would come. God acts on a preset schedule.",
+          "id": "mrk-1-12-k58",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "God keeps time; when the time is fulfilled, the kingdom of God is at hand, for the vision is for an appointed time…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "Every thing that is done is according to a plan laid by the Divine wisdom, and never performed till the time appointed was filled up."
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "God's timetable for the Messiah was precise",
+          "verseEnd": 15,
+          "verseStart": 15
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-16-q48",
+        "status": "active",
+        "targets": [
+          "mrk-1-16-k29"
+        ],
+        "text": "Jesus calls working fishermen, not trained religious teachers, to carry his gospel. What does that choice say about whose power his mission depends on?",
+        "type": "meaning",
+        "verseEnd": 17,
+        "verseStart": 16
+      },
+      "itemId": "mrk-1-16-q48",
+      "kind": "question",
+      "note": "owner: loved; Think this is a big picture idea. Wording is a bit weird though.",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-16",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "Jesus picked working fishermen, not religious scholars, so the results could not be credited to human skill or status. The glory had to belong to God alone.",
+          "id": "mrk-1-16-k29",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…that the excellency of the power might appear to be wholly of God, and not at all of them…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "…the excellency of the power at once appeared to be of God, and not of man; and thus the glory, due alone to his name, was secured…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "God chose ordinary men to show his power",
+          "verseEnd": 20,
+          "verseStart": 16
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-16-q49",
+        "status": "active",
+        "targets": [
+          "mrk-1-16-k30"
+        ],
+        "text": "Jesus tells Simon and Andrew he will make them 'fishers of men.' What does the image of fishing add to what following him will mean?",
+        "type": "meaning",
+        "verseEnd": 17,
+        "verseStart": 17
+      },
+      "itemId": "mrk-1-16-q49",
+      "kind": "question",
+      "note": "owner: fine",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-16",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "Jesus raised the disciples from catching fish to rescuing people. Like fishermen, ministers cast the gospel net with hard work and patience, knowing many will escape.",
+          "id": "mrk-1-16-k30",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "The business of ministers is to fish for souls, and win them to Christ…"
+            },
+            {
+              "commentator": "jamieson-fausset-brown",
+              "text": "…raising them from a lower to a higher fishing, as David was from a lower to a higher feeding…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "To follow Christ, and be admitted into a partnership of his ministry, is a great honor; but those only who are by himself fitted for it, God calls…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "Ministers fish for souls lost in the world",
+          "verseEnd": 17,
+          "verseStart": 17
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-16-q50",
+        "status": "active",
+        "targets": [
+          "mrk-1-16-k31"
+        ],
+        "text": "Simon and Andrew leave their nets right away when Jesus calls. What does that instant response say about the kind of claim Jesus is making on them?",
+        "type": "noticing",
+        "verseEnd": 18,
+        "verseStart": 18
+      },
+      "itemId": "mrk-1-16-q50",
+      "kind": "question",
+      "note": "owner: fine",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-16",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "The four left their nets, their livelihood, and their family without hesitation. Anyone who leaves even the smallest thing for Christ's sake has left their 'all'.",
+          "id": "mrk-1-16-k31",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…we must sit loose to the world, and forsake every thing that is inconsistent with our duty to Christ, and that cannot be kept without prejudice to our souls…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "…he who has nothing but a net, and leaves that for the sake of doing good to the souls of men, leaves his All…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "Discipleship requires leaving everything",
+          "verseEnd": 20,
+          "verseStart": 18
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-16-q51",
+        "status": "active",
+        "targets": [
+          "mrk-1-16-k31"
+        ],
+        "text": "Simon and Andrew had only nets to leave behind; James and John left their father and the hired workers too. What does that growing list say about what discipleship costs?",
+        "type": "meaning",
+        "verseEnd": 20,
+        "verseStart": 18
+      },
+      "itemId": "mrk-1-16-q51",
+      "kind": "question",
+      "note": "owner: rejected; Clunky wording; Better wordings of this same question above:\n\n\"James and John leave their father and the hired workers in the boat when Jesus calls. What does leaving behind both family and livelihood say about what following Jesus demands?",
+      "ownerGrade": "fail",
+      "role": "test",
+      "sectionId": "mrk-1-16",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "The four left their nets, their livelihood, and their family without hesitation. Anyone who leaves even the smallest thing for Christ's sake has left their 'all'.",
+          "id": "mrk-1-16-k31",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…we must sit loose to the world, and forsake every thing that is inconsistent with our duty to Christ, and that cannot be kept without prejudice to our souls…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "…he who has nothing but a net, and leaves that for the sake of doing good to the souls of men, leaves his All…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "Discipleship requires leaving everything",
+          "verseEnd": 20,
+          "verseStart": 18
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-16-q52",
+        "status": "active",
+        "targets": [
+          "mrk-1-16-k31"
+        ],
+        "text": "James and John leave their father and the hired workers in the boat when Jesus calls. What does leaving behind both family and livelihood say about what following Jesus demands?",
+        "type": "meaning",
+        "verseEnd": 20,
+        "verseStart": 19
+      },
+      "itemId": "mrk-1-16-q52",
+      "kind": "question",
+      "note": "owner: loved",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-16",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "The four left their nets, their livelihood, and their family without hesitation. Anyone who leaves even the smallest thing for Christ's sake has left their 'all'.",
+          "id": "mrk-1-16-k31",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…we must sit loose to the world, and forsake every thing that is inconsistent with our duty to Christ, and that cannot be kept without prejudice to our souls…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "…he who has nothing but a net, and leaves that for the sake of doing good to the souls of men, leaves his All…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "Discipleship requires leaving everything",
+          "verseEnd": 20,
+          "verseStart": 18
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-16-q53",
+        "status": "active",
+        "targets": [
+          "mrk-1-16-k31"
+        ],
+        "text": "Each of these four left behind something specific—nets, a trade, a father, fellow workers. What does that specificity suggest about what it really means to follow Jesus?",
+        "type": "application",
+        "verseEnd": 20,
+        "verseStart": 18
+      },
+      "itemId": "mrk-1-16-q53",
+      "kind": "question",
+      "note": "owner: rejected; Clunky wording; Same as the question above, just worded oddly",
+      "ownerGrade": "fail",
+      "role": "test",
+      "sectionId": "mrk-1-16",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "The four left their nets, their livelihood, and their family without hesitation. Anyone who leaves even the smallest thing for Christ's sake has left their 'all'.",
+          "id": "mrk-1-16-k31",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…we must sit loose to the world, and forsake every thing that is inconsistent with our duty to Christ, and that cannot be kept without prejudice to our souls…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "…he who has nothing but a net, and leaves that for the sake of doing good to the souls of men, leaves his All…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "Discipleship requires leaving everything",
+          "verseEnd": 20,
+          "verseStart": 18
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-16-q54",
+        "status": "active",
+        "targets": [
+          "mrk-1-16-k29"
+        ],
+        "text": "Jesus finds his first followers at fishing boats, not in a synagogue or school. What might that setting say about where he looks for people to carry his work?",
+        "type": "meaning",
+        "verseEnd": 20,
+        "verseStart": 16
+      },
+      "itemId": "mrk-1-16-q54",
+      "kind": "question",
+      "note": "owner: fine",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-16",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "Jesus picked working fishermen, not religious scholars, so the results could not be credited to human skill or status. The glory had to belong to God alone.",
+          "id": "mrk-1-16-k29",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…that the excellency of the power might appear to be wholly of God, and not at all of them…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "…the excellency of the power at once appeared to be of God, and not of man; and thus the glory, due alone to his name, was secured…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "God chose ordinary men to show his power",
+          "verseEnd": 20,
+          "verseStart": 16
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-21-q55",
+        "status": "active",
+        "targets": [
+          "mrk-1-21-k36"
+        ],
+        "text": "The crowd is astonished that Jesus teaches with an authority the scribes did not have. What does that contrast reveal about where his teaching came from?",
+        "type": "noticing",
+        "verseEnd": 22,
+        "verseStart": 22
+      },
+      "itemId": "mrk-1-21-q55",
+      "kind": "question",
+      "note": "owner: fine",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-21",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "Jesus did not separate his miracles from his message. The expulsion of the evil spirit showed that his teaching about God's kingdom carried real divine power behind it.",
+          "id": "mrk-1-21-k36",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "As soon as Christ began to preach, he began to work miracles for the confirmation of his doctrine."
+            },
+            {
+              "commentator": "jamieson-fausset-brown",
+              "text": "…the miracle was wrought to illustrate the teaching and display the character and glory of the Teacher…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown"
+          ],
+          "status": "active",
+          "title": "The miracle confirmed and illustrated the teaching",
+          "verseEnd": 28,
+          "verseStart": 21
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-21-q56",
+        "status": "active",
+        "targets": [
+          "mrk-1-21-k37"
+        ],
+        "text": "An unclean spirit confronts Jesus inside the synagogue during worship. What does that setting suggest about the depth of evil's hold that Jesus had come to break?",
+        "type": "noticing",
+        "verseEnd": 24,
+        "verseStart": 23
+      },
+      "itemId": "mrk-1-21-q56",
+      "kind": "question",
+      "note": "owner: rejected; Clunky wording; I like where this is going. But question is worded oddly",
+      "ownerGrade": "fail",
+      "role": "test",
+      "sectionId": "mrk-1-21",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "The demon recognized Jesus and knew what his coming meant: the end of Satan's power over people. Evil cannot escape the truth of who Jesus is, even as it opposes him.",
+          "id": "mrk-1-21-k37",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…this is the misery of those wicked spirits, that they persist in their rebellion, and yet know it will end in their destruction…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "…the Holy One of God, who art come to destroy unholiness, in which we have our residence, and through which we have our reign in the souls of men…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "Even evil spirits know Christ as their destroyer",
+          "verseEnd": 24,
+          "verseStart": 24
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-21-q57",
+        "status": "active",
+        "targets": [
+          "mrk-1-21-k37"
+        ],
+        "text": "The demon asks Jesus whether he has come to destroy 'us.' What does that fear reveal about what the demon understood his arrival to mean?",
+        "type": "meaning",
+        "verseEnd": 24,
+        "verseStart": 24
+      },
+      "itemId": "mrk-1-21-q57",
+      "kind": "question",
+      "note": "owner: loved",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-21",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "The demon recognized Jesus and knew what his coming meant: the end of Satan's power over people. Evil cannot escape the truth of who Jesus is, even as it opposes him.",
+          "id": "mrk-1-21-k37",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…this is the misery of those wicked spirits, that they persist in their rebellion, and yet know it will end in their destruction…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "…the Holy One of God, who art come to destroy unholiness, in which we have our residence, and through which we have our reign in the souls of men…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "Even evil spirits know Christ as their destroyer",
+          "verseEnd": 24,
+          "verseStart": 24
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-21-q58",
+        "status": "active",
+        "targets": [
+          "mrk-1-21-k38"
+        ],
+        "text": "Jesus silences the demon even though what it says about him is true. Why might he refuse to be identified by an evil spirit?",
+        "type": "meaning",
+        "verseEnd": 25,
+        "verseStart": 24
+      },
+      "itemId": "mrk-1-21-q58",
+      "kind": "question",
+      "note": "owner: fine; Too vague",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-21",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "The demon spoke truth about Jesus, but Jesus silenced it. Accepting praise from evil would have given his enemies grounds to accuse him of being in league with Satan.",
+          "id": "mrk-1-21-k38",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "Christ has a muzzle for that unclean spirit when he fawns as well as when he barks; such acknowledgments of him as this was, Christ disdains…"
+            },
+            {
+              "commentator": "jamieson-fausset-brown",
+              "text": "…who invariably rejected and silenced the testimonies that came to Him from beneath, and thus was able to rebut the imputations of His enemies against Him…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown"
+          ],
+          "status": "active",
+          "title": "Jesus refused his enemy's true confession",
+          "verseEnd": 25,
+          "verseStart": 24
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-21-q59",
+        "status": "active",
+        "targets": [
+          "mrk-1-21-k36",
+          "mrk-1-21-k37"
+        ],
+        "text": "The unclean spirit throws the man into convulsions on the way out. What does that final act of violence reveal about the power Jesus was overcoming?",
+        "type": "meaning",
+        "verseEnd": 26,
+        "verseStart": 26
+      },
+      "itemId": "mrk-1-21-q59",
+      "kind": "question",
+      "note": "owner: fine",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-21",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "Jesus did not separate his miracles from his message. The expulsion of the evil spirit showed that his teaching about God's kingdom carried real divine power behind it.",
+          "id": "mrk-1-21-k36",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "As soon as Christ began to preach, he began to work miracles for the confirmation of his doctrine."
+            },
+            {
+              "commentator": "jamieson-fausset-brown",
+              "text": "…the miracle was wrought to illustrate the teaching and display the character and glory of the Teacher…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown"
+          ],
+          "status": "active",
+          "title": "The miracle confirmed and illustrated the teaching",
+          "verseEnd": 28,
+          "verseStart": 21
+        },
+        {
+          "agreed": true,
+          "body": "The demon recognized Jesus and knew what his coming meant: the end of Satan's power over people. Evil cannot escape the truth of who Jesus is, even as it opposes him.",
+          "id": "mrk-1-21-k37",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…this is the misery of those wicked spirits, that they persist in their rebellion, and yet know it will end in their destruction…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "…the Holy One of God, who art come to destroy unholiness, in which we have our residence, and through which we have our reign in the souls of men…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "Even evil spirits know Christ as their destroyer",
+          "verseEnd": 24,
+          "verseStart": 24
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-21-q60",
+        "status": "active",
+        "targets": [
+          "mrk-1-21-k36"
+        ],
+        "text": "After the exorcism, the amazed crowd asks about Jesus's teaching. What does that connection reveal about how his miracle and his message worked together?",
+        "type": "meaning",
+        "verseEnd": 27,
+        "verseStart": 27
+      },
+      "itemId": "mrk-1-21-q60",
+      "kind": "question",
+      "note": "owner: rejected; Too vague",
+      "ownerGrade": "fail",
+      "role": "test",
+      "sectionId": "mrk-1-21",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "Jesus did not separate his miracles from his message. The expulsion of the evil spirit showed that his teaching about God's kingdom carried real divine power behind it.",
+          "id": "mrk-1-21-k36",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "As soon as Christ began to preach, he began to work miracles for the confirmation of his doctrine."
+            },
+            {
+              "commentator": "jamieson-fausset-brown",
+              "text": "…the miracle was wrought to illustrate the teaching and display the character and glory of the Teacher…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown"
+          ],
+          "status": "active",
+          "title": "The miracle confirmed and illustrated the teaching",
+          "verseEnd": 28,
+          "verseStart": 21
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-21-q61",
+        "status": "active",
+        "targets": [
+          "mrk-1-21-k36",
+          "mrk-1-21-k37"
+        ],
+        "text": "Jesus enters the synagogue as a teacher and leaves having driven out an evil spirit. What does that combination reveal about what announcing God's kingdom actually involves?",
+        "type": "application",
+        "verseEnd": 28,
+        "verseStart": 21
+      },
+      "itemId": "mrk-1-21-q61",
+      "kind": "question",
+      "note": "owner: rejected; Clunky wording",
+      "ownerGrade": "fail",
+      "role": "test",
+      "sectionId": "mrk-1-21",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "Jesus did not separate his miracles from his message. The expulsion of the evil spirit showed that his teaching about God's kingdom carried real divine power behind it.",
+          "id": "mrk-1-21-k36",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "As soon as Christ began to preach, he began to work miracles for the confirmation of his doctrine."
+            },
+            {
+              "commentator": "jamieson-fausset-brown",
+              "text": "…the miracle was wrought to illustrate the teaching and display the character and glory of the Teacher…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown"
+          ],
+          "status": "active",
+          "title": "The miracle confirmed and illustrated the teaching",
+          "verseEnd": 28,
+          "verseStart": 21
+        },
+        {
+          "agreed": true,
+          "body": "The demon recognized Jesus and knew what his coming meant: the end of Satan's power over people. Evil cannot escape the truth of who Jesus is, even as it opposes him.",
+          "id": "mrk-1-21-k37",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…this is the misery of those wicked spirits, that they persist in their rebellion, and yet know it will end in their destruction…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "…the Holy One of God, who art come to destroy unholiness, in which we have our residence, and through which we have our reign in the souls of men…"
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "Even evil spirits know Christ as their destroyer",
+          "verseEnd": 24,
+          "verseStart": 24
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-29-q49",
+        "status": "active",
+        "targets": [
+          "mrk-1-29-k29"
+        ],
+        "text": "The fever leaves Peter's mother-in-law fully strong, and she serves her guests at once. What does that instant, complete recovery suggest about what Jesus' healing restores people to?",
+        "type": "meaning",
+        "verseEnd": 31,
+        "verseStart": 29
+      },
+      "itemId": "mrk-1-29-q49",
+      "kind": "question",
+      "note": "owner: fine; Question above is better.",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-29",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "The fever left Peter's mother-in-law fully strong, not just alive. Jesus heals in order to restore people for active service to him and to others.",
+          "id": "mrk-1-29-k29",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…the same hand that healed her, strengthened her, so that she was able to minister to them; the cure is in order to that, to fit for action…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "Serving Christ in his ordinances and in his members is the best proof we can give to others of our being soundly restored to spiritual health."
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "Healing restores people to serve",
+          "verseEnd": 31,
+          "verseStart": 29
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-29-q50",
+        "status": "active",
+        "targets": [
+          "mrk-1-29-k31"
+        ],
+        "text": "People wait until after sunset to bring their sick to Jesus {{ref:1:32}}. What does that careful timing reveal about how they understood what the sabbath allowed?",
+        "type": "noticing",
+        "verseEnd": 33,
+        "verseStart": 32
+      },
+      "itemId": "mrk-1-29-q50",
+      "kind": "question",
+      "note": "owner: rejected; Too narrow; Kind of an odd question. Not sure how relevant this is here",
+      "ownerGrade": "fail",
+      "role": "test",
+      "sectionId": "mrk-1-29",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "People waited until sunset, thinking it wrong to seek healing during the sabbath. Jesus welcomed them anyway, and later showed that such strict rules were misguided.",
+          "id": "mrk-1-29-k31",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…perhaps many scrupled bringing their sick to him, till the sabbath was over, but their weakness therein was no prejudice to them in applying to Christ…"
+            },
+            {
+              "commentator": "jamieson-fausset-brown",
+              "text": "They waited, therefore, till these were over, and then brought them in crowds. Our Lord afterwards took repeated occasion to teach the people by example…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "…it was that the sick were not brought out to our Lord till after sun-set, because then the sabbath was ended."
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "Jesus healed despite their sabbath scruples",
+          "verseEnd": 33,
+          "verseStart": 32
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-29-q51",
+        "status": "active",
+        "targets": [
+          "mrk-1-29-k31"
+        ],
+        "text": "A whole city waits until the sabbath ends before coming to Jesus with their sick. What does his healing of them all suggest about their cautious rule-keeping?",
+        "type": "meaning",
+        "verseEnd": 33,
+        "verseStart": 32
+      },
+      "itemId": "mrk-1-29-q51",
+      "kind": "question",
+      "note": "owner: loved; Muh better wording of \"People wait until after sunset to bring their sick to Jesus (verse 32). What does that careful timing reveal about how they understood what the sabbath allowed?",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-29",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "People waited until sunset, thinking it wrong to seek healing during the sabbath. Jesus welcomed them anyway, and later showed that such strict rules were misguided.",
+          "id": "mrk-1-29-k31",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…perhaps many scrupled bringing their sick to him, till the sabbath was over, but their weakness therein was no prejudice to them in applying to Christ…"
+            },
+            {
+              "commentator": "jamieson-fausset-brown",
+              "text": "They waited, therefore, till these were over, and then brought them in crowds. Our Lord afterwards took repeated occasion to teach the people by example…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "…it was that the sick were not brought out to our Lord till after sun-set, because then the sabbath was ended."
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "Jesus healed despite their sabbath scruples",
+          "verseEnd": 33,
+          "verseStart": 32
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-29-q52",
+        "status": "active",
+        "targets": [
+          "mrk-1-29-k30"
+        ],
+        "text": "The demons know who Jesus is and would announce it, but he silences them. Why might he refuse testimony that was actually true?",
+        "type": "meaning",
+        "verseEnd": 34,
+        "verseStart": 34
+      },
+      "itemId": "mrk-1-29-q52",
+      "kind": "question",
+      "note": "owner: fine",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-29",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "Jesus refused to let demons announce who he was. This prevented any appearance that he worked in league with evil, keeping his mission untainted.",
+          "id": "mrk-1-29-k30",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…he cast out many devils, and suffered not the devils to speak, for he made them know who he was, and that silenced them…"
+            },
+            {
+              "commentator": "jamieson-fausset-brown",
+              "text": "Evidently they would have spoken, if permitted, proclaiming His Messiahship in such terms as in the synagogue; but once in one day, and that testimony immediately silenced, was enough."
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown"
+          ],
+          "status": "active",
+          "title": "Jesus silenced demons to guard his mission",
+          "verseEnd": 34,
+          "verseStart": 34
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-29-q53",
+        "status": "active",
+        "targets": [
+          "mrk-1-29-k30"
+        ],
+        "text": "Jesus silences the demons even though what they would say about him was correct. What does that restraint suggest about how he wanted his identity to become known?",
+        "type": "meaning",
+        "verseEnd": 34,
+        "verseStart": 34
+      },
+      "itemId": "mrk-1-29-q53",
+      "kind": "question",
+      "note": "owner: fine",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-29",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "Jesus refused to let demons announce who he was. This prevented any appearance that he worked in league with evil, keeping his mission untainted.",
+          "id": "mrk-1-29-k30",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…he cast out many devils, and suffered not the devils to speak, for he made them know who he was, and that silenced them…"
+            },
+            {
+              "commentator": "jamieson-fausset-brown",
+              "text": "Evidently they would have spoken, if permitted, proclaiming His Messiahship in such terms as in the synagogue; but once in one day, and that testimony immediately silenced, was enough."
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "jamieson-fausset-brown"
+          ],
+          "status": "active",
+          "title": "Jesus silenced demons to guard his mission",
+          "verseEnd": 34,
+          "verseStart": 34
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-29-q54",
+        "status": "active",
+        "targets": [
+          "mrk-1-29-k32"
+        ],
+        "text": "Jesus heals all kinds of illness in a single evening {{ref:1:34}}. What might those physical cures suggest about the deeper kind of restoration he came to bring?",
+        "type": "meaning",
+        "verseEnd": 34,
+        "verseStart": 34
+      },
+      "itemId": "mrk-1-29-q54",
+      "kind": "question",
+      "note": "owner: fine",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-29",
+      "targetIdeas": [
+        {
+          "agreed": false,
+          "body": "Jesus healing sick bodies fulfilled Isaiah's words about the Messiah bearing human infirmities. The physical healings were signs of the deeper spiritual healing he came to bring.",
+          "id": "mrk-1-29-k32",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "adam-clarke",
+              "text": "Christ fulfils the prophecies in all respects, and is himself the completion and truth of them, as being the lamb and victim of God, which…"
+            }
+          ],
+          "sources": [
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "Physical healings point to spiritual healing",
+          "verseEnd": 34,
+          "verseStart": 34
+        }
+      ]
+    },
+    {
+      "item": {
+        "id": "mrk-1-29-q55",
+        "status": "active",
+        "targets": [
+          "mrk-1-29-k29"
+        ],
+        "text": "Peter's mother-in-law is healed and immediately serves. What would be missing from the picture if she had been healed but needed days to recover her strength?",
+        "type": "meaning",
+        "verseEnd": 31,
+        "verseStart": 29
+      },
+      "itemId": "mrk-1-29-q55",
+      "kind": "question",
+      "note": "owner: loved",
+      "ownerGrade": "pass",
+      "role": "test",
+      "sectionId": "mrk-1-29",
+      "targetIdeas": [
+        {
+          "agreed": true,
+          "body": "The fever left Peter's mother-in-law fully strong, not just alive. Jesus heals in order to restore people for active service to him and to others.",
+          "id": "mrk-1-29-k29",
+          "kind": "key",
+          "quotes": [
+            {
+              "commentator": "matthew-henry",
+              "text": "…the same hand that healed her, strengthened her, so that she was able to minister to them; the cure is in order to that, to fit for action…"
+            },
+            {
+              "commentator": "adam-clarke",
+              "text": "Serving Christ in his ordinances and in his members is the best proof we can give to others of our being soundly restored to spiritual health."
+            }
+          ],
+          "sources": [
+            "matthew-henry",
+            "adam-clarke"
+          ],
+          "status": "active",
+          "title": "Healing restores people to serve",
+          "verseEnd": 31,
+          "verseStart": 29
         }
       ]
     }
@@ -2334,7 +4082,61 @@
       "graderModel": "us.anthropic.claude-opus-4-6-v1",
       "graderPromptVersion": "_shared/context@v1+review@v6",
       "items": 48,
-      "runAt": "2026-11-18T00:11:18+00:00"
+      "runAt": "2026-11-18T00:11:18+00:00",
+      "scores": {}
+    },
+    {
+      "agreement": 0.8333,
+      "disagreements": [
+        "mrk-1-12-q111",
+        "mrk-1-16-q51",
+        "mrk-1-21-q56",
+        "mrk-1-21-q60",
+        "mrk-1-29-q50",
+        "mrk-1-29-q51"
+      ],
+      "graderModel": "us.anthropic.claude-opus-4-6-v1",
+      "graderPromptVersion": "_shared/context@v1+review@v7",
+      "items": 36,
+      "runAt": "2026-11-18T00:40:47+00:00",
+      "scores": {
+        "mrk-1-1-q107": 4,
+        "mrk-1-1-q108": 5,
+        "mrk-1-1-q109": 4,
+        "mrk-1-1-q110": 5,
+        "mrk-1-1-q111": 4,
+        "mrk-1-1-q112": 2,
+        "mrk-1-1-q113": 4,
+        "mrk-1-12-q104": 4,
+        "mrk-1-12-q105": 4,
+        "mrk-1-12-q106": 3,
+        "mrk-1-12-q107": 2,
+        "mrk-1-12-q108": 5,
+        "mrk-1-12-q109": 3,
+        "mrk-1-12-q110": 2,
+        "mrk-1-12-q111": 3,
+        "mrk-1-16-q48": 4,
+        "mrk-1-16-q49": 5,
+        "mrk-1-16-q50": 4,
+        "mrk-1-16-q51": 4,
+        "mrk-1-16-q52": 3,
+        "mrk-1-16-q53": 2,
+        "mrk-1-16-q54": 3,
+        "mrk-1-21-q55": 3,
+        "mrk-1-21-q56": 4,
+        "mrk-1-21-q57": 5,
+        "mrk-1-21-q58": 4,
+        "mrk-1-21-q59": 5,
+        "mrk-1-21-q60": 3,
+        "mrk-1-21-q61": 2,
+        "mrk-1-29-q49": 3,
+        "mrk-1-29-q50": 4,
+        "mrk-1-29-q51": 2,
+        "mrk-1-29-q52": 4,
+        "mrk-1-29-q53": 3,
+        "mrk-1-29-q54": 3,
+        "mrk-1-29-q55": 5
+      }
     }
   ]
 }

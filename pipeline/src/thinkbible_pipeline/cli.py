@@ -501,10 +501,15 @@ def calibrate(
 
     if not calibration.items:
         _exit(ExitCode.USAGE, "the calibration set is empty: run `calibrate --label` first")
-    sections = sorted({c.section_id for c in calibration.items})
+    tests = [c for c in calibration.items if c.role == "test"]
+    if not tests:
+        _exit(ExitCode.USAGE, "the calibration set has no held-out (test) items to measure")
+    sections = sorted({c.section_id for c in tests})
     cost = len(sections) * deps.settings.stage("review").default_cost_usd
-    typer.echo(f"calibrate: grade {len(calibration.items)} items in {len(sections)} sections, "
-               f"about ${cost:.2f}")  # fmt: skip
+    examples = len(calibration.items) - len(tests)
+    typer.echo(f"calibrate: grade {len(tests)} held-out items in {len(sections)} sections, "
+               f"about ${cost:.2f} ({examples} more are examples in the grader's "
+               "prompt)")  # fmt: skip
     if not yes and not typer.confirm("Proceed?", default=False):
         _exit(ExitCode.OK, "not run")
 

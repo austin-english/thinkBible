@@ -479,6 +479,13 @@ risk.
   (`pipeline/evals/calibration.json`): "Love it" and "Fine" count as pass, "Not this" as fail.
   Under `review/v5` the grader agreed about 70% of the time (it passed 15 of 16 rejects). Each
   question item keeps the ideas it aims at (`targetIdeas`), so it grades after regeneration.
+  Under `review/v6` agreement fell to 60%: the rubric over-punished "vague" (the owner ships some
+  questions they tag vague) and still could not hear clunky wording. So the grader now learns from
+  the owner's verdicts directly: round 1 (48 ratings) is written into `review/v7` as worked
+  examples (`role: "example"`), and a second round on the `questions/v10` output (36 ratings) is
+  the held-out set (`role: "test"`) that `calibrate` measures; a grader is never measured on a
+  judgment it was shown. Each result also records the grader's score per test item. Round 2: the
+  owner would ship 13 of the 15 questions kept (8 of 14 in round 1).
 - **Quality first** (2026-11-17, revised the same day): each of the 3 places goes to the
   highest-graded candidate left, so a lower grade never beats a higher one
   (`gate.outcomes.pick_best`). Among equal grades: one aimed at a key idea not yet covered, then one

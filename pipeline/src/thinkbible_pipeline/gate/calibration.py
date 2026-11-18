@@ -29,6 +29,10 @@ class CalibrationItem(JsonModel):
     item: dict[str, Any]  # the item as labelled
     owner_grade: Literal["pass", "fail"]
     note: str | None = None
+    # "example": shown to the grader in its prompt (prompts/review/vN.md) as one of the owner's
+    # judgments; "test": held out, and the only kind `calibrate` measures agreement on. A grader
+    # is never measured on a judgment it was shown.
+    role: Literal["example", "test"] = "test"
     # For a question: the key ideas it aims at, as they were when labelled. The grader sees them,
     # so the item can still be graded after its section is regenerated with new ideas.
     target_ideas: list[dict[str, Any]] = Field(default_factory=list)
@@ -50,6 +54,7 @@ class CalibrationResult(JsonModel):
     items: int
     run_at: str
     disagreements: list[str] = Field(default_factory=list)  # item IDs where the grader differed
+    scores: dict[str, int] = Field(default_factory=dict)  # the grader's 1-5 for each test item
 
 
 class CalibrationSet(JsonModel):
@@ -202,17 +207,19 @@ async def run_calibration(
     model: str,
     now: str,
 ) -> CalibrationResult:
-    """Grade every labelled item with the grader (one call per section) and record agreement.
+    """Grade the held-out items with the grader (one call per section) and record agreement.
 
     ``grade(section_id, items)`` returns {item id: score 1-5}; an item passes above ``threshold``.
+    Only items with ``role == "test"`` are graded: the examples are already in the grader's prompt.
     """
+    tests = [c for c in calibration.items if c.role == "test"]
     by_section: dict[str, list[dict[str, Any]]] = {}
-    for c in calibration.items:
+    for c in tests:
         by_section.setdefault(c.section_id, []).append(c.item)
     scores: dict[str, int] = {}
     for sid, items in sorted(by_section.items()):
         scores.update(await grade(sid, items))
-    owner = {c.item_id: c.owner_grade == "pass" for c in calibration.items}
+    owner = {c.item_id: c.owner_grade == "pass" for c in tests}
     grader = {i: s > threshold for i, s in scores.items()}
     share, differ = agreement(owner, grader)
     result = CalibrationResult(
@@ -222,6 +229,7 @@ async def run_calibration(
         items=len([i for i in owner if i in grader]),
         run_at=now,
         disagreements=differ,
+        scores={i: s for i, s in scores.items() if i in owner},
     )
     calibration.results.append(result)
     return result

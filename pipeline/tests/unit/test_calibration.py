@@ -97,6 +97,25 @@ def test_labelling_stops_at_the_target() -> None:
     assert n == 0 and asked == []
 
 
+def test_only_held_out_items_are_measured() -> None:
+    cal = CalibrationSet(items=[
+        CalibrationItem(item_id="mrk-1-1-q1", kind="question", section_id="mrk-1-1",
+                        item={"id": "mrk-1-1-q1"}, owner_grade="pass", role="example"),
+        CalibrationItem(item_id="mrk-1-1-q2", kind="question", section_id="mrk-1-1",
+                        item={"id": "mrk-1-1-q2"}, owner_grade="fail"),
+    ])  # fmt: skip
+    seen: list[str] = []
+
+    async def grade(sid: str, items: list[dict[str, Any]]) -> dict[str, int]:
+        seen.extend(i["id"] for i in items)
+        return {i["id"]: 2 for i in items}
+
+    res = asyncio.run(run_calibration(cal, grade, threshold=2, prompt_version="review@v7",
+                                      model="opus", now="2026-11-18T12:00"))  # fmt: skip
+    assert seen == ["mrk-1-1-q2"]  # the example is in the grader's prompt, so it isn't measured
+    assert res.items == 1 and res.agreement == 1.0 and res.scores == {"mrk-1-1-q2": 2}
+
+
 def test_a_calibration_run_grades_by_section_and_records_agreement() -> None:
     cal = CalibrationSet(items=[
         CalibrationItem(item_id="mrk-1-1-k1", kind="keyIdea", section_id="mrk-1-1",

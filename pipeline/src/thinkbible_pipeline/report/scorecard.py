@@ -183,5 +183,8 @@ def _blockers(card: Scorecard, settings: Settings, ungraded: int) -> list[str]:
     elif cal.items < gate.min_calibration_items:
         out.append(f"calibration has {cal.items} items (needs {gate.min_calibration_items})")
     elif (cal.agreement or 0) < gate.min_agreement:
-        out.append(f"grader agreement {cal.agreement:.2f} < {gate.min_agreement:.2f}")
+        out.append(
+            f"grader calibration: agreement {cal.agreement:.2f} < {gate.min_agreement:.2f}; "
+            "adjust prompts/review and run `calibrate`"
+        )
     return out

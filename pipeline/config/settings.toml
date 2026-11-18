@@ -66,7 +66,7 @@ requests_per_minute = 10  # this account's Bedrock quota for the model
 model = "us.anthropic.claude-opus-4-6-v1"
 thinking = "adaptive"
 effort = "medium"
-prompt = "v6"  # v6: rewritten from the owner's ratings: deeper, approachable, focused, stands alone
+prompt = "v7"  # v7: v6 + the owner's round 1 verdicts as worked examples (round 2 is held out)
 default_cost_usd = 0.10  # grades every candidate question, not just three
 requests_per_minute = 5  # this account's Bedrock quota for the model
 
