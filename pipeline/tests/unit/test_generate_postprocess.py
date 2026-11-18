@@ -11,6 +11,7 @@ from thinkbible_pipeline.stages.generate_rules import (
     process_ideas,
     process_questions,
     quote_found,
+    repair_refs,
     short_quote,
     strip_trailing_ref,
 )
@@ -89,6 +90,7 @@ def test_a_closing_reference_sentence_is_stripped_but_not_one_inside_a_sentence(
     assert strip_trailing_ref("It shows who he is. {{ref:1:27}}") == "It shows who he is."
     assert strip_trailing_ref("He moved on. See {{ref:1:37-38}}.") == "He moved on."
     assert strip_trailing_ref("He moved on. (see also {{ref:1:38}})") == "He moved on."
+    assert strip_trailing_ref("He is the Son. See {{ref:1:1}} and {{ref:1:9}}.") == "He is the Son."
     kept = "The cure is a sign of the pardon, as {{ref:2:9-11}} shows."
     assert strip_trailing_ref(kept) == kept
     inside = "Jesus fulfils the promise in {{ref:1:2}}."
@@ -97,6 +99,17 @@ def test_a_closing_reference_sentence_is_stripped_but_not_one_inside_a_sentence(
     out.key_ideas[0].body = "John prepares the way. {{ref:1:2}}"
     kept_ideas, dropped = process_ideas(out, SECTION, EXCERPTS, SectionDraft())
     assert not dropped and kept_ideas[0].body == "John prepares the way."
+
+
+def test_a_placeholder_without_its_chapter_is_repaired_inside_the_section() -> None:
+    assert repair_refs("Jesus calls them {{ref:5}}.", SECTION) == "Jesus calls them {{ref:1:5}}."
+    assert repair_refs("In {{ref:4-6}}.", SECTION) == "In {{ref:1:4-6}}."
+    assert repair_refs("{{ref:12}} is outside.", SECTION) == "{{ref:12}} is outside."  # still bad
+    assert repair_refs("Fine {{ref:1:3}}.", SECTION) == "Fine {{ref:1:3}}."
+    out = ideas_out(idea(["matthew-henry"], {"matthew-henry": "he prepared the way"}))
+    out.key_ideas[0].body = "John prepares the way {{ref:2}}, as promised."
+    kept, dropped = process_ideas(out, SECTION, EXCERPTS, SectionDraft())
+    assert not dropped and kept[0].body == "John prepares the way {{ref:1:2}}, as promised."
 
 
 def test_the_central_idea_named_by_the_model_leads() -> None:

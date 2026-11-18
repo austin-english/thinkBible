@@ -34,10 +34,10 @@ pipeline/
 ├── prompts/
 │   ├── _shared/context-v1.md       # opening text of every system prompt
 │   ├── summaries/v1.md             # one-line summary
-│   ├── extract/v13.md              # generate call 1: key ideas, context, views differ
-│   ├── questions/v13.md            # generate call 2: candidate questions in reading order
+│   ├── extract/v14.md              # generate call 1: key ideas, context, views differ
+│   ├── questions/v14.md            # generate call 2: candidate questions in reading order
 │   ├── question-guide/v4.md        # quality rules + the owner's favorite questions
-│   └── review/v9.md                # the grader's rubric + the owner's worked examples
+│   └── review/v10.md               # the grader's rubric + the owner's worked examples
 ├── scripts/
 │   └── build_bundle.py             # `make lambda-bundle`: builds pipeline/out/lambda.zip
 ├── src/thinkbible_pipeline/

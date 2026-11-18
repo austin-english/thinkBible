@@ -35,6 +35,7 @@ from thinkbible_pipeline.stages.generate_rules import (
     note_problem,
     process_ideas,
     process_questions,
+    repair_refs,
 )
 from thinkbible_pipeline.stages.summaries import reference, section_entry
 
@@ -239,8 +240,10 @@ class GenerateStage(SectionStage):
             "verseEnd": entry.verse_end,
             "title": entry.title,
             "noPrompt": no_prompt,
-            "context": ideas_out.context,
-            "viewsDiffer": ideas_out.views_differ,
+            "context": repair_refs(ideas_out.context, entry),
+            "viewsDiffer": (
+                repair_refs(ideas_out.views_differ, entry) if ideas_out.views_differ else None
+            ),
             "manuscriptNotes": [],
             "keyIdeas": [i.publishable() for i in ideas],
             "questions": [q.publishable() for q in pool.questions],

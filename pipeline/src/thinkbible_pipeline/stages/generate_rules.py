@@ -158,9 +158,30 @@ def short_quote(quote: str) -> str:
 
 # A closing sentence that is only a verse reference: "… moved on. See {{ref:1:37-38}}." or a bare
 # "{{ref:1:27}}". The app shows each idea's verses, so it says nothing (Mark 1:21-28, 2026-11-18).
+_REF_TOKEN = r"\{\{ref:[^}]+\}\}"
 _TRAILING_REF = re.compile(
-    r"\s*\(?\s*(?:(?:see|cf\.?)\s+(?:also\s+)?)?\{\{ref:[^}]+\}\}\s*\)?\s*\.?\s*$", re.IGNORECASE
+    rf"\s*\(?\s*(?:(?:see|cf\.?)\s+(?:also\s+)?)?{_REF_TOKEN}"
+    rf"(?:\s*(?:,|and|&)\s*{_REF_TOKEN})*\s*\)?\s*\.?\s*$",
+    re.IGNORECASE,
 )
+# "{{ref:15}}" or "{{ref:14-15}}": a placeholder without its chapter. A section never crosses
+# chapters, so a verse inside the section can only mean the section's chapter (Mark 1:12-15 lost
+# three key ideas to it, 2026-11-18). Anything else stays malformed, and the checks drop it.
+_NO_CHAPTER = re.compile(r"\{\{ref:(\d+)(?:-(\d+))?\}\}")
+
+
+def repair_refs(text: str, section: SectionMapEntry) -> str:
+    """Give a chapterless placeholder for a verse in ``section`` the section's chapter."""
+
+    def sub(m: re.Match[str]) -> str:
+        start = int(m.group(1))
+        end = int(m.group(2)) if m.group(2) else start
+        if not section.verse_start <= start <= end <= section.verse_end:
+            return m.group(0)
+        verses = f"{start}-{end}" if m.group(2) else str(start)
+        return "{{ref:" + f"{section.chapter}:{verses}" + "}}"
+
+    return _NO_CHAPTER.sub(sub, text)
 
 
 def strip_trailing_ref(body: str) -> str:
@@ -246,8 +267,9 @@ def process_ideas(
                                  f"outside the section ({section.verse_start}-"
                                  f"{section.verse_end})", raw))  # fmt: skip
             continue
-        body = strip_trailing_ref(raw.body)
-        problem = idea_problem(raw.title, body, ctx)
+        title = repair_refs(raw.title, section)
+        body = strip_trailing_ref(repair_refs(raw.body, section))
+        problem = idea_problem(title, body, ctx)
         if problem:
             dropped.append(_drop(idea_id, problem, raw, "check"))
             continue
@@ -260,7 +282,7 @@ def process_ideas(
             Idea(
                 idea_id,
                 raw.kind,
-                raw.title,
+                title,
                 body,
                 sources,
                 raw.verse_start,
@@ -319,7 +341,8 @@ def process_questions(
     passed: list[tuple[QuestionOut, Question]] = []
     for raw in out.questions:
         qid = next_id(draft, section.id, "q")
-        problem = question_problem(raw.text, idea_texts, ctx)
+        text = repair_refs(raw.text, section).strip()
+        problem = question_problem(text, idea_texts, ctx)
         if problem:
             pool.dropped.append(_drop(qid, problem, raw, "check"))
             continue
@@ -331,7 +354,7 @@ def process_questions(
         if not targets:
             pool.dropped.append(_drop(qid, "targets no key idea that was kept", raw))
             continue
-        q = Question(qid, raw.type, raw.verse_start, raw.verse_end, raw.text.strip(), targets)
+        q = Question(qid, raw.type, raw.verse_start, raw.verse_end, text, targets)
         passed.append((raw, q))
 
     pool.candidates = [q for _, q in passed]

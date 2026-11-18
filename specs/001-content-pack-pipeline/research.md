@@ -554,6 +554,18 @@ risk.
   report flags the section.
   Unlike the removed whole-passage reservation, this one is for the central idea, not for breadth,
   and it needs a 4.
+- **Christ in the Old Testament** (2026-11-18, `extract/v14`, `questions/v14`, `review/v10`):
+  Isaiah 53:1-8 came out as "the servant" throughout, though all three commentators say in those
+  notes that it foretells Jesus. The neutrality rules ("where the commentators or traditions
+  disagree") had been read to cover the Jewish reading the commentators mention only to answer
+  it. "Traditions" means Christian traditions (the brief: Reformed, Wesleyan, later Catholic), so
+  neutral now means not taking sides between the commentators or between Christian traditions. A
+  prophecy or picture of Jesus that the commentators give, uncontradicted by another of them, is a
+  key idea (usually the central one) that names Jesus with the New Testament link they give.
+  Where one rejects it (Clarke on the bronze serpent as a type, Numbers 21), the idea keeps to what
+  they share and `viewsDiffer` describes the difference. Questions let the reader make the
+  connection and ask what it opens up, never only "who is this about?". The prompts' example is
+  the Passover lamb, not either test passage.
 - **Giveaway check**: code drops a question that repeats an idea's title word for word. A check
   for an 8-word run from the idea's body was removed (`checks-v2`): a plain question describes
   the same scene the body does, and it dropped Mark 1:21-28's best question. The grader's

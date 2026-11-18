@@ -58,7 +58,7 @@ requests_per_minute = 10
 model = "claude-sonnet-5-5"
 thinking = "adaptive"
 effort = "high"
-prompt = "v13"  # extract/v13: section context notes (the book has its own introduction); questions/v13 = v12
+prompt = "v14"  # v14: Christ in the Old Testament (2026-11-18); v13: the central meaning, section context
 default_cost_usd = 0.12  # measured on 10 Mark sections with Sonnet 5.5 (2026-11-18)
 requests_per_minute = 4
 
@@ -72,11 +72,12 @@ requests_per_minute = 10
 
 [stages.review]
 # The quality gate's grader: a stronger model than the generator (research R16). Calibrated:
-# Opus 5.5 with review/v9 agrees with the owner on 92% of 36 held-out ratings (2026-11-18).
+# Opus 5.5 with review/v9 agreed with the owner on 92% of 36 held-out ratings (2026-11-18); v10
+# adds only what neutral means for Christ in the Old Testament (re-run `calibrate` after a change).
 model = "claude-opus-5-5"
 thinking = "adaptive"
 effort = "high"
-prompt = "v9"  # v9: purpose-first question rubric; the owner's round 1 verdicts as examples
+prompt = "v10"  # v10 = v9 + neutral and Christ in the Old Testament; v9: purpose-first rubric
 default_cost_usd = 0.12  # measured on 9 Mark sections with Opus 5.5 (2026-11-18)
 requests_per_minute = 4
 
