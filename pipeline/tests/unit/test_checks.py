@@ -69,6 +69,8 @@ def test_good_idea_passes() -> None:
         ("Jesus speaks about food. Is that important?", "yes/no question"),
         ("Does this matter to you?", "yes/no question"),
         ("Why might Henry think this matters?", "names a commentator (Henry)"),
+        ("The commentators note that the heart matters. Why might that be?",
+         "names a commentator (commentators)"),
         ("Why might what defiles comes from within matter here?", "gives away a key idea"),
         ("What does {{ref:7:16}} add here?", "doesn't resolve in BSB"),
     ],

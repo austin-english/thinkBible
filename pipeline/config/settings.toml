@@ -50,7 +50,7 @@ requests_per_minute = 10  # this account's Bedrock quota for the model
 model = "us.anthropic.claude-sonnet-4-6"
 thinking = "adaptive"
 effort = "medium"
-prompt = "v10"  # extract/v10: key ideas are deeper meanings; questions/v10: from the owner's ratings
+prompt = "v12"  # questions/v12: purpose first (uncover the meaning beneath), few firm limits; extract/v12 = v11
 default_cost_usd = 0.22  # 0.17 measured on Mark 1 (2026-11-16), plus the notes and 8 candidates
 requests_per_minute = 10  # this account's Bedrock quota for the model
 
@@ -66,7 +66,7 @@ requests_per_minute = 10  # this account's Bedrock quota for the model
 model = "us.anthropic.claude-opus-4-6-v1"
 thinking = "adaptive"
 effort = "medium"
-prompt = "v7"  # v7: v6 + the owner's round 1 verdicts as worked examples (round 2 is held out)
+prompt = "v9"  # v9: purpose-first question rubric; the owner's round 1 verdicts as examples
 default_cost_usd = 0.10  # grades every candidate question, not just three
 requests_per_minute = 5  # this account's Bedrock quota for the model
 

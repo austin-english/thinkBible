@@ -28,17 +28,24 @@ NAMES = {
 }
 # Drops that are part of choosing a pool, not a sign that something went wrong.
 ROUTINE_DROPS = ("regenerated:", "more than ", "not chosen:")
-_REF = re.compile(r"\s*\{\{ref:(\d+):(\d+)(?:-(\d+))?\}\}")
+_REF = re.compile(r"(\s*\()?\s*\{\{ref:(\d+):(\d+)(?:-(\d+))?\}\}(\))?")
 
 
 def readable(text: str, chapter: int) -> str:
-    """``{{ref:1:7-8}}`` → ``(verses 7-8)``, as the app renders placeholders."""
+    """``{{ref:1:7-8}}`` → ``(verses 7-8)``, as the app renders placeholders.
+
+    A placeholder the text already wraps in parentheses ("({{ref:1:38}})") gets no second pair.
+    """
 
     def sub(m: re.Match[str]) -> str:
-        c, a, b = int(m.group(1)), m.group(2), m.group(3)
+        opened, c, a, b, closed = m.group(1), int(m.group(2)), m.group(3), m.group(4), m.group(5)
         if c != chapter:
-            return f" ({c}:{a}" + (f"-{b})" if b else ")")
-        return f" (verses {a}-{b})" if b else f" (verse {a})"
+            label = f"{c}:{a}" + (f"-{b}" if b else "")
+        else:
+            label = f"verses {a}-{b}" if b else f"verse {a}"
+        if opened and closed:
+            return f"{opened}{label})"
+        return f"{opened or ''} ({label}){closed or ''}"
 
     return _REF.sub(sub, text)
 

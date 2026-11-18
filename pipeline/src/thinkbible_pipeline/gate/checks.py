@@ -25,7 +25,7 @@ from thinkbible_pipeline.sources.snapshot import SourceLibrary
 from thinkbible_pipeline.text import normalize
 
 # Bump when a check is added or changed: the check stage then re-checks every section.
-CHECKS_VERSION = "checks-v2"
+CHECKS_VERSION = "checks-v3"
 
 TITLE_MAX, BODY_MAX = 60, 240
 QUESTION_MIN, QUESTION_MAX = 10, 200  # raised from 160 on 2026-11-17
@@ -37,6 +37,8 @@ _YES_NO_START = re.compile(
 _OPEN_WORDS = re.compile(r"\b(what|why|how|which|who|whom|whose|where|when|in what way)\b", re.I)
 # The commentators' names: idea text and questions never name them (the app shows sources).
 _COMMENTATOR = re.compile(r"\b(Henry|Jamieson|Fausset|Clarke|JFB)\b")
+# A question mentioning the commentary at all ("The commentators note…", 2026-11-18 round 2)
+_COMMENTARY = re.compile(r"\b(commentators?|commentary|commentaries)\b", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -115,7 +117,7 @@ def question_problem(text: str, ideas: list[tuple[str, str]], ctx: CheckContext)
         return f"question length {len(stripped)} ({QUESTION_MIN} to {QUESTION_MAX} characters)"
     if is_yes_no(stripped):
         return "yes/no question: it must be open-ended"
-    named = _COMMENTATOR.search(stripped)
+    named = _COMMENTATOR.search(stripped) or _COMMENTARY.search(stripped)
     if named:
         return f"names a commentator ({named.group(1)}); readers haven't seen the commentary yet"
     repeated = repeats_idea(stripped, ideas)

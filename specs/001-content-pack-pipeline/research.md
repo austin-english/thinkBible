@@ -486,6 +486,26 @@ risk.
   the held-out set (`role: "test"`) that `calibrate` measures; a grader is never measured on a
   judgment it was shown. Each result also records the grader's score per test item. Round 2: the
   owner would ship 13 of the 15 questions kept (8 of 14 in round 1).
+  `review/v7` reached 83% on the held-out round 2 (from 60%). `review/v8` adds three things the
+  owner rejects however good the idea (an abstract-noun ending, an obvious or one-word answer, a
+  custom or detail that leads to no key idea), using invented examples so the held-out set isn't
+  leaked into the rubric, and tells the grader to match the owner's judgment, not the topics of
+  the Mark examples. `questions/v11` adds the owner's favorite form ("What would be missing
+  if…?"), concrete endings, the obvious-answer test, and never mentioning the commentators (also
+  a code check, `checks-v3`). Because the rubric was tuned against round 2, the next confirmation
+  uses fresh ratings on passages never rated (Mark 1:35-2:20).
+- **Purpose first** (2026-11-18, owner's observation): every wording rule added since v7 made the
+  writer contort its sentences to satisfy them all at once, and the favorite form ("What would be
+  missing if…") became a template in 9 of 10 sections. `questions/v12` and `review/v9` are
+  rewrites, not additions: they lead with what a question is for (the moment the reader stops and
+  wonders about a meaning beneath the surface), give the writer a three-step method (find the
+  clue the reader passes over, say plainly what happens, ask what a curious friend would ask),
+  and keep only a few firm limits (length, open, names its people, no verse numbers, never
+  mentions the commentators, translation-neutral wording, no doctrine assumed). The grader asks the
+  same question first, then whether it is said simply; the owner's verdicts remain its examples.
+- **Genres**: the worked examples are all Mark narrative. Each new kind of book (a letter, poetry,
+  law, prophecy) gets a short rating round on its first sections, split into examples and a
+  held-out set, and `calibrate` re-runs before that book is promoted.
 - **Quality first** (2026-11-17, revised the same day): each of the 3 places goes to the
   highest-graded candidate left, so a lower grade never beats a higher one
   (`gate.outcomes.pick_best`). Among equal grades: one aimed at a key idea not yet covered, then one

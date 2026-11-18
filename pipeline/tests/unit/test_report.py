@@ -139,6 +139,8 @@ def test_review_page_shows_sections_ideas_and_problems(make_library: Any) -> Non
         ("In {{ref:1:7}}, John speaks.", "In (verse 7), John speaks."),
         ("Look at {{ref:1:7-8}}.", "Look at (verses 7-8)."),
         ("Compare {{ref:2:3}}.", "Compare (2:3)."),
+        # Already in parentheses: no second pair (Mark 1:38 showed "( (verse 38))").
+        ("he says 'I came forth' ({{ref:1:38}}).", "he says 'I came forth' (verse 38)."),
     ],
 )
 def test_placeholders_read_as_the_app_shows_them(text: str, expected: str) -> None:
