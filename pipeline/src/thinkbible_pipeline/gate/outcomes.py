@@ -58,6 +58,10 @@ def drop_items(draft: SectionDraft, drops: dict[str, str], stage: GateStage) -> 
         draft.dropped += dropped
 
 
+# The central idea's best question opens the section only if the grader gives it at least this.
+OPENER_MIN_SCORE = 4
+
+
 def is_big_picture(question: dict[str, Any], start: int, end: int) -> bool:
     """Whether a question is about at least half of the passage (verses ``start``-``end``)."""
     if (question["verseStart"], question["verseEnd"]) == (start, end):
@@ -66,14 +70,45 @@ def is_big_picture(question: dict[str, Any], start: int, end: int) -> bool:
     return span >= 2 and span * 2 >= end - start + 1
 
 
+def pick_opener(
+    candidates: list[dict[str, Any]],
+    scores: dict[str, int],
+    central: str | None,
+    start: int,
+    end: int,
+) -> dict[str, Any] | None:
+    """The question that goes first: the best-graded one on the central idea, if it grades at
+    least ``OPENER_MIN_SCORE`` (2026-11-18). Ties go to one about at least half the passage, then
+    the writer's order. None when there is no such question: the picks then run as before.
+    """
+    on_central = [
+        (n, c)
+        for n, c in enumerate(candidates)
+        if central in c["targets"] and scores.get(c["id"], 0) >= OPENER_MIN_SCORE
+    ]
+    if central is None or not on_central:
+        return None
+    _, best = min(
+        on_central,
+        key=lambda nc: (-scores[nc[1]["id"]], not is_big_picture(nc[1], start, end), nc[0]),
+    )
+    return best
+
+
 def pick_best(
-    candidates: list[dict[str, Any]], scores: dict[str, int], cap: int, start: int, end: int
+    candidates: list[dict[str, Any]],
+    scores: dict[str, int],
+    cap: int,
+    start: int,
+    end: int,
+    covered: set[str] | None = None,
 ) -> list[str]:
     """The IDs of up to ``cap`` candidates, returned in the writer's order.
 
     Quality first (revised 2026-11-17): each place goes to the highest-graded candidate left, so a
     lower grade never beats a higher one. Among equal grades, prefer one aimed at a key idea the
-    picks so far don't cover, then one about at least half the passage, then the writer's order.
+    picks so far (and ``covered``) don't cover, then one about at least half the passage, then the
+    writer's order.
     (Covering every idea first had kept a 3 over a 5, and a reserved place for a whole-passage
     question had let broad questions beat sharper ones; Mark 1:21-28.)
     """
@@ -88,7 +123,7 @@ def pick_best(
         )
 
     chosen: list[int] = []
-    covered: set[str] = set()
+    covered = set(covered or ())
     remaining = list(range(len(candidates)))
     while remaining and len(chosen) < cap:
         best = min(remaining, key=lambda n: rank(n, covered))

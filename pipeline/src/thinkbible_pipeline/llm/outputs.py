@@ -54,8 +54,14 @@ class IdeasOut(_Out):
     """``generate`` call 1 (``extract``): the key ideas, context and views-differ notes."""
 
     key_ideas: list[IdeaOut] = Field(description="1 to 5 ideas, the most important first.")
+    central_idea: int | None = Field(
+        default=None,
+        description="The number (1 for the first) of the key idea that is the passage's central "
+        "meaning: what the passage as a whole is about. Must be a key idea, not background.",
+    )
     context: str = Field(
-        description="Two short sentences, at most 35 words: who wrote it, to whom, and why."
+        description="One or two short sentences, at most 35 words: where and when this section "
+        "takes place, who is present, and how it follows from the previous section."
     )
     views_differ: str | None = Field(
         default=None,

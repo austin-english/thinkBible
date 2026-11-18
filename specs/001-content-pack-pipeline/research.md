@@ -538,10 +538,22 @@ risk.
 - **Quality first** (2026-11-17, revised the same day): each of the 3 places goes to the
   highest-graded candidate left, so a lower grade never beats a higher one
   (`gate.outcomes.pick_best`). Among equal grades: one aimed at a key idea not yet covered, then one
-  about at least half the passage, then the writer's order. The kept question spanning the most of
-  the passage goes first. Two earlier rules were removed after a Mark run: covering every idea
-  before looking at grades kept a 3 over a 5, and a place reserved for a whole-passage question
-  let broad questions beat sharper ones.
+  about at least half the passage, then the writer's order. Two earlier rules were removed after a
+  Mark run: covering every idea before looking at grades kept a 3 over a 5, and a place reserved
+  for a whole-passage question let broad questions beat sharper ones.
+- **The first question opens the central meaning** (2026-11-18, `extract/v13`, `questions/v13`):
+  the first question decides whether a reader comes back, so it should open what the passage as a
+  whole is about. The extract call names one key idea as the central meaning (`centralIdea`): what
+  the commentators treat as the point of the whole passage (their summary before the verse notes,
+  the point they keep returning to). Shared points are support, not the test, since all three may
+  note a place or a custom. Code puts that idea first among the key ideas and the draft keeps its
+  ID (pipeline only; no contract change). The writer gives two or three candidates on it. In
+  `review`, the best-graded of those takes the first place if it grades 4 or more
+  (`gate.outcomes.pick_opener`); the other places stay quality first. With none at 4, the
+  best-graded kept question goes first (ties to the one spanning most of the passage), and the
+  report flags the section.
+  Unlike the removed whole-passage reservation, this one is for the central idea, not for breadth,
+  and it needs a 4.
 - **Giveaway check**: code drops a question that repeats an idea's title word for word. A check
   for an 8-word run from the idea's body was removed (`checks-v2`): a plain question describes
   the same scene the body does, and it dropped Mark 1:21-28's best question. The grader's

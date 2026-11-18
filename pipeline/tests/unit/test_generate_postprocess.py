@@ -12,6 +12,7 @@ from thinkbible_pipeline.stages.generate_rules import (
     process_questions,
     quote_found,
     short_quote,
+    strip_trailing_ref,
 )
 
 SECTION = SectionMapEntry(
@@ -78,8 +79,44 @@ def test_agreed_ideas_rank_first_and_at_most_five_are_kept() -> None:
         *[idea(["matthew-henry"], single, title=f"extra {n}") for n in range(4)],
     )
     kept, dropped = process_ideas(out, SECTION, EXCERPTS, SectionDraft())
-    assert [i.title for i in kept][:2] == ["two", "one"] and kept[0].agreed
+    # No central idea named: the first key idea kept ("one") is central and leads, then agreed.
+    assert [i.title for i in kept][:2] == ["one", "two"] and kept[1].agreed
+    assert [i.central for i in kept] == [True, False, False, False, False]
     assert len(kept) == 5 and [d.reason for d in dropped] == ["more than 5 key ideas"]
+
+
+def test_a_closing_reference_sentence_is_stripped_but_not_one_inside_a_sentence() -> None:
+    assert strip_trailing_ref("It shows who he is. {{ref:1:27}}") == "It shows who he is."
+    assert strip_trailing_ref("He moved on. See {{ref:1:37-38}}.") == "He moved on."
+    assert strip_trailing_ref("He moved on. (see also {{ref:1:38}})") == "He moved on."
+    kept = "The cure is a sign of the pardon, as {{ref:2:9-11}} shows."
+    assert strip_trailing_ref(kept) == kept
+    inside = "Jesus fulfils the promise in {{ref:1:2}}."
+    assert strip_trailing_ref(inside) == inside
+    out = ideas_out(idea(["matthew-henry"], {"matthew-henry": "he prepared the way"}))
+    out.key_ideas[0].body = "John prepares the way. {{ref:1:2}}"
+    kept_ideas, dropped = process_ideas(out, SECTION, EXCERPTS, SectionDraft())
+    assert not dropped and kept_ideas[0].body == "John prepares the way."
+
+
+def test_the_central_idea_named_by_the_model_leads() -> None:
+    single = {"matthew-henry": "he prepared the way"}
+    both = {"matthew-henry": "he prepared the way", "adam-clarke": "a baptism of repentance"}
+    out = ideas_out(
+        idea(["matthew-henry", "adam-clarke"], both, title="agreed"),
+        {**idea(["matthew-henry"], single, title="a fact"), "kind": "background"},
+        idea(["matthew-henry"], single, title="the point of it all"),
+    )
+    out.central_idea = 3
+    kept, _ = process_ideas(out, SECTION, EXCERPTS, SectionDraft())
+    assert [(i.title, i.central) for i in kept] == [
+        ("the point of it all", True), ("agreed", False), ("a fact", False)
+    ]  # fmt: skip
+    # Background can't be central, and neither can a number past the list: the first key idea is.
+    for bad in (2, 9):
+        out.central_idea = bad
+        kept, _ = process_ideas(out, SECTION, EXCERPTS, SectionDraft())
+        assert [i.title for i in kept if i.central] == ["agreed"]
 
 
 def test_quotes_read_cleanly_under_in_their_words() -> None:

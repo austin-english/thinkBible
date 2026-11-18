@@ -139,7 +139,9 @@ def test_prompts_carry_both_translations_the_notes_and_the_previous_summary(
     second = prompts[("generate.extract", S2)]
     assert "John preaches and baptizes in the wilderness." in second  # S1's summary
     questions = prompts[("generate.questions", S1)]
-    assert f"{S1}-k1 [verses 1-8; agreed: Matthew Henry, Adam Clarke]" in questions
+    # No centralIdea given: the first key idea is central, and the writer is told so.
+    assert f"{S1}-k1 [CENTRAL MEANING; verses 1-8; agreed: Matthew Henry, Adam Clarke]" in questions
+    assert deps.store.read_draft_or_new(S1).central_idea == f"{S1}-k1"
     assert "the morning star to the Sun" in questions  # the writer reads the notes too
 
 

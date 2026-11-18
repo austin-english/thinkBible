@@ -10,6 +10,7 @@ from thinkbible_pipeline.drafts.models import Grade, SectionDraft, SectionMapEnt
 from thinkbible_pipeline.drafts.store import DraftStore
 from thinkbible_pipeline.exitcodes import ExitCode
 from thinkbible_pipeline.llm.runner import FakeRunner
+from thinkbible_pipeline.report.render import _central_note
 from thinkbible_pipeline.report.scorecard import build_scorecard
 from thinkbible_pipeline.requests import RunRequest
 from thinkbible_pipeline.stages import registry
@@ -44,7 +45,8 @@ SECTION = {
 
 
 def setup(tmp_path: Path, make_library: Any, responses: dict[tuple[str, str], Any],
-          section: dict[str, Any] | None = None, regenerated: bool = False) -> Deps:  # fmt: skip
+          section: dict[str, Any] | None = None, regenerated: bool = False,
+          central: str | None = None) -> Deps:  # fmt: skip
     lib = make_library({
         ("bsb", "MRK"): {"book": "MRK", "chapters": [{"number": 1, "items": [
             {"type": "verse", "number": v, "text": f"Verse {v}."} for v in range(1, 9)]}]},
@@ -55,7 +57,7 @@ def setup(tmp_path: Path, make_library: Any, responses: dict[tuple[str, str], An
     })  # fmt: skip
     store = DraftStore("mrk", LocalBlobStore(tmp_path / "drafts"))
     store.write_section_map([ENTRY])
-    draft = SectionDraft(section=copy.deepcopy(section or SECTION))
+    draft = SectionDraft(section=copy.deepcopy(section or SECTION), central_idea=central)
     draft.stages["generate"] = StageRecord.model_validate(
         {"promptVersion": "v3", "inputHash": "h", "completedAt": "t", "costUsd": 0.1,
          "status": "done"})  # fmt: skip
@@ -84,7 +86,8 @@ def ids(draft: SectionDraft) -> list[str]:
 def test_low_grades_are_dropped_and_the_rest_keep_their_order(
     tmp_path: Path, make_library: Any
 ) -> None:
-    deps = setup(tmp_path, make_library, {("review", SID): grades({**ALL_GOOD, "q2": 2})})
+    deps = setup(tmp_path, make_library, {("review", SID): grades({**ALL_GOOD, "q2": 2})},
+                 central=f"{SID}-k1")  # q1 (a 4 on the central k1) opens  # fmt: skip
     result = asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
     assert result.exit_code == ExitCode.OK
     draft = deps.store.read_draft_or_new(SID)
@@ -107,8 +110,9 @@ def test_a_dropped_idea_takes_its_questions_and_lowers_the_question_cap(
     reasons = {d.item_id: d.reason for d in draft.dropped}
     assert reasons[f"{SID}-q4"] == "targets no key idea that was kept"
     # 2 ideas allow 2 questions: q3 (graded 5, keeps k1) and q1 (adds k2) beat q2 (k2 only).
+    # No central idea here, so the best-graded, q3, goes first.
     assert reasons[f"{SID}-q2"] == "not chosen: graded 4; better-graded questions were kept"
-    assert ids(draft) == ["q1", "q3"]
+    assert ids(draft) == ["q3", "q1"]
 
 
 def test_the_grader_picks_the_best_candidates_in_the_writers_order(
@@ -170,14 +174,50 @@ def test_a_section_left_without_a_question_is_regenerated_once_then_failed(
     assert second.failed and second.failed.endswith("(after one regeneration)")
 
 
-def test_the_question_spanning_most_of_the_passage_goes_first(
+def test_with_no_central_question_the_best_graded_goes_first_ties_to_the_widest(
     tmp_path: Path, make_library: Any
 ) -> None:
     section = {**SECTION, "questions": [question(1, [1], 2, 2), question(2, [2], 1, 8),
                                         question(3, [3], 3, 5)]}  # fmt: skip
     deps = setup(tmp_path, make_library, {("review", SID): grades(ALL_GOOD)}, section)
     asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
-    assert ids(deps.store.read_draft_or_new(SID)) == ["q2", "q1", "q3"]
+    assert ids(deps.store.read_draft_or_new(SID)) == ["q3", "q1", "q2"]  # q3 is the only 5
+    tied = {**ALL_GOOD, "q3": 4}
+    deps = setup(tmp_path / "tied", make_library, {("review", SID): grades(tied)}, section)
+    asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
+    assert ids(deps.store.read_draft_or_new(SID)) == ["q2", "q1", "q3"]  # all 4s: the widest
+
+
+def test_the_best_question_on_the_central_idea_goes_first(
+    tmp_path: Path, make_library: Any
+) -> None:
+    """The first question opens the central meaning (2026-11-18), if one on it grades 4 or more."""
+    qs = [question(1, [1], 2, 2), question(2, [2], 4, 4), question(3, [3], 3, 5),
+          question(4, [2], 1, 8)]  # fmt: skip
+    scores = {"k1": 5, "k2": 5, "k3": 5, "q1": 5, "q2": 4, "q3": 5, "q4": 4}
+    deps = setup(tmp_path, make_library, {("review", SID): grades(scores)},
+                 {**SECTION, "questions": qs}, central=f"{SID}-k2")  # fmt: skip
+    asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
+    draft = deps.store.read_draft_or_new(SID)
+    # q2 and q4 tie at 4 on the central k2: the whole-passage q4 opens. The 5s fill the rest.
+    assert ids(draft) == ["q4", "q1", "q3"]
+    assert _central_note(draft, [i["id"] for i in draft.section["keyIdeas"]],
+                         draft.section["questions"]) is None  # fmt: skip
+
+
+def test_without_a_strong_central_question_the_widest_goes_first_and_is_flagged(
+    tmp_path: Path, make_library: Any
+) -> None:
+    qs = [question(1, [1], 2, 2), question(2, [2], 4, 4), question(3, [3], 3, 5)]
+    scores = {"k1": 5, "k2": 5, "k3": 5, "q1": 5, "q2": 3, "q3": 5}
+    deps = setup(tmp_path, make_library, {("review", SID): grades(scores)},
+                 {**SECTION, "questions": qs}, central=f"{SID}-k2")  # fmt: skip
+    asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
+    draft = deps.store.read_draft_or_new(SID)
+    assert ids(draft) == ["q3", "q1", "q2"]
+    note = _central_note(draft, [i["id"] for i in draft.section["keyIdeas"]],
+                         draft.section["questions"])  # fmt: skip
+    assert note and note.startswith("No question on the central idea graded 4")
 
 
 def test_a_lower_grade_never_beats_a_higher_one(tmp_path: Path, make_library: Any) -> None:

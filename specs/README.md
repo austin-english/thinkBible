@@ -69,6 +69,11 @@ time comes.
   research R11). Deferred until the first two questions are steady.
 - **The commentators as people in the comment thread** (noted 2026-11-17, `docs/design/README.md`
   "Future idea"): their own avatars, names and profiles, building on "In their words".
+- **Readers' own comments under each post** (noted 2026-11-18): an open "Add a note…" under the
+  "About Mark" post and under each section, for the reader's own thoughts beyond the question.
+  Private notes (device and iCloud, like answers) fit the current design and privacy rules; notes
+  other readers can see would need accounts, server storage, moderation and a constitution change
+  (answers and personal text never live on the server today). Decide which before specifying.
 
 ## Decisions
 

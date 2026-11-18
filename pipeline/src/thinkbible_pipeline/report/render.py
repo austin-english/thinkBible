@@ -68,6 +68,20 @@ def _order(commentator: str) -> int:
     return list(NAMES).index(commentator) if commentator in NAMES else len(NAMES)
 
 
+def _central_note(
+    draft: SectionDraft, idea_ids: list[str], questions: list[dict[str, Any]]
+) -> str | None:
+    """Why question 1 doesn't open the central idea, or None (only once the grader has run)."""
+    central = draft.central_idea
+    if central is None or not questions or "review" not in draft.stages:
+        return None
+    if central not in idea_ids:
+        return "The grader dropped the central idea, so question 1 is the best-graded one kept."
+    if central not in questions[0]["targets"]:
+        return "No question on the central idea graded 4 or more, so question 1 is about another."
+    return None
+
+
 def section_view(
     entry: SectionMapEntry, draft: SectionDraft | None, book: str, library: SourceLibrary
 ) -> dict[str, Any]:
@@ -97,6 +111,7 @@ def section_view(
                     for q in i.get("quotes", [])
                 ],
                 "background": i.get("kind") == "background",
+                "central": i["id"] == draft.central_idea,
             }
         )
     titles = {i["id"]: i["title"] for i in ideas}
@@ -110,6 +125,7 @@ def section_view(
         }
         for q in s.get("questions", [])
     ]
+    central_note = _central_note(draft, [i["id"] for i in ideas], s.get("questions", []))
     view.update(
         {
             "ideas": ideas,
@@ -135,8 +151,10 @@ def section_view(
                 for c, r in sorted(draft.excerpts.items(), key=lambda kv: _order(kv[0]))
             ],
             "cost": sum(r.cost_usd for r in draft.stages.values()),
+            "central_note": central_note,
             # Worth a look: a failure, or an item dropped for being wrong rather than for overflow.
             "problem": bool(draft.failed)
+            or central_note is not None
             or any(not d.reason.startswith(ROUTINE_DROPS) for d in draft.dropped),
         }
     )

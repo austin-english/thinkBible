@@ -148,6 +148,9 @@ class SectionDraft(JsonModel):
     # Every question that passed generate's checks, in the writer's order (not published). The
     # grader scores them all and ``review`` keeps the best (R11, 2026-11-17).
     candidates: list[dict[str, Any]] = Field(default_factory=list)
+    # The key idea that is the passage's central meaning: ``review`` gives its best question the
+    # first place, if one grades 4 or more (2026-11-18).
+    central_idea: str | None = None
     failed: str | None = None  # why the section failed after one regeneration (FR-018)
     # Set by a gate stage when the section broke a rule after generate ran: the next run's
     # generate regenerates it once (its inputs include this), then clears it (FR-018).

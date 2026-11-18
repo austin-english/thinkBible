@@ -129,6 +129,7 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
         {% if s.failed %}<span class="pill bad">failed: {{ s.failed }}</span>{% endif %}
         {% if not s.generated %}<span class="pill warn">not generated</span>{% endif %}
         {% if s.no_prompt %}<span class="pill info">no question</span>{% endif %}
+        {% if s.central_note %}<span class="pill warn">question 1 off the central idea</span>{% endif %}
         {% if s.entry.title_source == "split" %}<span class="pill warn">provisional title</span>{% endif %}
         {% if s.generated %}<span class="pill info">${{ "%.3f"|format(s.cost) }}</span>{% endif %}
       </div>
@@ -142,7 +143,7 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
         <div><div class="label">Key ideas (in the passage; questions aim at these)</div>
           {% for i in s.ideas if not i.background %}
           <div class="idea">
-            <div class="t">{{ i.title }} <span class="pill info">{{ i.scope }}</span>{% if i.agreed %} <span class="pill info">agreed</span>{% endif %}</div>
+            <div class="t">{{ i.title }} <span class="pill info">{{ i.scope }}</span>{% if i.central %} <span class="pill info">central meaning</span>{% endif %}{% if i.agreed %} <span class="pill info">agreed</span>{% endif %}</div>
             <div class="b">{{ i.body }}</div>
             <div class="src">{{ i.names|join(" · ") }} · <span class="mono">{{ i.id }}</span>{% if i.grade %} · graded {{ i.grade.score }}: {{ i.grade.notes }}{% endif %}</div>
             <details><summary>In their words</summary>{% for who, quote in i.quotes %}<blockquote><b>{{ who }}:</b> “{{ quote }}”</blockquote>{% endfor %}</details>
@@ -159,6 +160,7 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
         </div>
         {% if s.questions %}
         <div><div class="label">Questions, in the order a reader meets them (one a week)</div>
+          {% if s.central_note %}<div class="qmeta">{{ s.central_note }}</div>{% endif %}
           <ol class="qlist">
             {% for q in s.questions %}
             <li>

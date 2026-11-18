@@ -130,6 +130,9 @@ The commentators' own words for an idea, shown the way a comment app shows repli
 - VoiceOver: the link reads "In their words, 2 quotes, button"; each quote reads "Matthew Henry, 1706: …".
 - Not drawn yet: proposed values above; settle with the first build of the reply thread.
 
+### Future idea: readers' own notes under each post (owner, 2026-11-18)
+Not for the MVP. Leave the comment area open under the "About Mark" post and under every section, so a reader can add their own thoughts as further comments, beyond answering the question. Private notes fit as they are (device and iCloud); shared notes are a separate, much larger decision (specs/README.md, Future specs).
+
 ### Future idea: the commentators as people in the thread (owner, 2026-11-17)
 Not for the MVP. Treat Matthew Henry, Jamieson-Fausset-Brown and Adam Clarke as participants in the comments, the way "ThinkBible" and "You" already are: their own avatars and names on their replies rather than only "from Henry, JFB & Clarke" on ThinkBible's reply; tapping a name opens a short profile (who they were, when they wrote, their tradition) and, later, everything they said on this chapter. "In their words" is a first step: quotes already appear as replies from each commentator. Needs a decision on how ThinkBible's own summary and the commentators' replies sit together so the thread doesn't get long.
   - Footer note: clock icon + "Next question unlocks in a week · Enduring Word" (link). After the last question: "All questions done".

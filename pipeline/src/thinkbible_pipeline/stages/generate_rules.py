@@ -5,12 +5,15 @@ anything was dropped:
 
 - **Evidence (R10)**: every cited commentator must be backed by a short quote found in that
   commentator's excerpt. A source without one is removed; an idea left with no sources is dropped.
-- **Ideas**: ``agreed`` when two or more commentators make the point; agreed ideas rank first;
-  at most 5; verses must lie inside the section.
+- **Ideas**: ``agreed`` when two or more commentators make the point. The model names one key
+  idea as the passage's central meaning (2026-11-18); if it names none, or one that was dropped,
+  the first key idea it kept is central. The central idea ranks first, then agreed ones; at most 5;
+  verses must lie inside the section.
 - **Questions (R11, revised 2026-11-17)**: an ordered list with no levels. The model writes
   up to 8 candidates in the order a reader should meet them. Every one that passes the checks is
   kept as a candidate; the grader scores them all and ``review`` keeps the best 3 (never more than
-  the key ideas), one per idea first, in the writer's order (``gate.outcomes.pick_best``). Until
+  the key ideas): the best on the central idea first if it grades 4 or more, then the best of the
+  rest in the writer's order (``gate.outcomes.pick_opener``, ``pick_best``). Until
   then the section holds the first ones, preferring questions aimed at an idea not yet covered.
   A section with no usable question is regenerated once, then fails (FR-018). (A rule that
   swapped in a whole-passage question was removed on 2026-11-17: in Mark 1:16-20 it replaced the
@@ -56,6 +59,9 @@ class Idea:
     verse_start: int
     verse_end: int
     evidence: list[Evidence]
+    # The passage's central meaning (2026-11-18): question 1 opens it. Pipeline-only: the draft
+    # keeps its ID (``SectionDraft.central_idea``); the pack shows it as the first key idea.
+    central: bool = False
 
     @property
     def agreed(self) -> bool:
@@ -150,6 +156,21 @@ def short_quote(quote: str) -> str:
     return " ".join(head)
 
 
+# A closing sentence that is only a verse reference: "… moved on. See {{ref:1:37-38}}." or a bare
+# "{{ref:1:27}}". The app shows each idea's verses, so it says nothing (Mark 1:21-28, 2026-11-18).
+_TRAILING_REF = re.compile(
+    r"\s*\(?\s*(?:(?:see|cf\.?)\s+(?:also\s+)?)?\{\{ref:[^}]+\}\}\s*\)?\s*\.?\s*$", re.IGNORECASE
+)
+
+
+def strip_trailing_ref(body: str) -> str:
+    """The body without a closing reference-only sentence; a reference inside a sentence stays."""
+    m = _TRAILING_REF.search(body)
+    if m and body[: m.start()].rstrip().endswith((".", "!", "?")):
+        return body[: m.start()].rstrip()
+    return body
+
+
 def display_quote(quote: str) -> str:
     """How a verified quote reads under "In their words".
 
@@ -212,19 +233,21 @@ def process_ideas(
     draft: SectionDraft,
     ctx: CheckContext | None = None,
 ) -> tuple[list[Idea], list[DroppedItem]]:
-    """Give every idea an ID, keep the grounded ones that pass the checks (agreed first, at
-    most 5)."""
+    """Give every idea an ID, keep the grounded ones that pass the checks (the central idea
+    first, then agreed ones; at most 5)."""
     ctx = ctx or CheckContext()
     kept: list[Idea] = []
     dropped: list[DroppedItem] = []
-    for raw in out.key_ideas:
+    by_number: dict[int, Idea] = {}
+    for number, raw in enumerate(out.key_ideas, start=1):
         idea_id = next_id(draft, section.id, "k")
         if not _in_section(raw.verse_start, raw.verse_end, section):
             dropped.append(_drop(idea_id, f"verses {raw.verse_start}-{raw.verse_end} are "
                                  f"outside the section ({section.verse_start}-"
                                  f"{section.verse_end})", raw))  # fmt: skip
             continue
-        problem = idea_problem(raw.title, raw.body, ctx)
+        body = strip_trailing_ref(raw.body)
+        problem = idea_problem(raw.title, body, ctx)
         if problem:
             dropped.append(_drop(idea_id, problem, raw, "check"))
             continue
@@ -238,14 +261,21 @@ def process_ideas(
                 idea_id,
                 raw.kind,
                 raw.title,
-                raw.body,
+                body,
                 sources,
                 raw.verse_start,
                 raw.verse_end,
                 evidence,
             )
         )
-    kept.sort(key=lambda i: not i.agreed)  # stable: agreed first, otherwise the model's order
+        by_number[number] = kept[-1]
+    named = by_number.get(out.central_idea or 0)
+    central = named if named is not None and named.kind == "key" else None
+    central = central or next((i for i in kept if i.kind == "key"), None)
+    if central is not None:
+        central.central = True
+    # Stable: the central idea, then agreed ones, otherwise the model's order.
+    kept.sort(key=lambda i: (not i.central, not i.agreed))
     key = [i for i in kept if i.kind == "key"]
     background = [i for i in kept if i.kind == "background"]
     for extra in key[MAX_IDEAS:]:

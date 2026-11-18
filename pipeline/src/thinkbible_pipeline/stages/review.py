@@ -25,6 +25,7 @@ from thinkbible_pipeline.gate.outcomes import (
     clear_earlier_failure,
     drop_items,
     pick_best,
+    pick_opener,
     regenerate_or_fail,
 )
 from thinkbible_pipeline.llm.outputs import ReviewOut
@@ -135,12 +136,28 @@ def choose_questions(
             eligible.append({**c, "targets": targets})
     scores = {cid: g.score for cid, g in grades.items()}
     start, end = draft.section["verseStart"], draft.section["verseEnd"]
-    picked = set(pick_best(eligible, scores, max_questions(len(kept_ideas)), start, end))
-    kept = [c for c in eligible if c["id"] in picked]
-    if kept:
-        # The kept question spanning the most of the passage goes first: the reader's first
-        # question should open the main idea (Mark 1:12-15 had led with a one-verse detail).
-        first = max(kept, key=lambda c: (c["verseEnd"] - c["verseStart"], -kept.index(c)))
+    cap = max_questions(len(kept_ideas))
+    central = draft.central_idea if draft.central_idea in kept_ideas else None
+    # Question 1 opens the passage's central meaning (2026-11-18): the best question on the
+    # central idea goes first if it grades 4 or more; the other places stay quality first.
+    opener = pick_opener(eligible, scores, central, start, end) if cap else None
+    rest = [c for c in eligible if c is not opener]
+    picked = set(
+        pick_best(rest, scores, cap - (opener is not None), start, end,
+                  covered=set(opener["targets"]) if opener else None)
+    )  # fmt: skip
+    kept = [c for c in rest if c["id"] in picked]
+    if opener is not None:
+        picked.add(opener["id"])
+        kept = [opener, *kept]
+    elif kept:
+        # No question on the central idea graded 4: the best-graded kept question goes first,
+        # ties to the one spanning most of the passage (a widest-first rule had put a 3 before a 5
+        # in Mark 1:29-34). The report flags the section.
+        first = max(
+            kept,
+            key=lambda c: (scores.get(c["id"], 0), c["verseEnd"] - c["verseStart"], -kept.index(c)),
+        )
         kept = [first, *(c for c in kept if c is not first)]
     for c in eligible:
         if c["id"] not in picked:

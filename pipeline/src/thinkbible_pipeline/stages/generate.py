@@ -77,7 +77,8 @@ def _ideas_list(ideas: list[Idea]) -> str:
         names = ", ".join(COMMENTATOR_NAMES[s] for s in i.sources)
         agreed = "agreed" if i.agreed else "one commentator"
         scope = f"verses {i.verse_start}-{i.verse_end}"
-        return f"- {i.id} [{scope}; {agreed}: {names}] {i.title}: {i.body}"
+        central = "CENTRAL MEANING; " if i.central else ""
+        return f"- {i.id} [{central}{scope}; {agreed}: {names}] {i.title}: {i.body}"
 
     key = [line(i) for i in ideas if i.kind == "key"]
     background = [line(i) for i in ideas if i.kind == "background"]
@@ -192,7 +193,8 @@ class GenerateStage(SectionStage):
             questions_user = (
                 f"{header}\n\n{passages}\n\n"
                 f"The commentators' notes (for you, not the reader):\n{_commentary(excerpts)}\n\n"
-                f"Key ideas, agreed ones first:\n{_ideas_list(ideas)}\n\n"
+                f"Key ideas, the central meaning first, then agreed ones:\n"
+                f"{_ideas_list(ideas)}\n\n"
                 f"Views differ: {ideas_out.views_differ or '(none)'}"
             )
             first_problem: str | None = None
@@ -227,6 +229,7 @@ class GenerateStage(SectionStage):
         draft.dropped = dropped
         draft.grades, draft.checks = {}, []
         draft.candidates = [q.publishable() for q in pool.candidates]
+        draft.central_idea = next((i.id for i in ideas if i.central), None)
         draft.regenerated_for = regenerating_for
         draft.section = {
             "id": section_id,
