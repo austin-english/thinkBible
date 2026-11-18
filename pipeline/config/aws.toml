@@ -9,7 +9,7 @@ drafts_bucket = "thinkbible-drafts-522779858032"
 ledger_table = "thinkbible-pipeline-runs"
 state_machine_arn = "arn:aws:states:us-west-2:522779858032:stateMachine:thinkbible-pipeline"
 
-# Published packs, prefixes draft/ and live/, and the CDN (US3 `publish`; not created yet)
+# Published packs, prefixes draft/ and live/, and the CDN (US3, created 2026-11-18)
 packs_bucket = "thinkbible-packs-522779858032"
-distribution_id = ""
-cdn_base_url = ""
+distribution_id = "E1X7XF1S1Y9E2H"
+cdn_base_url = "https://d2ne647g2cqb22.cloudfront.net"
