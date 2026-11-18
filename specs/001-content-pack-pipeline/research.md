@@ -220,6 +220,20 @@ world (constitution II).
 cross-references, below the brief's assumed ~12k. The brief's cost estimates are therefore
 conservative.
 
+**Coverage across the Bible (measured 2026-11-18, all 4,178 sections)**: every note reaches at
+least one section, and Henry has notes for every section (JFB has none for 26 sections and Clarke
+for 92: genealogies, census and offering lists, kings' death notices). The 8,000-token cap per
+commentator, though, cut 199 excerpts, and in 128 the cut removed Henry's discussion of the
+section's own verses: a note covering a whole passage (Henry on Deuteronomy 4:1-40) reached
+every section of it, but only its opening fitted. Now (`commentary/gather.py`):
+1. Henry's copy of the verses' text, which opens nearly every note (11% of his words), is left
+   out; the model has the passage.
+2. A note that runs past the section is labelled so, and over the cap it first sheds paragraphs
+   whose verse markers ("v. 25", "ver. 3-5") are all outside the section.
+3. The part that doesn't fit keeps the whole paragraphs that do.
+4. The cap is 16,000 tokens.
+After this, 5 excerpts reach the cap and none loses discussion of its section's own verses.
+
 ## R5. Building sections (FR-004, FR-005)
 
 **Decision**: a deterministic code step in the `sections` stage:
@@ -230,8 +244,13 @@ conservative.
 3. Compare against Henry's division start verses. If a candidate is longer than 12 verses and
    contains a Henry boundary, split it there. If it has no Henry boundary, split it at the
    paragraph break nearest its middle.
-4. Merge candidates shorter than 3 verses into the next section in the same chapter, under the
-   longer piece's title. A section at the end of a chapter merges into the previous one instead.
+4. Merge candidates shorter than 3 verses into the section before them in the same chapter,
+   under the longer piece's title: a short piece usually finishes what came before (Mark
+   2:21-22 finishes the fasting answer; 14:10-11, Judas going out, finishes the anointing). It
+   merges into the next section instead when it is first in the chapter, or when it opens a
+   Henry division that the next piece doesn't. (Revised 2026-11-18: short pieces had merged
+   forward, gluing the wineskins saying to the Sabbath story; the change moved 87 of 4,187
+   sections in 17 books before anything was published.)
    Merging runs before splitting (step 3), so a merge can't leave a section over 12 verses, and
    splits always leave at least 3 verses on each side. Without a Henry boundary or paragraph
    break, a long section splits at its middle verse.

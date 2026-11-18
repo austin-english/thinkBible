@@ -12,20 +12,30 @@ note's own verses (or, in an introduction, to the whole chapter). A section's ex
 commentator is then, in this order:
 
 1. **Notes**: every block whose passage overlaps the section. Henry's notes cover whole passages
-   ("divisions"), so a division that only partly overlaps comes in whole.
+   ("divisions"), so a division that only partly overlaps comes in whole, labelled as running past
+   the section (2026-11-18: Mark 2:18-20's central idea had come from the note's 2:21-22).
 2. **The chapter introduction**: its opening text and the blocks overlapping the section.
 3. **Pointers, one hop** (``crossrefs.py``): the commentator's own note on the passage they point
    to, labelled as a parallel passage note. Explicit pointers ("See on Mt 12:9-21") are always
    followed; "( = Mt …; Lu …)" parallel lists only when the commentator says little on the
    section itself. A pointer to a whole chapter brings only that chapter's introduction.
 
-Each excerpt is capped at ``excerpt_cap_tokens`` (tokens estimated as characters / 4). Parts are
-kept in the order above, so pointers are the first to go, and the trim is recorded. Only a record
-of the excerpt (sha256, tokens, parts) is stored in the draft, never its text (data-model §2).
+Henry opens nearly every note with his own copy of its verses' text (11% of his words). The model
+is given the passage separately, so that copy is left out (2026-11-18).
+
+Each excerpt is capped at ``excerpt_cap_tokens`` (tokens estimated as characters / 4). Over the
+cap, a note that runs past the section first sheds the paragraphs that discuss only other verses
+(by the commentator's own markers, "v. 25", "ver. 3-5"); then parts are kept in the order above,
+so pointers are the first to go, the first part that doesn't fit keeps the whole paragraphs that
+do, and the trim is recorded. (2026-11-18: a whole-chapter note such
+as Henry on Deuteronomy 4:1-40 had been cut before reaching the later sections' own verses.) Only
+a record of the excerpt (sha256, tokens, parts) is stored in the draft, never its text
+(data-model §2).
 """
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -47,6 +57,45 @@ THIN_TOKENS = 250
 MAX_POINTERS = 4
 
 PartKind = Literal["note", "introduction", "parallel"]
+
+# Henry's copy of a note's verses: "1 Now therefore hearken…", one block near the start.
+_SCRIPTURE_COPY = re.compile(r"^(\d+) \S")
+_SCRIPTURE_COPY_WITHIN = 7  # paragraphs from the start of the note
+# A commentator's marker for the verse a paragraph discusses: "v. 25", "ver. 3-5", "vs. 9".
+_VERSE_MARK = re.compile(r"\b(?:v|ver|vs)\.\s*(\d+)(?:\s*-\s*(\d+))?")
+
+
+def without_scripture_copy(text: str, start: int, end: int) -> str:
+    """Henry's note without his copy of verses ``start``-``end`` (the model has the passage)."""
+    paras = text.split("\n\n")
+
+    def is_copy(p: str) -> bool:
+        m = _SCRIPTURE_COPY.match(p)
+        return m is not None and start <= int(m.group(1)) <= end
+
+    first = next((i for i, p in enumerate(paras[:_SCRIPTURE_COPY_WITHIN]) if is_copy(p)), None)
+    if first is None:
+        return text
+    last = first
+    while last + 1 < len(paras) and is_copy(paras[last + 1]):
+        last += 1
+    return "\n\n".join(paras[:first] + paras[last + 1 :])
+
+
+def _marked_verses(paragraph: str) -> set[int]:
+    out: set[int] = set()
+    for a, b in _VERSE_MARK.findall(paragraph):
+        first, last = int(a), int(b) if b else int(a)
+        if first <= last < first + 60:
+            out.update(range(first, last + 1))
+    return out
+
+
+def focus_on_section(text: str, start: int, end: int) -> str:
+    """The paragraphs of a note that discuss this section's verses or no verse in particular."""
+    own = set(range(start, end + 1))
+    kept = [p for p in text.split("\n\n") if not (v := _marked_verses(p)) or v & own]
+    return "\n\n".join(kept)
 
 
 def tokens(text: str) -> int:
@@ -107,6 +156,18 @@ def _passage_label(ref: Ref) -> str:
     return f"{_name(ref.book)} {ref.compact().split(' ', 1)[1]}"
 
 
+def _note_label(passage: Ref, chapter: int, start: int, end: int) -> str:
+    """A note's label; one that runs past the section says so, and what the section is."""
+    label = _passage_label(passage)
+    first, last = passage.span()
+    if first < (chapter, start) or last > (chapter, end):
+        label += (
+            f"; this note runs past the section, which is {chapter}:{start}-{end}: what it says "
+            "about other verses is context only"
+        )
+    return label
+
+
 def _blocks(
     text: str, refs: list[str], book: str, chapter: int, own: Ref | None, own_key: str
 ) -> list[_Block]:
@@ -147,6 +208,8 @@ def _chapter_blocks(
         text = item.text
         if chapter.number == 1 and n == 0:
             text = split_preface(commentator, text)[1]
+        if commentator == "matthew-henry":
+            text = without_scripture_copy(text, item.verse, item.verse_end or item.verse)
         passages += _blocks(text, item.refs, book, chapter.number, own, own.compact())
     return opening, passages
 
@@ -184,6 +247,19 @@ def _follow(target: Ref, commentator: str, library: SourceLibrary) -> tuple[str,
     return f"{_name(target.book)} {target.chapter} (introduction)", opening
 
 
+_FOCUSED = "; shortened to its parts about this section, to fit"
+
+
+def _focused(part: ExcerptPart, section: SectionMapEntry) -> ExcerptPart:
+    """A note running past the section, without its paragraphs about other verses only."""
+    if part.kind != "note" or "runs past the section" not in part.label:
+        return part
+    text = focus_on_section(part.text, section.verse_start, section.verse_end)
+    if text == part.text or not text.strip():
+        return part
+    return ExcerptPart(part.kind, part.key, part.label + _FOCUSED, text, part.refs)
+
+
 def gather(
     section: SectionMapEntry,
     book: str,
@@ -207,7 +283,9 @@ def gather(
         if b.key not in intro_keys
     ]
     candidates = [
-        ExcerptPart("note", b.key, _passage_label(b.passage), b.text, b.refs)
+        ExcerptPart(
+            "note", b.key, _note_label(b.passage, section.chapter, start, end), b.text, b.refs
+        )
         for b in notes
         if b.passage is not None
     ]
@@ -250,21 +328,25 @@ def gather(
                 )
             )
 
+    if sum(tokens(p.rendered + "\n\n") for p in candidates) > cap_tokens:
+        candidates = [_focused(p, section) for p in candidates]
     used = 0
     for part in candidates:
         cost = tokens(part.rendered + "\n\n")
         if used + cost > cap_tokens:
             excerpt.trimmed = True
-            if not excerpt.parts:  # one part over the cap on its own: keep whole paragraphs
-                kept: list[str] = []
-                for para in part.text.split("\n\n"):
-                    if tokens(part.label + "\n\n".join([*kept, para])) > cap_tokens:
-                        break
-                    kept.append(para)
-                if kept:
-                    excerpt.parts.append(
-                        ExcerptPart(part.kind, part.key, part.label, "\n\n".join(kept), part.refs)
-                    )
+            # The part that doesn't fit keeps the whole paragraphs that do (a long parallel note,
+            # such as Henry's Matthew 23 for Mark 12:38-40, opens with what the section needs).
+            room = cap_tokens - used
+            kept: list[str] = []
+            for para in part.text.split("\n\n"):
+                if tokens(f"[{part.label}]\n" + "\n\n".join([*kept, para]) + "\n\n") > room:
+                    break
+                kept.append(para)
+            if kept:
+                excerpt.parts.append(
+                    ExcerptPart(part.kind, part.key, part.label, "\n\n".join(kept), part.refs)
+                )
             break
         excerpt.parts.append(part)
         used += cost

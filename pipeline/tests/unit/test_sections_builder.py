@@ -73,11 +73,25 @@ def test_sections_never_cross_chapters() -> None:
     assert all(s.verse_end <= KJV_VERSES["MRK"][s.chapter - 1] for s in sections)
 
 
-def test_short_sections_merge_into_the_next_or_the_previous() -> None:
+def test_short_sections_merge_into_the_previous_unless_they_open_the_next() -> None:
+    """Mark 2:18-22: patches and wineskins finish the fasting answer; they had been glued to the
+    Sabbath story that follows."""
+    book = bsb({2: {"headings": {18: "Fasting", 21: "Wineskins", 23: "Sabbath"}}})
+    two = chapter(build_sections("MRK", book, henry({2: [(1, 17), (18, 28)]})), 2)
+    assert [(s, e, t) for s, e, t, _src in two if s >= 18] == [
+        (18, 22, "Fasting"), (23, 28, "Sabbath")
+    ]  # fmt: skip
+    # A short piece where Henry starts a division the next piece doesn't opens that passage.
+    book = bsb({2: {"headings": {18: "Fasting", 21: "Plot", 23: "Anointing"}}})
+    two = chapter(build_sections("MRK", book, henry({2: [(1, 20), (21, 28)]})), 2)
+    assert [(s, e) for s, e, _t, _src in two if s >= 18] == [(18, 20), (21, 28)]
+
+
+def test_short_sections_first_or_last_in_the_chapter() -> None:
     book = bsb({1: {"headings": {1: "Patches", 3: "Sabbath", 44: "Ending"}}})
     one = chapter(build_sections("MRK", book, None), 1)
-    # 1-2 merges into 3-43 under the longer piece's title; 44-45, the last in the chapter, merges
-    # into the previous one. The resulting 1-45 is then split (no paragraph breaks: at the middle).
+    # 1-2, first in the chapter, merges into 3-43 under the longer piece's title; 44-45, the last,
+    # merges into the previous one. The resulting 1-45 is then split (at the middle).
     titles = [title for *_r, title, _s in one]
     assert one[0] == (1, 11, "Sabbath", "bsb-heading")
     assert one[-1][1] == 45

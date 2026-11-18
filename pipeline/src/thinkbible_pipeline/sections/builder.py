@@ -4,8 +4,12 @@ Per chapter:
 
 1. Each BSB heading starts a candidate section. A chapter with no heading at verse 1 starts with
    a piece of the previous heading, titled "{heading} (cont.)". Sections never cross chapters.
-2. Candidates shorter than 3 verses merge into the next section in the chapter (the last one in
-   a chapter merges into the previous one) and take the longer piece's title.
+2. Candidates shorter than 3 verses merge into the section before them, which they usually
+   finish (Jesus' answer about patches and wineskins finishes the fasting question, Mark
+   2:18-22; Judas going out finishes the anointing, Mark 14:1-11). They merge into the next one
+   instead when they open a Henry division that the next one doesn't (the piece starts a new
+   passage), or when they are first in the chapter. The merged section takes the longer piece's
+   title. (Until 2026-11-18 short pieces merged forward, gluing Mark 2:21-22 to the Sabbath.)
 3. Sections longer than 12 verses split at Matthew Henry's division start nearest the middle;
    without one, at the BSB paragraph break nearest the middle; without one, at the middle verse.
    Both pieces keep at least 3 verses. Later pieces are titled "{heading} (cont.)" with
@@ -91,15 +95,22 @@ def _chapters(
     return out
 
 
-def _merge_short(pieces: list[_Piece]) -> list[_Piece]:
+def _opens_next(p: _Piece, nxt: _Piece, henry: set[int]) -> bool:
+    """Whether a short piece starts a passage that runs on into the next piece (Henry's view)."""
+    return p.start in henry and nxt.start not in henry
+
+
+def _merge_short(pieces: list[_Piece], henry: set[int] | None = None) -> list[_Piece]:
     pieces = list(pieces)
+    henry = henry or set()
     i = 0
     while len(pieces) > 1 and i < len(pieces):
         p = pieces[i]
         if p.length >= MIN_VERSES:
             i += 1
             continue
-        if i + 1 < len(pieces):  # into the next section
+        forward = i == 0 or (i + 1 < len(pieces) and _opens_next(p, pieces[i + 1], henry))
+        if forward:  # into the next section
             nxt = pieces[i + 1]
             keep = nxt if nxt.length >= p.length else p
             pieces[i : i + 2] = [_Piece(p.start, nxt.end, keep.title, keep.split)]
@@ -154,7 +165,7 @@ def build_sections(
             pieces.append(_Piece(s, end, ch.headings[s]))
         if starts:
             carried = ch.headings[starts[-1]]
-        for piece in _merge_short(pieces):
+        for piece in _merge_short(pieces, ch.henry):
             for part in _split_long(piece, ch):
                 entries.append(
                     SectionMapEntry(

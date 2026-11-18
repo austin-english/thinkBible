@@ -498,8 +498,8 @@ every key idea names a commentator. Then, with Bedrock, Mark 1–16 is fully dra
   - sections start at BSB headings and never cross a chapter;
   - ranges are contiguous, non-overlapping, and cover every verse in either translation
     (including KJV-only 7:16);
-  - sections with fewer than 3 verses merge into the next (the last one in a chapter merges into
-    the previous);
+  - sections with fewer than 3 verses merge into the previous (into the next when first in the
+    chapter or when they open a Henry division the next doesn't; revised 2026-11-18);
   - sections longer than 12 verses split at a Henry division start, else at the paragraph break
     nearest the middle;
   - IDs are `mrk-{C}-{V}`;

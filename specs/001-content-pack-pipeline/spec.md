@@ -277,8 +277,8 @@ place and confirm the publish check refuses the version.
 
 - A section where the three commentaries group verses differently from the BSB headings: section
   boundaries follow the BSB headings, adjusted to Matthew Henry's divisions. Very short sections
-  (fewer than ~3 verses) merge with the next, and long ones (more than ~12 verses) split at a
-  natural break.
+  (fewer than ~3 verses) merge with the passage they belong to (usually the one before), and
+  long ones (more than ~12 verses) split at a natural break.
 - A boundary turns out wrong after a book is published: it stays as published. Fixing it needs a
   future feature that maps readers' progress from old sections to new ones.
 - A section where commentaries say almost nothing: fewer key ideas and fewer questions (one per

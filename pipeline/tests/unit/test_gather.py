@@ -2,7 +2,13 @@
 
 from typing import Any
 
-from thinkbible_pipeline.commentary.gather import THIN_TOKENS, gather, gather_all
+from thinkbible_pipeline.commentary.gather import (
+    THIN_TOKENS,
+    focus_on_section,
+    gather,
+    gather_all,
+    without_scripture_copy,
+)
 from thinkbible_pipeline.drafts.models import SectionMapEntry
 
 
@@ -103,6 +109,12 @@ def test_notes_overlapping_the_section_and_whole_henry_divisions(make_library: A
     ex = gather(section(1, 1, 11), "MRK", "matthew-henry", lib, cap_tokens=8000)
     assert [p.key for p in ex.parts] == ["MRK 1:1-8", "MRK 1:9-13", "MRK 1 intro"]
     assert ex.parts[1].text == "Henry on the baptism and temptation."  # 9-13: whole division
+    # A note inside the section has a plain label; one running past it says so.
+    assert ex.parts[0].label == "Mark 1:1-8"
+    assert ex.parts[1].label == (
+        "Mark 1:9-13; this note runs past the section, which is 1:1-11: what it says about "
+        "other verses is context only"
+    )
     assert ex.parts[2].label == "Introduction to Mark 1"
     record = ex.record()
     assert record.tokens == ex.tokens and record.items == ["MRK 1:1-8", "MRK 1:9-13", "MRK 1 intro"]
@@ -178,3 +190,41 @@ def test_a_commentator_without_notes_gives_an_empty_excerpt(make_library: Any) -
     excerpts = gather_all(section(5, 1, 5), "MRK", lib, cap_tokens=8000)
     assert list(excerpts) == ["matthew-henry", "jamieson-fausset-brown", "adam-clarke"]
     assert all(e.tokens == 0 and e.parts == [] for e in excerpts.values())
+
+
+def test_henrys_copy_of_the_verses_is_left_out() -> None:
+    title, remark = "Exhortations. (b. c. 1451.)", "This discourse is entire (v. 1)."
+    note = f"{title}\n\n1 Now therefore hearken, O Israel…\n\n2 Ye shall not add…\n\n{remark}"
+    assert without_scripture_copy(note, 1, 40) == f"{title}\n\n{remark}"
+    # A number outside the note's verses is not its copy of them ("2 Kings…" in a note on 5-9).
+    other = "Title.\n\n2 Kings tells the rest of the story."
+    assert without_scripture_copy(other, 5, 9) == other
+
+
+def test_a_note_over_the_cap_keeps_its_parts_about_the_section(make_library: Any) -> None:
+    """Henry on Deuteronomy 4:1-40: the later sections' own verses had been cut off."""
+    paras = [
+        "General remarks on the chapter.",
+        "(1.) On hearing the law, v. 1, 2. " + "x " * 400,
+        "(2.) On idolatry, v. 15-18. " + "y " * 400,
+        "(3.) On apostasy, v. 25-31. Its end.",
+    ]
+    assert focus_on_section("\n\n".join(paras), 23, 31) == "\n\n".join([paras[0], paras[3]])
+    henry_ch = {
+        "number": 4,
+        "items": [
+            {
+                "verse": 1,
+                "verseEnd": 40,
+                "text": "1 Now therefore hearken…\n\n" + "\n\n".join(paras),
+            }
+        ],
+    }
+    lib = make_library({("matthew-henry", "DEU"): book("DEU", [henry_ch])})  # fmt: skip
+    sec = SectionMapEntry(id="deu-4-23", chapter=4, verse_start=23, verse_end=31, title="T",
+                          title_source="bsb-heading")  # fmt: skip
+    roomy = gather(sec, "DEU", "matthew-henry", lib, cap_tokens=8000)
+    assert "Now therefore hearken" not in roomy.text and "On idolatry" in roomy.text  # fits whole
+    tight = gather(sec, "DEU", "matthew-henry", lib, cap_tokens=200)
+    assert "On apostasy, v. 25-31. Its end." in tight.text and "On idolatry" not in tight.text
+    assert tight.parts[0].label.endswith("shortened to its parts about this section, to fit")
