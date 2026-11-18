@@ -116,7 +116,7 @@
         "kind": {
           "type": "string",
           "enum": ["key", "background"],
-          "description": "key: a careful reader can see it in the passage itself; questions target only these, and the app counts them as caught or missed. background: worth knowing but not visible in the passage (another Gospel, the original language, history); shown under 'More from the commentators', never counted as missed."
+          "description": "key: a deeper meaning the commentators draw from the passage (what it shows about God, Jesus, salvation or following him); questions target only these, and the app counts them as caught or missed. background: a fact worth knowing that is not itself a meaning (another Gospel, the original word, a custom); shown under 'More from the commentators', never counted as missed."
         },
         "title": { "type": "string", "minLength": 1, "maxLength": 60 },
         "body": { "type": "string", "minLength": 1, "maxLength": 240 },

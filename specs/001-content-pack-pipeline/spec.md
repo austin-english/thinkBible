@@ -67,6 +67,12 @@ this feature); constitution principles II, III, IV, VII.
   week after the previous answer, to match how rarely people return to the same passage. "Not a
   helpful question?" moves to the next question. The `levels` stage was removed (constitution
   v1.3.0).
+- Q: Should questions be answerable from the passage alone? → A: No (owner, after rating 51 Mark 1
+  questions). The app's focus is uncovering the deeper meanings beneath the text, which a casual
+  reading misses. Key ideas are those meanings; questions are approachable (a concrete handle in
+  the passage, plus one plain fact if needed) and the commentators' reply supplies the depth.
+  Questions stand alone, naming their people. The owner's ratings are the grader's calibration
+  set.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -139,7 +145,7 @@ regenerated and then marked failed.
    dropped, with the reason recorded.
 2. **Given** items that pass the checks, **When** the grader runs, **Then** each key idea and
    question gets a 1–5 grade against a fixed rubric (ideas: say only what the commentators say,
-   neutral, plain English; questions: open-ended, short, answerable from the passage, not leading,
+   neutral, plain English; questions: open-ended, short, approachable from the passage, focused, standing alone, not leading,
    no tradition-specific assumptions, aimed at their idea without giving it away, aimed at one of
    the passage's main ideas). Items at or below the threshold are dropped; the remaining questions
    keep their order.
@@ -331,7 +337,7 @@ place and confirm the publish check refuses the version.
 - **FR-005**: Whether a section gets questions MUST be decided by its commentary, not by the kind of
   passage. Every section goes through key-idea extraction, including genealogies, lists, census
   and law passages. A section is marked "no prompt" only when no key idea can be targeted by a
-  question the reader could answer from the passage alone. It then carries a short context note
+  question the reader could approach from the passage. It then carries a short context note
   instead of questions. The reason is recorded and shown in the scorecard.
 
 **Study content**
@@ -342,8 +348,9 @@ place and confirm the publish check refuses the version.
   ideas rank first.
 - **FR-007**: Key ideas MUST restate only what the commentators say: no new interpretations, and no
   quoted translation wording. Verse references are placeholders the app resolves.
-- **FR-007a** (2026-11-17): Each idea MUST be marked `key` (a careful reader can see it in the
-  passage) or `background` (worth knowing, but needs something outside the passage), and MUST
+- **FR-007a** (2026-11-17): Each idea MUST be marked `key` (a deeper meaning the passage points
+  to: what it shows about God, Jesus, salvation or following him) or `background` (a fact worth
+  knowing that is not itself a meaning), and MUST
   publish each source commentator's verified words as `quotes` for "In their words". Questions
   target only key ideas; the app never counts a background idea as missed.
 - **FR-008**: For each prompted section the system MUST produce an ordered list of questions.
@@ -355,9 +362,11 @@ place and confirm the publish check refuses the version.
 - **FR-009**: A section MUST have between 1 and min(N, 3) active questions, where N is its number
   of active key ideas. Questions SHOULD aim at the passage's main ideas, and the pipeline prefers
   a set that covers different ideas and includes a question on the whole passage.
-- **FR-010**: Each question MUST target at least one key idea without giving it away, be
-  answerable from the passage alone, be open-ended, short, not leading, and free of
-  tradition-specific doctrinal assumptions. Its shape follows the passage kind (story, letter,
+- **FR-010** (revised 2026-11-17): Each question MUST target at least one key idea without giving
+  it away and be approachable: a thoughtful reader can make a real start from something concrete
+  in the passage (plus one plain fact the question states, if needed), while the commentators'
+  reply supplies the depth. It MUST stand alone (naming its people), be open-ended, short, plain,
+  not leading, and free of tradition-specific doctrinal assumptions. Its shape follows the passage kind (story, letter,
   poetry, prophecy). In genealogies, lists and laws, questions are scoped to the verses the
   commentaries single out.
 - **FR-011**: *(Removed 2026-11-17: question levels and the level check. The generator writes

@@ -171,7 +171,7 @@ The content pack for each section (from the batch pipeline, cached offline) incl
 
 - `id`, `ref`, `title`
 - `verses` (BSB and KJV)
-- `keyIdeas[]`: `id`, `kind` (`key`: visible in the passage, targeted and counted; `background`: shown under "More from the commentators", never counted), `title`, `body`, `sources[]`, `quotes[]` (`{commentator, text}`, one per source, for "In their words"), `verseStart`, `verseEnd`, `agreed`
+- `keyIdeas[]`: `id`, `kind` (`key`: a deeper meaning, targeted and counted; `background`: a fact worth knowing, shown under "More from the commentators", never counted), `title`, `body`, `sources[]`, `quotes[]` (`{commentator, text}`, one per source, for "In their words"), `verseStart`, `verseEnd`, `agreed`
 - `questions[]` (in reading order): `id`, `verseStart`, `verseEnd`, `text` (BSB and KJV variants), `targets[]` (key idea IDs)
 
 The compare API returns `coveredIdeaIds`, `highlightPhrase`, `note`, `contradictsText`.

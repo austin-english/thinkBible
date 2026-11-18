@@ -513,10 +513,17 @@ def calibrate(
             typer.echo(f"  {sid} is no longer in sections.json; its items are skipped", err=True)
             return {}
         draft = deps.store.read_draft_or_new(sid)
-        section = {
-            "keyIdeas": draft.section.get("keyIdeas", [])
-            + [c.item for c in calibration.items if c.section_id == sid and c.kind == "keyIdea"]
-        }
+        # The ideas the grader can see: the draft's, the labelled ones, and those the labelled
+        # questions aim at (kept with each item, so a regenerated section still grades).
+        known: dict[str, dict[str, Any]] = {i["id"]: i for i in draft.section.get("keyIdeas", [])}
+        for c in calibration.items:
+            if c.section_id != sid:
+                continue
+            if c.kind == "keyIdea":
+                known[c.item_id] = c.item
+            for idea in c.target_ideas:
+                known.setdefault(idea["id"], idea)
+        section = {"keyIdeas": list(known.values())}
         grades, _usage = await grade_items(entries[sid], section, list(items), deps)
         return {i: g.score for i, g in grades.items()}
 

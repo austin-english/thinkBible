@@ -38,9 +38,9 @@ class EvidenceOut(_Out):
 
 class IdeaOut(_Out):
     kind: Literal["key", "background"] = Field(
-        description="key: a careful reader can see it in the passage itself. background: worth "
-        "knowing but needs something outside the passage (another Gospel, the original language, "
-        "history, other Scripture)."
+        description="key: a deeper meaning the commentators draw from the passage, about God, "
+        "Jesus, salvation or following him. background: a fact worth knowing that is not itself "
+        "a meaning (another Gospel, the original word, a custom)."
     )
     title: str = Field(description="The point itself, at most 8 words.")
     body: str = Field(description="One or two sentences, at most 30 words.")

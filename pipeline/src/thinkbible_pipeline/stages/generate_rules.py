@@ -43,7 +43,7 @@ MIN_QUOTE_WORDS = 3
 @dataclass
 class Idea:
     id: str
-    kind: str  # "key" (visible in the passage) or "background"
+    kind: str  # "key" (a deeper meaning) or "background" (a fact worth knowing)
     title: str
     body: str
     sources: list[str]

@@ -84,7 +84,7 @@ def _ideas_list(ideas: list[Idea]) -> str:
     text = "\n".join(key)
     if background:
         text += (
-            "\n\nBackground (worth knowing, but not visible in the passage; questions must not "
+            "\n\nBackground (facts worth knowing, not meanings; questions must not "
             "target these):\n" + "\n".join(background)
         )
     return text

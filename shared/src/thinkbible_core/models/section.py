@@ -53,7 +53,8 @@ class Quote(ContractModel):
 
 class KeyIdea(_VersionedItem):
     id: KeyIdeaId
-    # key: visible in the passage (questions target it, the app counts it); background: worth
+    # key: a deeper meaning the passage points to (questions target it, the app counts it);
+    # background: a fact worth
     # knowing, shown but never counted as missed.
     kind: Literal["key", "background"]
     title: Annotated[str, StringConstraints(min_length=1, max_length=60)]

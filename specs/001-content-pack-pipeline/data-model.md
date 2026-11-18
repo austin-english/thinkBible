@@ -49,7 +49,7 @@ Field names are camelCase in JSON and snake_case in the Python models (Pydantic 
 | Field | Type | Rules |
 |---|---|---|
 | `id` | `mrk-1-1-k3` | Permanent. Never reused |
-| `kind` | `key` or `background` | `key`: a careful reader can see it in the passage; questions target only these and the app counts them. `background`: worth knowing but needs another Gospel, the original language, history or other Scripture; shown, never counted as missed (2026-11-17). At most 5 key and 2 background per section |
+| `kind` | `key` or `background` | `key`: a deeper meaning the commentators draw from the passage (about God, Jesus, salvation, following him); questions target only these and the app counts them. `background`: a fact worth knowing that is not itself a meaning (another Gospel, the original word, a custom); shown, never counted as missed (2026-11-17). At most 5 key and 2 background per section |
 | `title` | ≤ 60 chars | Frozen once published |
 | `body` | ≤ 240 chars | Frozen once published. Neutral modern English, with no quoted translation wording |
 | `sources[]` | commentator ids | 1–3, unique. Each one is backed by an evidence quote in the draft (R10) |

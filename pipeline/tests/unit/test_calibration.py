@@ -71,6 +71,9 @@ def test_labelling_records_grades_and_keeps_a_copy(tmp_path: Path) -> None:
         ("keyIdea", "pass", None), ("question", "fail", "Reads like a quiz.")
     ]  # fmt: skip
     assert "1 The beginning…" in shown  # the passage is shown with each item
+    # A question keeps the ideas it aims at, so it still grades after the section is regenerated.
+    question = next(c for c in cal.items if c.kind == "question")
+    assert [i["title"] for i in question.target_ideas] == ["John prepares the way"]
     # The copy is what was labelled, whatever happens to the draft later.
     drafts["mrk-1-1"].section["keyIdeas"][0]["title"] = "Changed by a regeneration"
     saved = load_calibration(path)

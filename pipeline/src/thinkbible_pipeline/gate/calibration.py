@@ -29,6 +29,18 @@ class CalibrationItem(JsonModel):
     item: dict[str, Any]  # the item as labelled
     owner_grade: Literal["pass", "fail"]
     note: str | None = None
+    # For a question: the key ideas it aims at, as they were when labelled. The grader sees them,
+    # so the item can still be graded after its section is regenerated with new ideas.
+    target_ideas: list[dict[str, Any]] = Field(default_factory=list)
+
+
+def target_ideas(item: dict[str, Any], draft: SectionDraft) -> list[dict[str, Any]]:
+    """The key ideas a question aims at, from the draft's kept and dropped ideas."""
+    ideas = {i["id"]: i for i in draft.section.get("keyIdeas", [])}
+    ideas.update(
+        {d.item_id: {"id": d.item_id, **d.item} for d in draft.dropped if "-k" in d.item_id}
+    )
+    return [ideas[t] for t in item.get("targets", []) if t in ideas]
 
 
 class CalibrationResult(JsonModel):
@@ -170,6 +182,7 @@ def label_items(
                 item=dict(item),
                 owner_grade="pass" if answer.startswith("p") else "fail",
                 note=note,
+                target_ideas=target_ideas(item, drafts[sid]) if kind == "question" else [],
             )
         )
         save(calibration)

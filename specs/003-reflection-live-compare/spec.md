@@ -284,6 +284,9 @@ with nothing sent off the device for recognition.
   (hollow circle), then "More from the commentators" (other key ideas and background ideas, no
   check or circle), each with body and sources, then the context note and any views-differ note,
   with "Hide details" to collapse.
+- **FR-008a** (2026-11-17): Key ideas are deeper meanings, which readers rarely state exactly. The
+  compare step MUST count an idea as caught when the answer clearly heads toward it, not only
+  when it restates it, and its note MUST acknowledge the direction the reader took.
 - **FR-009a**: Each idea in the expanded reply MUST offer "In their words (n)", which opens the
   idea's `quotes` from the pack as nested replies (one per source commentator: initial avatar, name
   and year, the quote in the Scripture serif, original wording). Quotes come only from the pack.

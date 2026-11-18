@@ -464,6 +464,21 @@ risk.
   commentators", never counted). The grader's `reachable` line drops a key idea that isn't
   reachable. The app also scores an answer against the question's own targets, not every idea
   (spec 003).
+- **Deeper meaning** (2026-11-17, owner decision after rating 51 Mark 1 questions): the app's
+  focus is uncovering what lies beneath the surface of a passage, which a casual reading misses.
+  Superseding the "reachable" rule above: key ideas are the deeper meanings the commentators draw
+  (what the passage shows about God, Jesus, salvation, following him, including links to other
+  Scripture the commentator makes); background ideas are facts that are not meanings (another
+  Gospel, the original word, a custom). Questions are **approachable** rather than answerable
+  from the passage alone: one concrete handle in the text, plus one plain fact if needed, and a
+  short plain question about what it reveals; the reply supplies the depth. Questions **stand
+  alone** (a week apart), naming their people. Prompts: `extract/v10`, `questions/v10`, question
+  guide v4 (the owner's 11 favorites; no longer a draft), `review/v6` (rubric rewritten: deeper,
+  approachable, focused, stands-alone, plain, not-leading).
+- **Calibration from the ratings**: the owner's 48 ratings are the grader's calibration set
+  (`pipeline/evals/calibration.json`): "Love it" and "Fine" count as pass, "Not this" as fail.
+  Under `review/v5` the grader agreed about 70% of the time (it passed 15 of 16 rejects). Each
+  question item keeps the ideas it aims at (`targetIdeas`), so it grades after regeneration.
 - **Quality first** (2026-11-17, revised the same day): each of the 3 places goes to the
   highest-graded candidate left, so a lower grade never beats a higher one
   (`gate.outcomes.pick_best`). Among equal grades: one aimed at a key idea not yet covered, then one
@@ -612,8 +627,9 @@ risk.
   - Opus 5.5 grades every key idea and question 1–5 against a fixed rubric in
     `pipeline/prompts/review/vN.md`. Key ideas: says only what the cited commentators say, neutral
     across traditions, plain modern English, no quoted translation wording. Questions:
-    open-ended, short, answerable from the passage alone, not leading, no tradition-specific
-    assumptions, aimed at its target ideas without giving them away.
+    open-ended, short, approachable from the passage, not leading, no tradition-specific
+    assumptions, aimed at its target ideas without giving them away (revised by `review/v6`,
+    below).
   - The grader sees the passage, the commentators' excerpts and the item, so it can judge
     faithfulness. Items graded at or below `review_flag_threshold` (2) are dropped (the other
     questions keep their order, R11).

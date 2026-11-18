@@ -34,7 +34,7 @@ min_calibration_items = 30
 
 [prompts]
 shared_context = "v1"
-question_guide = "v3"  # v3 (2026-11-17): big-picture questions in reading order, no levels
+question_guide = "v4"  # v4 (2026-11-17): the owner's favorites; deeper meaning (approved, not a draft)
 
 # Per stage: model; thinking ("adaptive" or "none"); effort (output_config.effort, omit for
 # models that don't accept it, such as Haiku 4.5); prompt version; and the default cost per
@@ -50,7 +50,7 @@ requests_per_minute = 10  # this account's Bedrock quota for the model
 model = "us.anthropic.claude-sonnet-4-6"
 thinking = "adaptive"
 effort = "medium"
-prompt = "v9"  # questions/v9: ask about the people in plain words; extract/v9 = v8
+prompt = "v10"  # extract/v10: key ideas are deeper meanings; questions/v10: from the owner's ratings
 default_cost_usd = 0.22  # 0.17 measured on Mark 1 (2026-11-16), plus the notes and 8 candidates
 requests_per_minute = 10  # this account's Bedrock quota for the model
 
@@ -66,7 +66,7 @@ requests_per_minute = 10  # this account's Bedrock quota for the model
 model = "us.anthropic.claude-opus-4-6-v1"
 thinking = "adaptive"
 effort = "medium"
-prompt = "v5"  # v5: + natural (plain, about the people); v4 added reachable, quotes, notes
+prompt = "v6"  # v6: rewritten from the owner's ratings: deeper, approachable, focused, stands alone
 default_cost_usd = 0.10  # grades every candidate question, not just three
 requests_per_minute = 5  # this account's Bedrock quota for the model
 
