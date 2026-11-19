@@ -863,7 +863,7 @@ text edit is refused.
 
 ### Tests for User Story 6 ⚠️
 
-- [ ] T079 [P] [US6] Write `pipeline/tests/integration/test_refresh_versions.py` (moto):
+- [x] T079 [P] [US6] Write `pipeline/tests/integration/test_refresh_versions.py` (moto):
   - the 1.0.0 → retire+replace → 1.1.0 flow succeeds;
   - an in-place edit of published text fails at `check` (and again at `publish`);
   - **published-section guard**: after 1.0.0, `run --stage generate --fresh` and a run with a new
@@ -873,7 +873,7 @@ text edit is refused.
 
 ### Implementation for User Story 6
 
-- [ ] T080 [US6] Freeze published content in the pipeline:
+- [x] T080 [US6] Freeze published content in the pipeline:
   - **`pipeline/src/thinkbible_pipeline/stages/checks.py`**: after a promotion, drafts record
     `publishedIn` per item. Any change to a promoted item's `title`, `body`, `text` or
     `textByTranslation` is a check failure with the message "published text is frozen: retire
@@ -892,12 +892,12 @@ text edit is refused.
       re-picks questions or removes a note. A weak live item is fixed only by `retire --replace`
       (T081). Test: a live section re-reviewed with every item graded 1 keeps exactly its
       published ideas, questions and notes, and the scorecard lists them as weak.
-- [ ] T081 [US6] Add `retire --book B --item ID [--replace]` to `cli.py`, implemented in
+- [x] T081 [US6] Add `retire --book B --item ID [--replace]` to `cli.py`, implemented in
   `pipeline/src/thinkbible_pipeline/drafts/retire.py`:
   - it sets `status: retired`; `retiredIn` is set at publish;
   - with `--replace`, it copies the item into a new item with a new ID and `replaces: <old>`;
   - retiring a key idea also retires the active questions that target only that idea (FR-024).
-- [ ] T082 [US6] Add `--refresh` to `run --stage generate` in
+- [x] T082 [US6] Add `--refresh` to `run --stage generate` in
   `pipeline/src/thinkbible_pipeline/stages/generate.py` and `pipeline/src/thinkbible_pipeline/cli.py`.
   It passes the existing questions into the questions prompt (FR-014), adds only new questions,
   and never modifies existing items.
@@ -945,6 +945,14 @@ text edit is refused.
   verse 1, but verses.schema.json has no field for it, so `publish/build.py` leaves it out. Add a
   `title` to a chapter in the schema first, then the fixtures, `thinkbible_core`, the build and
   the Swift `ContentKit` models (shared/CLAUDE.md).
+- [ ] T089 Alignment for any number of translations (added 2026-11-19; when a third translation is
+  added, not before): the content format is already general (`textByTranslation` keyed by
+  translation id, one verse file each), but `publish/build.py` lists `("bsb", "kjv")` and the
+  align stage compares the BSB only with the KJV. Move the translations into `settings.toml`;
+  align each non-default translation against the BSB (its own quoted phrases and names, a
+  variant from its own verses, the translation's name passed to the prompt); write manuscript
+  notes that name whichever translations have the verse. The study content is written once, so
+  each translation adds only its variants (about $0.003 a book).
 
 ---
 

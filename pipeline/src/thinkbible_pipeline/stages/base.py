@@ -24,6 +24,7 @@ from typing import Any, Literal
 from pydantic import Field
 
 from thinkbible_pipeline.config import Pricing, Settings
+from thinkbible_pipeline.drafts.live import GUARDED_STAGES, is_live
 from thinkbible_pipeline.drafts.models import (
     RunRecord,
     SectionCounts,
@@ -160,6 +161,7 @@ class StagePlan(JsonModel):
     model: str | None = None
     items: list[PlanItem] = Field(default_factory=list)
     skipped: int = 0
+    live: int = 0  # live sections a content stage leaves alone (use --refresh; US6)
     estimate_usd: float = 0.0
 
     @property
@@ -180,6 +182,7 @@ class StageResult(JsonModel):
     stage: str
     done: int = 0
     skipped: int = 0
+    live: int = 0
     failed: int = 0
     not_started: int = 0
     spent_usd: float = 0.0
@@ -264,9 +267,20 @@ def plan_stage(
     pv = stage.prompt_version(deps)
     model = stage.model(deps)
     plan = StagePlan(stage=stage.name, prompt_version=pv, model=model)
+    guarded = stage.name in GUARDED_STAGES
     for sid in _section_ids(request, deps, planned_sections):
         if not stage.applies_to(sid, deps):
             continue
+        if guarded:
+            live = deps.store.read_draft(sid)
+            if live is not None and is_live(live):
+                if not request.refresh:
+                    plan.live += 1  # frozen: listed as "live (use --refresh)" (FR-024a)
+                    continue
+                if stage.name == "generate":
+                    # --refresh always writes new questions for a live section.
+                    plan.items.append(PlanItem(section_id=sid, input_hash=""))
+                    continue
         if sid in assume_changed:
             # An earlier stage of this run will (re)write this section, or create it: it will be
             # processed whatever its inputs are, and they may not exist yet (no sections.json
@@ -319,6 +333,7 @@ def estimate_run(request: RunRequest, deps: Deps) -> tuple[list[StagePlan], Esti
                 stage=p.stage,
                 to_process=len(p.items),
                 skipped=p.skipped,
+                live=p.live,
                 estimate_usd=p.estimate_usd,
                 calls_model=p.model is not None,
             )
@@ -407,7 +422,9 @@ def finish_stage(
     cap_usd: float | None = None,
 ) -> StageResult:
     """Write the stage's run record and stop the run if the cap stopped any section."""
-    result = StageResult(stage=plan.stage, skipped=plan.skipped, estimate_usd=plan.estimate_usd)
+    result = StageResult(
+        stage=plan.stage, skipped=plan.skipped, live=plan.live, estimate_usd=plan.estimate_usd
+    )
     tokens = TokenCounts()
     models: set[str] = {plan.model} if plan.model else set()
     for o in outcomes:

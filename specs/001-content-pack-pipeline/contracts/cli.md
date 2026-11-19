@@ -32,10 +32,11 @@ Functions execution whose input carries the same request as JSON:
 | `sources push` | Upload cache files listed in the manifest but missing from S3. Write-once (`If-None-Match: *`); refuses if an existing object's checksum differs | S3 (sources bucket) | No |
 | `sources pull [--books …]` | Download manifest files missing from the local cache, then verify them | S3 (sources bucket) | No |
 | `verify [--remote]` | Re-check every cached file against `manifest.json`; with `--remote`, download every file from the sources bucket and check it instead (the local cache is untouched) | S3 with `--remote` | No |
-| `run --book B --stage S [--sections ID,…] [--fresh] [--cap USD] [--yes] [--wait] [--local]` | Run one stage or all of them (see below). By default: estimate from the S3 drafts, confirm, then start the Step Functions execution and print its ARN and console link. `--wait` polls until it finishes and exits with its code. `--local` runs in-process against the same S3 drafts, for a few sections while tuning prompts | Step Functions, S3, DynamoDB (cloud); Bedrock, S3 (`--local`) | Yes, except `sections`, `check` and `report` |
+| `run --book B --stage S [--sections ID,…] [--fresh] [--refresh] [--cap USD] [--yes] [--wait] [--local]` | Run one stage or all of them (see below). By default: estimate from the S3 drafts, confirm, then start the Step Functions execution and print its ARN and console link. `--wait` polls until it finishes and exits with its code. `--local` runs in-process against the same S3 drafts, for a few sections while tuning prompts | Step Functions, S3, DynamoDB (cloud); Bedrock, S3 (`--local`) | Yes, except `sections`, `check` and `report` |
 | `status --book B [--open]` | Book status, the latest runs (from the ledger and run records) with spend and counts, the latest scorecard's pass rates and failed sections, and what is left. `--open` downloads `review.html` and opens it | S3, DynamoDB, Step Functions | No |
 | `publish --book B [--dry-run]` | Build the pack from the S3 drafts and publish it to the **draft** channel (no additive check there). A run that includes `report` does this automatically when no section failed; this command repeats it by hand | S3 / CloudFront (dev) | No |
 | `promote --book B` | Copy the book's current draft version, byte for byte, to **live**: refuses (exit 5) unless the gate passed, pass rates meet the thresholds, the grader calibration is current and at least 85%, and the live publish check passes. Then updates prod's index and invalidates it (FR-021, FR-024) | S3 / CloudFront (draft → live) | No |
+| `retire --book B --item ID [--replace] [--text T \| --title T --body B]` | Retire a key idea or question: it stays, marked `retired`. With `--replace`, add a replacement with a new ID that records the ID it `replaces`, worded by `--text` (a question) or `--title`/`--body` (a key idea); anything not given is copied. Retiring a key idea also retires the active questions that target only it. Then `publish`; `retiredIn` is set then (FR-024, US6) | S3 (drafts) | No |
 | `calibrate [--label] [--book B] [--yes]` | `--label`: show calibration candidates (item, passage, excerpts) and record your pass/fail grade for each, until the set has at least 30. Without it: run the grader on the set and record its agreement for the current grader prompt and model (R16) | Bedrock only | Yes (without `--label`) |
 | `eval --sample mark-sample --candidate PROMPT_SET [--yes]` | Run the current and candidate prompt sets in local mode on a fixed sample of 15–25 sections, grade both with the calibrated grader, and render a side-by-side report (FR-029) | Bedrock only | Yes |
 
@@ -83,7 +84,11 @@ they drop failing items and record why.
 - **`--refresh`**: the only way to add to a published section. It adds new questions with new
   IDs, reuses the stored key ideas, and never changes existing items (FR-024, US6).
 - **Gate stages**: `check` and `review` re-run whenever a section's content changed,
-  and skip unchanged sections like any other stage. `report` always runs.
+  and skip unchanged sections like any other stage. `report` always runs. On a section with live
+  items they only report (FR-024a): `check` fails it if live wording changed ("published text is
+  frozen: retire and replace") and otherwise drops nothing live; `review` stores grades for the
+  scorecard, lists weak live items there, and only places new questions (from `--refresh`) in
+  free places under the cap.
 
 ## Cost behaviour (FR-027, FR-028)
 

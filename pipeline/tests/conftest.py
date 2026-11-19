@@ -167,7 +167,12 @@ class PublishBook:
 @pytest.fixture
 def publish_book(make_library: MakeLibrary, tmp_path: Path) -> PublishBook:
     """2 John in two graded sections, with a snapshot whose manifest carries full provenance."""
-    from thinkbible_pipeline.drafts.models import SectionDraft, SectionMapEntry, StageRecord
+    from thinkbible_pipeline.drafts.models import (
+        Evidence,
+        SectionDraft,
+        SectionMapEntry,
+        StageRecord,
+    )
     from thinkbible_pipeline.drafts.store import DraftStore
     from thinkbible_pipeline.storage import LocalBlobStore
 
@@ -206,6 +211,9 @@ def publish_book(make_library: MakeLibrary, tmp_path: Path) -> PublishBook:
     ])  # fmt: skip
     for sid, a, b, t in PUBLISH_SECTIONS:
         draft = SectionDraft(section=section_doc(sid, a, b, t))
+        # As a real draft has: the ID counters, and each idea's evidence quote.
+        draft.ids.k = draft.ids.q = 1
+        draft.evidence = {f"{sid}-k1": [Evidence(commentator="matthew-henry", quote="On point 1.")]}
         for stage, version, model in (
             ("generate", "_shared/context@v1+extract@v15+question-guide@v4+questions@v15",
              "claude-sonnet-5-5"),

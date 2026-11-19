@@ -76,6 +76,9 @@ class Scorecard(JsonModel):
     failed_sections: list[SectionIssue] = Field(default_factory=list)
     not_generated: list[str] = Field(default_factory=list)
     no_prompt: list[SectionIssue] = Field(default_factory=list)
+    # Live items the grader now scores at or below the threshold: frozen, so only `retire
+    # --replace` fixes them (FR-024a). Information, not a blocker.
+    weak_live: list[SectionIssue] = Field(default_factory=list)
     calibration: Calibration | None = None
     thresholds: Thresholds | None = None
     promotable: bool = False
@@ -156,6 +159,15 @@ def build_scorecard(
                 rate.dropped += 1
         for d in draft.dropped:
             card.dropped_by_stage[d.stage] = card.dropped_by_stage.get(d.stage, 0) + 1
+        for item_id in draft.live.items if draft.live is not None else {}:
+            live_grade = draft.grades.get(item_id)
+            if live_grade is not None and live_grade.score <= threshold:
+                card.weak_live.append(
+                    SectionIssue(
+                        section_id=item_id,
+                        reason=f"graded {live_grade.score}: {live_grade.notes}",
+                    )
+                )
         if not draft.failed and not section.get("noPrompt") and review and review.status == "done":
             _count_reader_measures(card, section, draft)
     card.graded = bool(sections) and not card.not_generated and ungraded == 0

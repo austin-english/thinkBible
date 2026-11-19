@@ -101,6 +101,8 @@ pipeline/
 │   │   └── prompts.py              # assembles the versioned system prompt for a stage
 │   ├── drafts/
 │   │   ├── models.py               # BookState, SectionDraft, RunRecord, … (data-model §2)
+│   │   ├── live.py                 # live content is frozen: the guard and the frozen-wording check
+│   │   ├── retire.py               # `retire`: retire an item, optionally with a replacement
 │   │   ├── ids.py                  # permanent key-idea and question IDs, never reused
 │   │   └── store.py                # DraftStore: reads and writes {book}/… in a BlobStore
 │   └── sources/
@@ -284,6 +286,16 @@ make pipeline BOOK=mark STAGE=all       # in AWS: estimate, confirm, start, wait
 make status BOOK=mark                   # latest runs, spend, and opens the scorecard (review.html)
 make publish BOOK=mark                  # publish to the draft channel (a passing run does this itself)
 make promote BOOK=mark                  # copy the draft version to live, if the gate allows it
+```
+
+Once a book is live its wording is frozen (FR-024): content stages skip live sections, and the gate
+only reports on them. To fix or improve a live item, retire it and give the replacement's wording;
+to add questions to a live section, refresh it:
+
+```bash
+uv run --package thinkbible-pipeline thinkbible-pipeline retire --book mark --item mrk-1-1-q5 \
+  --replace --text "The new wording of the question?"
+uv run --package thinkbible-pipeline thinkbible-pipeline run --book mark --stage all --refresh
 uv run --package thinkbible-pipeline thinkbible-pipeline run --book mark --stage generate \
   --local --sections mrk-1-1,mrk-1-9    # in-process, two sections, using the repo's prompts
 ```

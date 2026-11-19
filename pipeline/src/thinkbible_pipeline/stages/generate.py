@@ -20,6 +20,7 @@ from typing import Any
 
 from thinkbible_core.ids import resolve_book
 from thinkbible_pipeline.commentary.gather import COMMENTATORS, Excerpt, gather_all
+from thinkbible_pipeline.drafts.live import is_live
 from thinkbible_pipeline.drafts.models import DroppedItem, SectionDraft, SectionMapEntry
 from thinkbible_pipeline.gate.checks import CheckContext
 from thinkbible_pipeline.gate.outcomes import SectionFailed
@@ -129,9 +130,53 @@ class GenerateStage(SectionStage):
             "regenerate": draft.regenerate,
         }
 
+    async def _refresh(self, section_id: str, draft: SectionDraft, deps: Deps) -> SectionResult:
+        """``--refresh`` on a live section (T082, FR-014): new candidate questions, nothing else.
+
+        The key ideas, notes and existing questions are live and stay exactly as they are. The
+        writer sees the existing questions so it writes new ones; ``review`` then fills any free
+        place under the cap from these and the earlier unused candidates.
+        """
+        book = resolve_book(deps.store.book)
+        entry = section_entry(section_id, deps)
+        excerpts = self._excerpts(entry, deps)
+        _, questions_prompt = self._prompts(deps)
+        ideas = [
+            Idea(
+                i["id"], i.get("kind", "key"), i["title"], i["body"], i["sources"],
+                i["verseStart"], i["verseEnd"], draft.evidence.get(i["id"], []),
+                central=i["id"] == draft.central_idea,
+            )
+            for i in draft.section.get("keyIdeas", [])
+            if i.get("status", "active") == "active"
+        ]  # fmt: skip
+        existing = draft.section.get("questions", [])
+        user = (
+            f"{_header(section_id, entry, book.name)}\n\n{_passages(deps, book.code, entry)}\n\n"
+            f"The commentators' notes (for you, not the reader):\n{_commentary(excerpts)}\n\n"
+            f"Key ideas, the central meaning first, then agreed ones:\n{_ideas_list(ideas)}\n\n"
+            f"Views differ: {draft.section.get('viewsDiffer') or '(none)'}\n\n"
+            "Readers already have these questions. Write new ones: don't repeat or rephrase them.\n"
+            + "\n".join(f"- {q['text']}" for q in existing)
+        )
+        out, usage = await deps.runner.parse(
+            self.name, questions_prompt.blocks, user, QuestionsOut,
+            section_id=section_id, call="questions",
+        )  # fmt: skip
+        ctx = CheckContext.for_book(deps.sources, book.code)
+        pool = process_questions(out, ideas, entry, draft, ctx)
+        in_section = {q["id"] for q in existing}
+        earlier = [c for c in draft.candidates if c["id"] not in in_section]
+        draft.candidates = [*earlier, *(q.publishable() for q in pool.candidates)]
+        draft.dropped += pool.dropped
+        return SectionResult(usages=[usage])
+
     async def execute(
         self, section_id: str, inputs: Any, draft: SectionDraft, deps: Deps
     ) -> SectionResult:
+        if is_live(draft):
+            # Only `run --refresh` plans a live section for this stage (stages/base.plan_stage).
+            return await self._refresh(section_id, draft, deps)
         book = resolve_book(deps.store.book)
         entry = section_entry(section_id, deps)
         excerpts = self._excerpts(entry, deps)

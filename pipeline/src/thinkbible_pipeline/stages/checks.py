@@ -13,6 +13,9 @@ a section was generated:
 A section that breaks a rule here is flagged for regeneration: the next run's ``generate``
 regenerates it once. If the regenerated content fails too, the section is marked failed (FR-018).
 It re-runs only when ``generate`` produced new content or the checks change (``CHECKS_VERSION``).
+
+A live section (US6) is checked differently (``check_live``): changed live wording fails it, and
+otherwise the checks only report on live items; nothing live is dropped or regenerated.
 """
 
 from __future__ import annotations
@@ -20,6 +23,7 @@ from __future__ import annotations
 from typing import Any
 
 from thinkbible_core.ids import resolve_book
+from thinkbible_pipeline.drafts.live import frozen_violations, is_live, live_ids
 from thinkbible_pipeline.drafts.models import CheckResult, DroppedItem, SectionDraft
 from thinkbible_pipeline.gate.checks import (
     CHECKS_VERSION,
@@ -28,7 +32,12 @@ from thinkbible_pipeline.gate.checks import (
     question_problem,
     section_problems,
 )
-from thinkbible_pipeline.gate.outcomes import clear_earlier_failure, drop_items, regenerate_or_fail
+from thinkbible_pipeline.gate.outcomes import (
+    SectionFailed,
+    clear_earlier_failure,
+    drop_items,
+    regenerate_or_fail,
+)
 from thinkbible_pipeline.stages.base import Deps, SectionResult, SectionStage
 
 
@@ -80,6 +89,39 @@ def apply_checks(draft: SectionDraft, ctx: CheckContext) -> list[str]:
     return section_problems(draft.section, ctx)
 
 
+def check_live(draft: SectionDraft, section_id: str, ctx: CheckContext, deps: Deps) -> None:
+    """A live section (FR-024a): fail on changed live wording; otherwise report only.
+
+    Problems with live items are recorded for the scorecard but nothing live is dropped; a weak
+    live item is fixed with ``retire --replace``. New items (from ``--refresh``, or a replacement)
+    are checked as usual and dropped if they fail.
+    """
+    violations = frozen_violations(draft)
+    if violations:
+        draft.failed = f"check: {violations[0]}"
+        deps.store.write_draft(section_id, draft)
+        raise SectionFailed(f"{section_id}: {violations[0]}")
+    trial = draft.model_copy(deep=True)
+    problems = apply_checks(trial, ctx)
+    frozen = live_ids(draft)
+    new_drops = trial.dropped[len(draft.dropped) :]
+    gone = {d.item_id for d in new_drops if d.item_id not in frozen}
+    draft.candidates = [c for c in draft.candidates if c["id"] not in gone]
+    draft.section = {
+        **draft.section,
+        "questions": [q for q in draft.section.get("questions", []) if q["id"] not in gone],
+    }
+    draft.dropped += [d for d in new_drops if d.item_id in gone]
+    draft.checks = [
+        CheckResult(item_id=d.item_id, check="live", ok=False, detail=d.reason)
+        for d in new_drops
+        if d.item_id in frozen
+    ] + [CheckResult(item_id=section_id, check="section", ok=False, detail=p) for p in problems]
+    if not draft.checks:
+        draft.checks = [CheckResult(item_id=section_id, check="section", ok=True)]
+    clear_earlier_failure(draft, "check")
+
+
 class CheckStage(SectionStage):
     name = "check"
 
@@ -105,7 +147,11 @@ class CheckStage(SectionStage):
         if rec is None or rec.status != "done":
             return SectionResult()  # nothing generated to check
         book = resolve_book(deps.store.book)
-        problems = apply_checks(draft, CheckContext.for_book(deps.sources, book.code))
+        ctx = CheckContext.for_book(deps.sources, book.code)
+        if is_live(draft):
+            check_live(draft, section_id, ctx, deps)
+            return SectionResult()
+        problems = apply_checks(draft, ctx)
         draft.checks = [
             CheckResult(item_id=section_id, check="section", ok=False, detail=p) for p in problems
         ] or [CheckResult(item_id=section_id, check="section", ok=True)]

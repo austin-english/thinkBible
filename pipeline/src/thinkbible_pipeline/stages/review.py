@@ -19,6 +19,7 @@ from typing import Any
 from thinkbible_core.ids import resolve_book
 from thinkbible_core.rules import max_questions
 from thinkbible_pipeline.commentary.gather import gather_all
+from thinkbible_pipeline.drafts.live import is_live, live_ids
 from thinkbible_pipeline.drafts.models import DroppedItem, Grade, SectionDraft, SectionMapEntry
 from thinkbible_pipeline.gate.checks import CheckContext, section_problems
 from thinkbible_pipeline.gate.outcomes import (
@@ -207,6 +208,50 @@ def choose_questions(
     draft.dropped += dropped
 
 
+def choose_live_questions(
+    draft: SectionDraft,
+    candidates: list[dict[str, Any]],
+    grades: dict[str, ItemGrade],
+    threshold: int,
+) -> None:
+    """A live section (FR-024a): its questions stay as they are; new ones only fill free places.
+
+    Live questions, and any the owner added by ``retire --replace``, keep their order. New
+    candidates (from ``--refresh``) graded above ``threshold`` and aimed at an active key idea fill
+    the places left under the cap, quality first, after the existing ones.
+    """
+    frozen = live_ids(draft)
+    cand_ids = {c["id"] for c in candidates}
+    keep = [
+        q
+        for q in draft.section.get("questions", [])
+        if q["id"] in frozen or q["id"] not in cand_ids
+    ]
+    ideas = {
+        i["id"]
+        for i in draft.section.get("keyIdeas", [])
+        if i.get("kind", "key") == "key" and i.get("status", "active") == "active"
+    }
+    active = sum(1 for q in keep if q.get("status", "active") == "active")
+    free = max(0, max_questions(len(ideas)) - active)
+    scores = {cid: g.score for cid, g in grades.items()}
+    eligible = []
+    for c in candidates:
+        if c["id"] in frozen or c["id"] in {q["id"] for q in keep}:
+            continue
+        g = grades.get(c["id"])
+        targets = [t for t in c["targets"] if t in ideas]
+        if g is not None and g.score > threshold and targets:
+            eligible.append({**c, "targets": targets})
+    start, end = draft.section["verseStart"], draft.section["verseEnd"]
+    big = {cid for cid, g in grades.items() if g.focus == "big-picture"}
+    picked = set(pick_best(eligible, scores, free, start, end, big=big)) if free else set()
+    draft.section = {
+        **draft.section,
+        "questions": [*keep, *(c for c in eligible if c["id"] in picked)],
+    }
+
+
 def note_items(section_id: str, section: dict[str, Any]) -> list[dict[str, Any]]:
     """The context and views-differ notes as items for the grader (readers see both)."""
     items = [{"id": f"{section_id}-context", "note": "context", "text": section.get("context", "")}]
@@ -313,6 +358,11 @@ class ReviewStage(SectionStage):
             )
             for item_id, g in grades.items()
         }
+        if is_live(draft):
+            # Live (FR-024a): grades go to the scorecard; nothing live is dropped or re-picked.
+            choose_live_questions(draft, candidates, grades, threshold)
+            clear_earlier_failure(draft, "review")
+            return SectionResult(usages=usages)
         # A re-run (say, a new rubric) chooses again from all the candidates.
         cand_ids = {c["id"] for c in candidates}
         draft.dropped = [

@@ -114,6 +114,17 @@ class BookIntro(JsonModel):
     problem: str | None = None
 
 
+class LiveRecord(JsonModel):
+    """What a promotion put on the live channel for this section (US6, FR-024, FR-024a).
+
+    ``items`` maps every promoted key idea and question to its published fields, so the pipeline
+    can tell what is frozen without reading the live channel.
+    """
+
+    version: str  # the pack version that went live
+    items: dict[str, dict[str, Any]] = Field(default_factory=dict)
+
+
 class SectionDraft(JsonModel):
     """One section's pipeline state (``sections/{id}.json``). Nobody edits it by hand.
 
@@ -149,6 +160,9 @@ class SectionDraft(JsonModel):
     # Every question that passed generate's checks, in the writer's order (not published). The
     # grader scores them all and ``review`` keeps the best (R11, 2026-11-17).
     candidates: list[dict[str, Any]] = Field(default_factory=list)
+    # Set by ``promote`` (US6): the section's live items. A live section is frozen: generation skips
+    # it unless --refresh, and the gate only reports on it.
+    live: LiveRecord | None = None
     # What ``align`` added, for the report (R12, R3): each KJV variant with the words that called
     # for it, each variant the model wrote that the checks refused, and each manuscript note.
     alignment: list[dict[str, Any]] = Field(default_factory=list)

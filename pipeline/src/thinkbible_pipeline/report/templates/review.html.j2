@@ -101,6 +101,9 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
   {% if card.failed_sections %}
   <div class="panel"><h2>Failed sections</h2><ul>{% for f in card.failed_sections %}<li><a href="#{{ f.section_id }}" class="mono">{{ f.section_id }}</a> · {{ f.reason }}</li>{% endfor %}</ul></div>
   {% endif %}
+  {% if card.weak_live %}
+  <div class="panel"><h2>Live items graded {{ 2 }} or less</h2><p class="qmeta">Live wording is frozen: <code>retire --item ID --replace</code> fixes an item.</p><ul>{% for f in card.weak_live %}<li class="mono">{{ f.section_id }}</li> {{ f.reason }}{% endfor %}</ul></div>
+  {% endif %}
   {% if card.no_prompt %}
   <div class="panel"><h2>Sections with no question</h2><ul>{% for f in card.no_prompt %}<li><a href="#{{ f.section_id }}" class="mono">{{ f.section_id }}</a> · {{ f.reason or "no reason given" }}</li>{% endfor %}</ul></div>
   {% endif %}

@@ -8,6 +8,9 @@ when:
 - the drafts changed since the draft version was published (publish again first);
 - that version is already live;
 - the live publish check fails against the current live pack (``publish_check.py``).
+
+After copying, each section's draft records its live items (``SectionDraft.live``): from then on
+the pipeline treats them as frozen (``drafts/live.py``).
 """
 
 from __future__ import annotations
@@ -17,6 +20,7 @@ from datetime import datetime
 
 from thinkbible_core.ids import resolve_book
 from thinkbible_pipeline.config import Settings
+from thinkbible_pipeline.drafts.live import snapshot
 from thinkbible_pipeline.drafts.models import BookRef, BookState
 from thinkbible_pipeline.drafts.store import DraftStore
 from thinkbible_pipeline.gate.calibration import CalibrationSet
@@ -99,6 +103,12 @@ def promote(
         live.put(ref.path, data)
         copied[ref.path] = len(data)
     live.write_index(with_book(live.read_index(), entry, now))
+    # Every section's draft records what is now live: from here on it is frozen (US6, FR-024a).
+    for section in new.sections:
+        section_draft = store.read_draft(section.id)
+        if section_draft is not None:
+            section_draft.live = snapshot(section.to_doc(), entry.latest)
+            store.write_draft(section.id, section_draft)
     state = store.read_book() or BookState(
         book=BookRef(id=info.code, name=info.name), status="published-draft"
     )

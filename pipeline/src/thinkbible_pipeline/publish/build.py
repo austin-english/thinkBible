@@ -140,25 +140,31 @@ def _section_problem(entry: SectionMapEntry, draft: SectionDraft | None) -> str 
     return None
 
 
-def _set_versions(doc: dict[str, Any], added: dict[str, str], version: str) -> dict[str, Any]:
-    """A section doc whose items carry ``addedIn`` (and ``retiredIn`` when retired)."""
+def _set_versions(
+    doc: dict[str, Any], added: dict[str, str], version: str, retired: dict[str, str] | None = None
+) -> dict[str, Any]:
+    """A section doc whose items carry ``addedIn``, and ``retiredIn`` when retired: the version they
+    went live (or were retired) with on the live channel, else this one."""
     out = copy.deepcopy(doc)
     for kind in ("keyIdeas", "questions"):
         for item in out.get(kind, []):
             item["addedIn"] = added.get(item["id"], version)
             if item.get("status") == "retired":
-                item.setdefault("retiredIn", version)
+                item["retiredIn"] = (retired or {}).get(item["id"], version)
     return out
 
 
 def _sections(
-    docs: list[dict[str, Any]], added: dict[str, str], version: str
+    docs: list[dict[str, Any]],
+    added: dict[str, str],
+    version: str,
+    retired: dict[str, str] | None = None,
 ) -> tuple[list[Section], list[str]]:
     sections: list[Section] = []
     problems: list[str] = []
     for doc in docs:
         try:
-            sections.append(Section.model_validate(_set_versions(doc, added, version)))
+            sections.append(Section.model_validate(_set_versions(doc, added, version, retired)))
         except ValidationError as e:
             for err in e.errors():
                 where = ".".join(str(p) for p in err["loc"])
@@ -191,6 +197,12 @@ def _added_in(live: StudyPack | None) -> dict[str, str]:
     if live is None:
         return {}
     return {i.id: i.added_in for s in live.sections for i in section_items(s)}
+
+
+def _retired_in(live: StudyPack | None) -> dict[str, str]:
+    if live is None:
+        return {}
+    return {i.id: i.retired_in for s in live.sections for i in section_items(s) if i.retired_in}
 
 
 # --- provenance ---
@@ -377,7 +389,7 @@ def build_pack(
     # With nothing on the draft channel but a live version, the new draft is the next minor.
     version = next_version(base, "minor" if change == "first" and base else change)
 
-    sections, problems = _sections(docs, _added_in(live), version)
+    sections, problems = _sections(docs, _added_in(live), version, _retired_in(live))
     verses = {tr: verse_text(library, tr, code, info.name, version) for tr in TRANSLATIONS}
     files = {f"verses/{tr}.json": encode(v.to_doc()) for tr, v in verses.items()}
     study = StudyPack(

@@ -21,6 +21,7 @@ from __future__ import annotations
 from typing import Any
 
 from thinkbible_core.ids import resolve_book
+from thinkbible_pipeline.drafts.live import live_ids
 from thinkbible_pipeline.drafts.models import SectionDraft
 from thinkbible_pipeline.llm.outputs import AlignVariantOut
 from thinkbible_pipeline.llm.prompts import system_prompt, version_tag
@@ -84,7 +85,10 @@ class AlignStage(SectionStage):
         log: list[dict[str, Any]] = []
         usages: list[Usage] = []
         candidates = draft.candidates or draft.section.get("questions", [])
+        frozen = live_ids(draft)  # a live question's wording, KJV included, never changes
         for q in candidates:
+            if q["id"] in frozen:
+                continue
             q.pop("textByTranslation", None)
             bsb_verses = verse_text(bsb, entry.chapter, q["verseStart"], q["verseEnd"])
             kjv_verses = verse_text(kjv, entry.chapter, q["verseStart"], q["verseEnd"])
@@ -114,6 +118,9 @@ class AlignStage(SectionStage):
         variants = {q["id"]: q["textByTranslation"] for q in candidates if "textByTranslation" in q}
         questions = []
         for q in draft.section.get("questions", []):
+            if q["id"] in frozen:
+                questions.append(q)
+                continue
             q = {k: v for k, v in q.items() if k != "textByTranslation"}
             if q["id"] in variants:
                 q["textByTranslation"] = variants[q["id"]]

@@ -244,6 +244,8 @@ def verify(
 def _print_stages(stages: list[StageResult]) -> None:
     for s in stages:
         line = f"{s.stage}: {s.done} done, {s.skipped} skipped, {s.failed} failed"
+        if s.live:
+            line += f", {s.live} live (use --refresh)"
         if s.spent_usd:
             line += f", ${s.spent_usd:.3f}"
         if s.stopped_by == "cap":
@@ -467,6 +469,35 @@ def publish(
     for path, size in result.files.items():
         typer.echo(f"  draft/{path}  {size:,} bytes")
     _exit(ExitCode.OK)
+
+
+@app.command()
+def retire(
+    book: BookOpt,
+    item: Annotated[str, typer.Option("--item", help="The key idea or question ID.")],
+    replace: Annotated[bool, typer.Option("--replace", help="Add a replacement.")] = False,
+    text: Annotated[str | None, typer.Option(help="The replacement question's text.")] = None,
+    title: Annotated[str | None, typer.Option(help="The replacement key idea's title.")] = None,
+    body: Annotated[str | None, typer.Option(help="The replacement key idea's body.")] = None,
+) -> None:
+    """Retire a live item, optionally adding a replacement with a new ID (FR-024)."""
+    from thinkbible_pipeline import app as wiring
+    from thinkbible_pipeline.drafts.retire import RetireError
+    from thinkbible_pipeline.drafts.retire import retire as retire_item
+
+    try:
+        request = PublishRequest(book=book)
+    except ValidationError as e:
+        _usage(e)
+    store = wiring.publish_store(request.book_info.slug)
+    try:
+        result = retire_item(store, item, replace=replace, text=text, title=title, body=body)
+    except RetireError as e:
+        _exit(ExitCode.USAGE, str(e))
+    typer.echo(f"retired {', '.join(result.retired)}")
+    if result.replacement:
+        typer.echo(f"added {result.replacement} (replaces {item})")
+    _exit(ExitCode.OK, f"publish {request.book_info.name} to put this on the draft channel")
 
 
 @app.command()

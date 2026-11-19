@@ -716,6 +716,25 @@ risk.
 - **Doc update**: the brief's example section used `mk-1-1` and `mark-1.0.0`. Update it to
   `mrk-1-1` and `1.0.0`.
 
+## R14a. Live content (US6, built 2026-11-19)
+
+**Decision**:
+- `promote` records each section's live items on its draft (`SectionDraft.live`: the version and
+  every promoted item's frozen fields), so the pipeline knows what is frozen without reading the
+  live channel. `drafts/live.py` holds the rules.
+- `generate`, `summaries` and `align` skip a live section ("skipped: live (use --refresh)"), left
+  out of the estimate; `check` fails it on changed live wording and otherwise only reports;
+  `review` grades it for the scorecard (weak live items are listed there) and never drops,
+  re-picks or removes anything live.
+- `retire --item ID [--replace]`: the replacement's wording is given by the owner (`--text`, or
+  `--title`/`--body`), since drafts are never edited by hand; `retiredIn` is the version an item
+  was first retired in on the live channel, else the version being built.
+- `--refresh` writes new candidate questions for a live section without touching its key ideas,
+  notes or questions; the writer sees the existing questions so it doesn't repeat them. New
+  questions only fill free places under the cap (at most min(key ideas, 3) active, FR-009), so a
+  section with three live questions gains one only after one is retired. `align` keeps live
+  questions' KJV wording as it is.
+
 ## R14. Publishing and delivery (revised 2026-11-10)
 
 **Decision**:

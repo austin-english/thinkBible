@@ -47,6 +47,7 @@ class StageEstimate:
     skipped: int
     estimate_usd: float
     calls_model: bool
+    live: int = 0  # live sections left alone (US6)
 
 
 @dataclass(frozen=True)
@@ -72,6 +73,8 @@ def confirm(
     """Print what the run will do and what it may cost, then ask unless ``yes``."""
     for s in summary.stages:
         line = f"{s.stage}: {s.to_process} sections to process, {s.skipped} skipped (already done)"
+        if s.live:
+            line += f", {s.live} skipped: live (use --refresh)"
         if s.calls_model and s.to_process:
             line += f", about ${s.estimate_usd:.2f}"
         echo(line)
