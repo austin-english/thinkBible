@@ -30,6 +30,8 @@ class VerseEntry(ContractModel):
 
 class Chapter(ContractModel):
     number: Annotated[int, Field(ge=1)]
+    # A psalm's title, before verse 1: part of the translation's text (only in Psalms).
+    title: Annotated[str, StringConstraints(min_length=1)] | None = None
     verses: Annotated[list[VerseEntry], Field(min_length=1)]
 
 

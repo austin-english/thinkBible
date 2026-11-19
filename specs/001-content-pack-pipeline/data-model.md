@@ -78,8 +78,10 @@ hidden alternates (revised 2026-11-17).
 
 ### VerseText ([verses.schema.json](contracts/verses.schema.json))
 
-One file per translation per book: chapters → verses `{number, text, paragraphStart?, lines?}`,
-plus `omittedVerses[]`.
+One file per translation per book: chapters `{number, title?, verses}` → verses `{number, text,
+paragraphStart?, lines?}`, plus `omittedVerses[]`. A chapter's `title` is a psalm's title ("A Psalm of
+David, when he fled from his son Absalom."), part of the translation's text and shown before verse
+1; editorial headings are not included (2026-11-19, T088).
 
 ### PackIndex ([index.schema.json](contracts/index.schema.json))
 

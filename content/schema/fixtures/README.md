@@ -8,6 +8,8 @@ These are shared test data for every implementation of the pack contract: the Py
   schema is chosen by file-name prefix: `study-pack-*`, `verses-*`, `index-*`.
   - `study-pack-mark-sample.json` holds Mark 1:1–8 and 1:9–11 at pack version 1.1.0, including a
     retired question (`mrk-1-9-q5`) and its replacement (`mrk-1-9-q3`, `replaces`).
+  - `verses-bsb-psalm-title.json` holds Psalm 3:1–2 with the psalm's title, a chapter's optional
+    `title` (2026-11-19).
 - **`invalid/`**: each file is the valid study pack with **exactly one** defect, named after it
   (`study-pack--<defect>.json`). Each must fail both the JSON Schema and the models.
 

@@ -29,6 +29,11 @@
         "required": ["number", "verses"],
         "properties": {
           "number": { "type": "integer", "minimum": 1 },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "A psalm's title, shown before verse 1 ('A Psalm of David, when he fled from his son Absalom.'). It is part of the translation's text, unlike an editorial heading. Only in Psalms."
+          },
           "verses": {
             "type": "array",
             "minItems": 1,

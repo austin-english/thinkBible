@@ -7,8 +7,8 @@ What goes in:
   they are never published.
 - **The book introduction**: from the first section's draft, when it has one.
 - **Verse files**: one per translation (BSB first, the default), from the frozen snapshot, with
-  paragraph starts, poetry lines (indent at most 4) and the verses of the KJV versification the
-  translation omits.
+  paragraph starts, poetry lines (indent at most 4), psalm titles (a chapter's ``title``, T088)
+  and the verses of the KJV versification the translation omits. Editorial headings are left out.
 - **Provenance**: every translation and commentary used, with its license and checksums (FR-023),
   and the prompt versions and models each stage used (FR-013).
 
@@ -283,10 +283,15 @@ def verse_text(
     omitted: list[OmittedVerse] = []
     for number, verse_count in enumerate(KJV_VERSES[code], start=1):
         verses: list[VerseEntry] = []
+        titles: list[str] = []  # a psalm's title (the translation's own text, not a heading)
         paragraph = True  # a chapter starts a paragraph
         chapter = by_number.get(number)
         for item in chapter.items if chapter else []:
-            if isinstance(item, HeadingItem | SubtitleItem):
+            if isinstance(item, SubtitleItem):
+                if not verses and item.text.strip():
+                    titles.append(item.text.strip())
+                paragraph = True
+            elif isinstance(item, HeadingItem):
                 paragraph = True
             elif isinstance(item, BreakItem):
                 paragraph = paragraph or item.paragraph
@@ -315,7 +320,7 @@ def verse_text(
             if v not in present
         ]
         if verses:
-            chapters.append(Chapter(number=number, verses=verses))
+            chapters.append(Chapter(number=number, title=" ".join(titles) or None, verses=verses))
     return VerseText(
         format_version=FORMAT_VERSION,
         book=Book(id=code, name=book_name),

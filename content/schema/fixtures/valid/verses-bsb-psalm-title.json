@@ -1,0 +1,55 @@
+{
+  "formatVersion": 1,
+  "book": {
+    "id": "PSA",
+    "name": "Psalms"
+  },
+  "translation": {
+    "id": "bsb",
+    "name": "Berean Standard Bible",
+    "abbreviation": "BSB"
+  },
+  "packVersion": "1.0.0",
+  "chapters": [
+    {
+      "number": 3,
+      "title": "A Psalm of David, when he fled from his son Absalom.",
+      "verses": [
+        {
+          "number": 1,
+          "text": "O LORD, how my foes have increased! How many rise up against me!",
+          "paragraphStart": true,
+          "lines": [
+            {
+              "text": "O LORD, how my foes have increased!",
+              "indent": 1
+            },
+            {
+              "text": "How many rise up against me!",
+              "indent": 2
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "text": "Many say of me, “God will not deliver him.” Selah",
+          "lines": [
+            {
+              "text": "Many say of me,",
+              "indent": 1
+            },
+            {
+              "text": "“God will not deliver him.”",
+              "indent": 2
+            },
+            {
+              "text": "Selah",
+              "indent": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "omittedVerses": []
+}

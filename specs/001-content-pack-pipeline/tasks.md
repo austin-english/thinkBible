@@ -940,7 +940,7 @@ text edit is refused.
     the run records after a failure;
   - cost estimates and the ledger use batch prices; `--local` keeps the standard API for tuning;
   - verify on a few sections that content and grades match a standard run before switching.
-- [ ] T088 Psalm titles in the verse files (added 2026-11-18; before Psalms is published): the
+- [x] T088 Psalm titles in the verse files (added 2026-11-18; before Psalms is published): the
   snapshot keeps each psalm's title ("A Psalm of David, when he fled…") as a subtitle before
   verse 1, but verses.schema.json has no field for it, so `publish/build.py` leaves it out. Add a
   `title` to a chapter in the schema first, then the fixtures, `thinkbible_core`, the build and

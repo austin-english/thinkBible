@@ -290,7 +290,8 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
 - **Book / Chapter / Section** (from the pack): section ID, reference, title, verse range,
   "no prompt" flag, context note, manuscript notes.
 - **Catalog** (from the CDN, cached): books and whether each is published.
-- **Verse text** (per translation): book, chapter, verse number, text.
+- **Verse text** (per translation): book, chapter, verse number, text; for Psalms, the chapter's
+  optional `title` (the psalm's own title, shown before verse 1 in the reader's translation).
 - **Reading position** (on device, synced in spec 005): book, chapter, section ID, last-opened time.
 - **Book notify request** (on device): book ID, requested time.
 - **Pack cache** (on device): book, pack version, translation files, validation status.

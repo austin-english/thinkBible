@@ -133,3 +133,20 @@ def test_a_pack_breaking_the_contract_is_not_built(publish_book: Any) -> None:
     with pytest.raises(BuildError) as err:
         build(publish_book)
     assert any("2jn-1-1-q1" in p for p in err.value.problems)
+
+
+def test_a_psalms_title_is_kept_and_an_editorial_heading_is_not(make_library: Any) -> None:
+    from thinkbible_pipeline.publish.build import verse_text
+
+    psalm = {"book": "PSA", "chapters": [{"number": 3, "items": [
+        {"type": "heading", "text": "Deliver Me, O LORD!"},
+        {"type": "subtitle", "text": "A Psalm of David, when he fled from his son Absalom."},
+        {"type": "verse", "number": 1, "text": "O LORD, how my foes have increased!"},
+        {"type": "verse", "number": 2, "text": "Many say of me, God will not deliver him."},
+    ]}]}  # fmt: skip
+    lib = make_library({("bsb", "PSA"): psalm, ("kjv", "PSA"): psalm})
+    verses = verse_text(lib, "bsb", "PSA", "Psalms", "1.0.0")
+    chapter = next(c for c in verses.chapters if c.number == 3)
+    assert chapter.title == "A Psalm of David, when he fled from his son Absalom."
+    assert "Deliver Me" not in verses.model_dump_json()
+    assert validate(verses.to_doc(), "verses") == []
