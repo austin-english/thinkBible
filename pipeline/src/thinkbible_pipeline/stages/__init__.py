@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from thinkbible_pipeline.requests import STAGE_ORDER
+from thinkbible_pipeline.stages.align import AlignStage
 from thinkbible_pipeline.stages.base import BookStage, SectionStage
 from thinkbible_pipeline.stages.checks import CheckStage
 from thinkbible_pipeline.stages.generate import GenerateStage
@@ -19,6 +20,7 @@ def registry() -> dict[str, SectionStage | BookStage]:
         IntroStage(),
         SummariesStage(),
         GenerateStage(),
+        AlignStage(),
         CheckStage(),
         ReviewStage(),
         ReportStage(),
@@ -29,8 +31,8 @@ def registry() -> dict[str, SectionStage | BookStage]:
 def expand_all(stage_arg: str) -> str:
     """``all`` (alone or in a list) means every stage that is implemented, in pipeline order.
 
-    Stages planned for later user stories (align) are left out until they
-    exist; naming one of them explicitly still fails with "not implemented yet".
+    Stages planned for later user stories are left out until they exist; naming one of them
+    explicitly still fails with "not implemented yet".
     """
     names = [s.strip() for s in stage_arg.split(",") if s.strip()]
     if "all" not in names:

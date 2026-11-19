@@ -167,8 +167,12 @@ ThML, not OSIS, and would need a small second converter.
   1. a code diff of which verses exist in each translation;
   2. BSB footnotes that mention manuscripts (patterns such as "manuscripts", "BYZ and TR include",
      "Some early manuscripts").
-- Each candidate becomes a short, neutral note written by the alignment step, and is always
-  listed for human review.
+- Each candidate becomes a short, neutral note, always listed for human review. (Revised
+  2026-11-19: the notes are written in code from fixed wording, not by a model: they state a fact,
+  so they stay neutral and can't add anything. Footnotes about wording within a verse, 22 of
+  Mark's 28 manuscript footnotes, get no note; the brief scopes notes to verses present in one
+  translation and missing in the other. Mark has 6: 7:16, 9:44, 9:46, 11:26, 15:28 and the ending
+  after 16:8.)
 - Verse-text files carry `omittedVerses` so the app can render the gap correctly.
 
 ## R4. Commentary structure and gathering excerpts per section
@@ -679,6 +683,19 @@ risk.
 - Only items with a BSB-only token go to a Haiku call, which writes a KJV wording variant into
   `textByTranslation.kjv`. Every variant is listed for review.
 - Manuscript notes are covered in R3.
+
+**Revised in building it (2026-11-19, `stages/align.py`, `align_rules.py`)**:
+- Comparing every content word flagged 227 of Mark's 296 questions, nearly all on everyday words
+  ("crowd", where the KJV says "multitude"; "boat", "ship"). Questions are plain modern English
+  for readers of either translation, so detection is limited to what a KJV reader would look for
+  in their text and not find: a quoted phrase the KJV words differently ('I am willing' / 'I
+  will'), and a name the KJV's book never uses (Elijah / Elias), with the KJV's joined letters
+  read as two (Bartimæus). On Mark: 19 kept questions flagged, 14 given a variant.
+- Only questions get variants (the contract has `textByTranslation` on questions; key ideas
+  don't quote either translation). The model may return a question unchanged, and a variant is
+  kept only if it ends with "?", is 10 to 200 characters and has no double quotation marks.
+- Variants are written for every candidate, before `check` and `review`, so a question the grader
+  keeps carries its variant.
 
 ## R13. IDs, versions and placeholders
 

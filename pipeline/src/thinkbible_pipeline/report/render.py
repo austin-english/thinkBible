@@ -151,6 +151,10 @@ def section_view(
                 for c, r in sorted(draft.excerpts.items(), key=lambda kv: _order(kv[0]))
             ],
             "cost": sum(r.cost_usd for r in draft.stages.values()),
+            "alignment": [
+                {**a, "verses": a.get("verses", ""), "id": a.get("itemId", "")}
+                for a in draft.alignment
+            ],
             "central_note": central_note,
             # Worth a look: a failure, or an item dropped for being wrong rather than for overflow.
             "problem": bool(draft.failed)
@@ -175,8 +179,11 @@ def render_review(
     views = [section_view(e, drafts.get(e.id), card.book, library) for e in sections]
     first = drafts.get(sections[0].id) if sections else None
     intro = first.book_intro if first is not None else None
+    alignment = [a for d in drafts.values() for a in d.alignment]
     return env.get_template("review.html.j2").render(
         card=card,
+        variants=sum(1 for a in alignment if a["kind"] == "variant"),
+        notes=sum(1 for a in alignment if a["kind"] == "note"),
         sections=views,
         book_name=resolve_book(card.book).name,
         intro=intro,

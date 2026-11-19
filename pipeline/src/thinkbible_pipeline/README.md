@@ -36,6 +36,7 @@ pipeline/
 │   ├── intro/v2.md                 # the book introduction ("About Mark")
 │   ├── intro-review/v2.md          # the grader's rubric for the introduction
 │   ├── summaries/v1.md             # one-line summary
+│   ├── align/v1.md                 # a question worded for KJV readers
 │   ├── extract/v18.md              # generate call 1: key ideas, context, views differ
 │   ├── questions/v18.md            # generate call 2: candidate questions in reading order
 │   ├── question-guide/v5.md        # quality rules + the owner's favorite questions
@@ -62,6 +63,8 @@ pipeline/
 │   │   ├── summaries.py            # `summaries`: one line per section (Haiku)
 │   │   ├── generate.py             # `generate`: key ideas, context, questions (Sonnet)
 │   │   ├── generate_rules.py       # evidence check, ranking, choosing questions (no model calls)
+│   │   ├── align.py                # `align`: KJV wording variants and manuscript notes (Haiku)
+│   │   ├── align_rules.py          # what needs a variant or a note (no model calls)
 │   │   ├── checks.py               # `check`: the gate's rule checks on each finished section
 │   │   ├── review.py               # `review`: the grader (Opus) grades every item 1-5
 │   │   ├── report.py               # `report`: scorecard.json + review.html for the book
@@ -155,7 +158,7 @@ costs); a section's content never travels through Step Functions. Each Lambda re
 drafts in S3.
 
 - **`Stages`** iterates over `$.request.stages`: the stages named on the command line (`all`
-  expands to the seven below). One at a time and in order, because each stage needs the one
+  expands to the eight below). One at a time and in order, because each stage needs the one
   before finished for the whole book (a section's context uses the previous section's summary;
   the grader needs the generated content). For each stage:
   1. **`PlanStage`** (Lambda) returns the stage's `sectionIds`: each section whose inputs, prompt
@@ -181,12 +184,12 @@ drafts in S3.
 | `intro` | the book's first section | Sonnet writes, Opus grades | about $0.15 per book | "About Mark", the book's first post: 80-120 words from each commentator's preface (who wrote it, to whom, when, why, what to watch for), each source backed by an exact quote. Graded 2 or less: one rewrite with the reason; still failing, a scorecard blocker. |
 | `summaries` | every section | Haiku | about $0.002 | One line about the passage. The next section's `generate` gets it as "the previous section", for its context note's "how this follows". Questions are never written from it. |
 | `generate` | every section | Sonnet | about $0.10 | The content. Code gathers each commentator's notes on the section (`commentary/gather.py`, R4; notes running past the section are labelled so). Call 1 writes the key ideas (one marked as the central meaning) and background facts, each source with an exact quote, plus the context and "views differ" notes. Code keeps only sources whose quote is found word for word. Call 2 writes up to 10 candidate questions in reading order, 2-3 on the central idea. Code checks each one (length, "?", in the section's verses, aimed at a key idea). |
+| `align` | every section | Haiku, only where needed | about $0.0001 | For KJV readers: a question that quotes a phrase the KJV words differently ('I am willing' / 'I will') or names someone the KJV spells differently (Elijah / Elias) gets a KJV wording (`textByTranslation.kjv`); the question itself is unchanged. Code also writes neutral manuscript notes for verses one translation has and the other doesn't (Mark 7:16) and for early endings (after Mark 16:8). |
 | `check` | every section | none | free | The published format's rules on the finished section: lengths, verse references that resolve in both translations, no cut-off text. A section that breaks one is regenerated on the next run, once; then it fails. |
 | `review` | every section | Opus | about $0.13 | The quality gate: the calibrated grader scores every key idea, candidate question and note 1-5. At 2 or less an item is dropped. Up to 3 questions are kept (never more than the key ideas): the best on the central idea first if it grades 4 or more, then the best of the rest. A weak views note is removed; a weak context note regenerates the section. |
 | `report` | once per book, in `PlanStage` | none | free | `scorecard.json` (pass rates, failed and ungenerated sections, calibration, cost, what blocks promotion) and `review.html` (`make status` opens it), and the book's status. |
 
-In all, about $0.23 per section. `align` (KJV wording variants and manuscript notes, US5) is
-planned and not built yet.
+In all, about $0.27 per section.
 
 ### One `RunSection`
 

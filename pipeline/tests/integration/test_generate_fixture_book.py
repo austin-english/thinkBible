@@ -150,7 +150,7 @@ def test_fixture_book_end_to_end(
         assert (root / name).is_file(), name
     assert sorted(p.name for p in (root / "sections").iterdir()) == sorted(f"{i}.json" for i in ids)
     assert {p.name.split("-", 2)[-1] for p in (root / "runs").iterdir()} == {
-        "intro.json", "summaries.json", "generate.json", "check.json", "review.json"
+        "intro.json", "summaries.json", "generate.json", "align.json", "check.json", "review.json"
     }  # fmt: skip
 
     for sid in ids:

@@ -149,6 +149,9 @@ class SectionDraft(JsonModel):
     # Every question that passed generate's checks, in the writer's order (not published). The
     # grader scores them all and ``review`` keeps the best (R11, 2026-11-17).
     candidates: list[dict[str, Any]] = Field(default_factory=list)
+    # What ``align`` added, for the report (R12, R3): each KJV variant with the words that called
+    # for it, each variant the model wrote that the checks refused, and each manuscript note.
+    alignment: list[dict[str, Any]] = Field(default_factory=list)
     # The key idea that is the passage's central meaning: ``review`` gives its best question the
     # first place, if one grades 4 or more (2026-11-18).
     central_idea: str | None = None

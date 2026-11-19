@@ -93,6 +93,8 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
     <div class="tile {{ 'bad' if card.full_set_rate is not none and card.full_set_rate < t.min_full_set_rate }}"><b>{{ "—" if card.full_set_rate is none else ((card.full_set_rate * 100)|round|int|string + "%") }}</b><span>sections with a full set of questions (needs {{ (t.min_full_set_rate * 100)|round|int }}%)</span></div>
     <div class="tile"><b>{{ "—" if card.question_pass_rate is none else ((card.question_pass_rate * 100)|round|int|string + "%") }}</b><span>candidate questions passing (information)</span></div>
     {% if card.calibration %}<div class="tile {{ 'bad' if not card.calibration.current }}"><b>{{ "—" if card.calibration.agreement is none else ((card.calibration.agreement * 100)|round|int|string + "%") }}</b><span>grader agreement with you{% if card.calibration.items %} ({{ card.calibration.items }} items){% endif %}</span></div>{% endif %}
+    <div class="tile"><b>{{ variants }}</b><span>KJV wording variants</span></div>
+    <div class="tile"><b>{{ notes }}</b><span>manuscript notes</span></div>
     {% for st, n in card.dropped_by_stage|dictsort %}<div class="tile"><b>{{ n }}</b><span>dropped by {{ st }}</span></div>{% endfor %}
     {% if card.not_generated %}<div class="tile"><b>{{ card.not_generated|length }}</b><span>not generated yet</span></div>{% endif %}
   </div>
@@ -175,6 +177,9 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
         {% elif s.no_prompt %}<div class="note"><span class="label">No question</span><br>{{ s.no_prompt_reason }}</div>{% endif %}
         <div><div class="label">Context</div><div class="note">{{ s.context }}</div>{% if s.context_grade %}<div class="qmeta">graded {{ s.context_grade.score }}: {{ s.context_grade.notes }}</div>{% endif %}</div>
         {% if s.views_differ %}<div><div class="label">Views differ</div><div class="note">{{ s.views_differ }}</div>{% if s.views_grade %}<div class="qmeta">graded {{ s.views_grade.score }}: {{ s.views_grade.notes }}</div>{% endif %}</div>{% endif %}
+        {% if s.alignment %}<div><div class="label">Alignment (for KJV readers)</div><ul class="dropped">
+          {% for a in s.alignment %}<li>{% if a.kind == "note" %}<b>Manuscript note</b> · {{ a.verses }}<br><em>{{ a.text }}</em>{% elif a.kind == "variant" %}<b>KJV variant</b> for <span class="mono">{{ a.id }}</span> ({{ a.words|join(", ") }})<br>BSB: <em>{{ a.text }}</em><br>KJV: <em>{{ a.kjv }}</em>{% else %}<b>Variant refused</b> for <span class="mono">{{ a.id }}</span>: {{ a.reason }}<br><em>{{ a.kjv }}</em>{% endif %}</li>{% endfor %}
+        </ul></div>{% endif %}
         <details><summary>Pipeline details: summary, commentary given, dropped items ({{ s.dropped|length }})</summary>
           <p class="qmeta">Summary for the next section: “{{ s.summary or "" }}”</p>
           <p class="qmeta">Commentary given: {% for who, tokens, refs, trimmed in s.excerpts %}{{ who }} {{ "{:,}".format(tokens) }} tokens{% if refs %} (follows {{ refs|join(", ") }}){% endif %}{% if trimmed %}, trimmed{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}</p>

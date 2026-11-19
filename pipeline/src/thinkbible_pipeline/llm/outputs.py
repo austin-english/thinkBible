@@ -77,6 +77,15 @@ class IdeasOut(_Out):
     no_prompt_reason: str | None = None
 
 
+class AlignVariantOut(_Out):
+    """``align``: one question worded for KJV readers (R12)."""
+
+    text: str = Field(
+        description="The question with the KJV's words for what it quotes or names; otherwise "
+        "unchanged. Return it unchanged if it already reads naturally for a KJV reader."
+    )
+
+
 class IntroOut(_Out):
     """``intro``: the book introduction, from the commentators' prefaces."""
 

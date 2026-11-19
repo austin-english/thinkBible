@@ -829,7 +829,7 @@ section containing 7:16 gets a manuscript note, and so does 16:9–20 (from the 
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T076 [P] [US5] Write `pipeline/tests/unit/test_align_detect.py`:
+- [x] T076 [P] [US5] Write `pipeline/tests/unit/test_align_detect.py`:
   - BSB-only token detection (stopwords removed, light stemming) flags "sandals" for Mark 1:7,
     but not words present in both translations;
   - manuscript candidates come from the verse-presence diff (7:16) and from BSB footnotes matching
@@ -837,7 +837,7 @@ section containing 7:16 gets a manuscript note, and so does 16:9–20 (from the 
 
 ### Implementation for User Story 5
 
-- [ ] T077 [US5] Implement `pipeline/src/thinkbible_pipeline/stages/align.py` and
+- [x] T077 [US5] Implement `pipeline/src/thinkbible_pipeline/stages/align.py` and
   `pipeline/prompts/align/v1.md` (R12, R3):
   - code-based detection;
   - one Haiku call per affected item writes `textByTranslation.kjv`; one call per candidate
@@ -845,7 +845,7 @@ section containing 7:16 gets a manuscript note, and so does 16:9–20 (from the 
   - every output gets an `align` flag for review.
 
   Add `AlignVariantOut` and `ManuscriptNoteOut` to `llm/outputs.py`.
-- [ ] T078 [US5] Add `align` to `run` and `all` (after `generate`, before `check`) in `cli.py`. Add
+- [x] T078 [US5] Add `align` to `run` and `all` (after `generate`, before `check`) in `cli.py`. Add
   an "Alignment" section to `review.html.j2` listing every variant and note.
 
 **Checkpoint**: Alignment output is reviewed together with the rest of the book.

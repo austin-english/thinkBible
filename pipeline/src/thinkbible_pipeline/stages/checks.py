@@ -91,7 +91,12 @@ class CheckStage(SectionStage):
 
     def inputs(self, section_id: str, draft: SectionDraft, deps: Deps) -> Any:
         rec = draft.stages.get("generate")
-        return {"generate": f"{rec.input_hash}@{rec.completed_at}" if rec else None}
+        align = draft.stages.get("align")
+        return {
+            "generate": f"{rec.input_hash}@{rec.completed_at}" if rec else None,
+            # The KJV variants and manuscript notes are checked too (R12).
+            "align": f"{align.input_hash}@{align.completed_at}" if align else None,
+        }
 
     async def execute(
         self, section_id: str, inputs: Any, draft: SectionDraft, deps: Deps
