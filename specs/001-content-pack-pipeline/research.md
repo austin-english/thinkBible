@@ -628,6 +628,16 @@ risk.
   and reverted. It led 1:16-20 with a detail question the grader rates 5 because it mirrors an
   owner-loved example, and moved 1:21-28's opener off the central idea. The grades, not the
   order, are the limit: a later round can teach the grader to rank big-picture questions higher.
+- **Big picture in keeping and ordering** (2026-11-19, `review/v14`): the grader marks each
+  question big-picture or detail, separately from its 1-5 grade (calibration unchanged at 89%).
+  Equal grades prefer the big-picture question when choosing which three to keep, including the
+  place kept for the central idea; a big-picture question graded 4 or more leads, and without one
+  the best-graded leads, with the central idea breaking ties. In Mark, 3:1-6 had dropped both of
+  its big-picture questions ("Why might a clear act of mercy lead to a plot rather than belief?",
+  a 5) for details on the writer's order, and 12 sections led with a detail 4 on the central idea
+  ahead of a 5. Applied to Mark's stored grades, 19 sections change their first question and 81
+  (from 73) lead with a big-picture one. A change to these rules re-runs `review`, which reuses a
+  section's stored grades when the grader prompt and model are unchanged: no model call.
 - **Giveaway check**: code drops a question that repeats an idea's title word for word. A check
   for an 8-word run from the idea's body was removed (`checks-v2`): a plain question describes
   the same scene the body does, and it dropped Mark 1:21-28's best question. The grader's

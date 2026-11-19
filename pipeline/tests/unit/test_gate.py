@@ -87,7 +87,7 @@ def test_low_grades_are_dropped_and_the_rest_keep_their_order(
     tmp_path: Path, make_library: Any
 ) -> None:
     deps = setup(tmp_path, make_library, {("review", SID): grades({**ALL_GOOD, "q2": 2})},
-                 central=f"{SID}-k1")  # q1 (a 4 on the central k1) opens  # fmt: skip
+                 central=f"{SID}-k1")  # q1 is a 4 on the central k1; q3 is a 5  # fmt: skip
     result = asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
     assert result.exit_code == ExitCode.OK
     draft = deps.store.read_draft_or_new(SID)
@@ -95,7 +95,7 @@ def test_low_grades_are_dropped_and_the_rest_keep_their_order(
     assert {d.item_id: (d.stage, d.reason) for d in draft.dropped} == {
         f"{SID}-q2": ("review", "graded 2: Reason for q2.")
     }
-    assert ids(draft) == ["q1", "q3"]
+    assert ids(draft) == ["q3", "q1"]  # no big-picture question: the 5 leads
 
 
 def test_a_dropped_idea_takes_its_questions_and_lowers_the_question_cap(
@@ -205,10 +205,11 @@ def test_with_no_central_question_the_best_graded_goes_first_ties_to_the_widest(
     assert ids(deps.store.read_draft_or_new(SID)) == ["q2", "q1", "q3"]  # all 4s: the widest
 
 
-def test_the_best_question_on_the_central_idea_goes_first(
+def test_a_place_is_kept_for_the_central_idea_and_the_best_graded_leads(
     tmp_path: Path, make_library: Any
 ) -> None:
-    """The first question opens the central meaning (2026-11-18), if one on it grades 4 or more."""
+    """A question on the central idea graded 4 or more is kept (2026-11-18); without a big-picture
+    question, the best-graded leads (2026-11-19)."""
     qs = [question(1, [1], 2, 2), question(2, [2], 4, 4), question(3, [3], 3, 5),
           question(4, [2], 1, 8)]  # fmt: skip
     scores = {"k1": 5, "k2": 5, "k3": 5, "q1": 5, "q2": 4, "q3": 5, "q4": 4}
@@ -216,13 +217,15 @@ def test_the_best_question_on_the_central_idea_goes_first(
                  {**SECTION, "questions": qs}, central=f"{SID}-k2")  # fmt: skip
     asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
     draft = deps.store.read_draft_or_new(SID)
-    # q2 and q4 tie at 4 on the central k2: the whole-passage q4 opens. The 5s fill the rest.
-    assert ids(draft) == ["q4", "q1", "q3"]
-    assert _central_note(draft, [i["id"] for i in draft.section["keyIdeas"]],
-                         draft.section["questions"]) is None  # fmt: skip
+    # q2 and q4 tie at 4 on the central k2: the whole-passage q4 is kept; the 5s fill the rest,
+    # and the wider 5 (q3) leads.
+    assert ids(draft) == ["q3", "q1", "q4"]
+    note = _central_note(draft, [i["id"] for i in draft.section["keyIdeas"]],
+                         draft.section["questions"])  # fmt: skip
+    assert note and note.startswith("Question 1 is about another idea")
 
 
-def test_without_a_strong_central_question_the_widest_goes_first_and_is_flagged(
+def test_without_a_strong_central_question_the_best_graded_leads(
     tmp_path: Path, make_library: Any
 ) -> None:
     qs = [question(1, [1], 2, 2), question(2, [2], 4, 4), question(3, [3], 3, 5)]
@@ -234,7 +237,7 @@ def test_without_a_strong_central_question_the_widest_goes_first_and_is_flagged(
     assert ids(draft) == ["q3", "q1", "q2"]
     note = _central_note(draft, [i["id"] for i in draft.section["keyIdeas"]],
                          draft.section["questions"])  # fmt: skip
-    assert note and note.startswith("No question on the central idea graded 4")
+    assert note and note.startswith("Question 1 is about another idea")
 
 
 def test_a_lower_grade_never_beats_a_higher_one(tmp_path: Path, make_library: Any) -> None:
@@ -329,5 +332,39 @@ def test_a_big_picture_question_graded_4_or_more_goes_first(
 
     # The central q2 (a 4, a detail) would open; the big-picture q1 (a 5) leads instead.
     assert order({"q1": "big-picture", "q2": "detail", "q3": "detail"}, "big") == ["q1", "q2", "q3"]
-    # With no big-picture question, the central-first order stands.
-    assert order({"q1": "detail", "q2": "detail", "q3": "detail"}, "none") == ["q2", "q1", "q3"]
+    # With no big-picture question, the best-graded leads (Mark 3:1-6): the 5s outrank the central
+    # 4, and the wider of them (q1) goes first.
+    assert order({"q1": "detail", "q2": "detail", "q3": "detail"}, "none") == ["q1", "q2", "q3"]
+
+
+def test_equal_grades_keep_the_big_picture_question(tmp_path: Path, make_library: Any) -> None:
+    """Mark 3:1-6 (2026-11-19): big-picture questions had lost ties to details on writer's order."""
+    qs = [question(1, [1], 3, 3), question(2, [1], 4, 4), question(3, [2], 5, 5),
+          question(4, [3], 6, 6), question(5, [3], 6, 6)]  # fmt: skip
+    scores = {"k1": 5, "k2": 5, "k3": 5, "q1": 4, "q2": 4, "q3": 5, "q4": 5, "q5": 5}
+    out = grades(scores)
+    for item in out["items"]:
+        if item["itemId"].endswith(("-q2", "-q5")):
+            item["focus"] = "big-picture"
+        elif "-q" in item["itemId"]:
+            item["focus"] = "detail"
+    deps = setup(tmp_path, make_library, {("review", SID): out},
+                 {**SECTION, "questions": qs}, central=f"{SID}-k1")  # fmt: skip
+    asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
+    # The central place goes to big-picture q2 over q1 (both 4s); of the 5s, big-picture q5 beats
+    # q4 for k3, and q3 adds k2. The big-picture 5 leads.
+    assert ids(deps.store.read_draft_or_new(SID)) == ["q5", "q2", "q3"]
+
+
+def test_a_selection_change_reuses_the_stored_grades(tmp_path: Path, make_library: Any) -> None:
+    """Re-running review with the same grader re-selects from the stored grades: no model call."""
+    deps = setup(tmp_path, make_library, {("review", SID): grades(ALL_GOOD)})
+    asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
+    first = deps.store.read_draft_or_new(SID)
+    runner = deps.runner
+    calls = len(runner.calls)
+    runner.responses.clear()  # any model call would now fail
+    result = asyncio.run(run(RunRequest(book="mark", stages=["review"], fresh=True), deps))
+    assert result.exit_code == ExitCode.OK and len(runner.calls) == calls
+    again = deps.store.read_draft_or_new(SID)
+    assert again.grades == first.grades and ids(again) == ids(first)

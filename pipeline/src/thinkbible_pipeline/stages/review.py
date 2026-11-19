@@ -116,19 +116,23 @@ async def grade_items(
 BIG_PICTURE_MIN_SCORE = 4
 
 
-def big_picture_first(
+def order_questions(
     kept: list[dict[str, Any]],
     grades: dict[str, ItemGrade],
     scores: dict[str, int],
     central: str | None,
 ) -> list[dict[str, Any]]:
-    """The kept questions with a big-picture one first, if any graded 4 or more (2026-11-19).
+    """The kept questions in the order readers meet them (2026-11-19).
 
-    Which questions are kept doesn't change; only which comes first. Among big-picture questions
-    the best-graded leads, then one on the central idea, then the order so far. (Mark 1:16-20 had
-    led with "leave everything", a 4 on the run's central idea, ahead of the owner's preferred
-    big-picture "Why might he start with men like these?", a 5.)
+    First, a question the grader marked big-picture and graded 4 or more: the best-graded, then
+    one on the central idea. Without one, the best-graded question, with the central idea only
+    breaking ties, then the one spanning most of the passage. The rest keep the writer's order.
+    (Mark 1:16-20 had led with "leave everything", a 4 on the central idea, ahead of the big-picture
+    "Why might he start with men like these?", a 5; in 12 of Mark's sections with no big-picture
+    question, a detail 4 on the central idea had led ahead of a 5.)
     """
+    if not kept:
+        return kept
     big = [
         c
         for c in kept
@@ -136,17 +140,21 @@ def big_picture_first(
         and g.focus == "big-picture"
         and g.score >= BIG_PICTURE_MIN_SCORE
     ]
-    if not big:
-        return kept
     first = max(
-        big,
+        big or kept,
         key=lambda c: (
             scores.get(c["id"], 0),
             central is not None and central in c["targets"],
+            0 if big else c["verseEnd"] - c["verseStart"],
             -kept.index(c),
         ),
     )
     return [first, *(c for c in kept if c is not first)]
+
+
+# Bump when the rules for keeping and ordering questions change (choose_questions, pick_opener,
+# pick_best, order_questions): every section's review runs again, reusing its stored grades.
+SELECTION_RULES = "2026-11-19: big-picture ties; best-graded first without big-picture"
 
 
 def choose_questions(
@@ -178,28 +186,18 @@ def choose_questions(
     start, end = draft.section["verseStart"], draft.section["verseEnd"]
     cap = max_questions(len(kept_ideas))
     central = draft.central_idea if draft.central_idea in kept_ideas else None
-    # Question 1 opens the passage's central meaning (2026-11-18): the best question on the
-    # central idea goes first if it grades 4 or more; the other places stay quality first.
-    opener = pick_opener(eligible, scores, central, start, end) if cap else None
+    # One place goes to the best question on the central idea if it grades 4 or more; the others
+    # stay quality first. Equal grades prefer what the grader marked big-picture.
+    big = {cid for cid, g in grades.items() if g.focus == "big-picture"}
+    opener = pick_opener(eligible, scores, central, start, end, big) if cap else None
     rest = [c for c in eligible if c is not opener]
     picked = set(
         pick_best(rest, scores, cap - (opener is not None), start, end,
-                  covered=set(opener["targets"]) if opener else None)
+                  covered=set(opener["targets"]) if opener else None, big=big)
     )  # fmt: skip
-    kept = [c for c in rest if c["id"] in picked]
     if opener is not None:
         picked.add(opener["id"])
-        kept = [opener, *kept]
-    elif kept:
-        # No question on the central idea graded 4: the best-graded kept question goes first,
-        # ties to the one spanning most of the passage (a widest-first rule had put a 3 before a 5
-        # in Mark 1:29-34). The report flags the section.
-        first = max(
-            kept,
-            key=lambda c: (scores.get(c["id"], 0), c["verseEnd"] - c["verseStart"], -kept.index(c)),
-        )
-        kept = [first, *(c for c in kept if c is not first)]
-    kept = big_picture_first(kept, grades, scores, central)
+    kept = order_questions([c for c in eligible if c["id"] in picked], grades, scores, central)
     for c in eligible:
         if c["id"] not in picked:
             score = scores.get(c["id"])
@@ -257,7 +255,34 @@ class ReviewStage(SectionStage):
         return deps.settings.stage(self.name).model
 
     def inputs(self, section_id: str, draft: SectionDraft, deps: Deps) -> Any:
-        return {"generate": stamp(draft, "generate"), "check": stamp(draft, "check")}
+        return {
+            "generate": stamp(draft, "generate"),
+            "check": stamp(draft, "check"),
+            # A change to the rules for keeping and ordering questions re-runs this stage; it
+            # reuses the section's stored grades when the grader is unchanged (no model call).
+            "selection": SELECTION_RULES,
+        }
+
+    def _stored_grades(
+        self, draft: SectionDraft, candidates: list[dict[str, Any]], deps: Deps
+    ) -> dict[str, ItemGrade] | None:
+        """The section's grades from its last review, if that review used this grader and graded
+        these same candidate questions (new content has new IDs); then only the selection runs
+        again."""
+        prev = draft.stages.get("review")
+        if (
+            prev is None
+            or prev.status != "done"
+            or prev.prompt_version != self.prompt_version(deps)
+            or prev.model != self.model(deps)
+            or not candidates
+            or not all(c["id"] in draft.grades for c in candidates)
+        ):
+            return None
+        return {
+            item_id: ItemGrade(g.score, g.notes or "", (), g.focus)
+            for item_id, g in draft.grades.items()
+        }
 
     async def execute(
         self, section_id: str, inputs: Any, draft: SectionDraft, deps: Deps
@@ -272,7 +297,12 @@ class ReviewStage(SectionStage):
         if rec is None or rec.status != "done" or not items:
             return SectionResult()  # nothing generated, or nothing to grade
         entry = section_entry(section_id, deps)
-        grades, usage = await grade_items(entry, section, items, deps)
+        stored = self._stored_grades(draft, candidates, deps)
+        if stored is not None:
+            grades, usages = stored, []
+        else:
+            grades, usage = await grade_items(entry, section, items, deps)
+            usages = [usage]
         threshold = deps.settings.review_flag_threshold
         draft.grades = {
             item_id: Grade(
@@ -304,4 +334,4 @@ class ReviewStage(SectionStage):
         if problems:
             regenerate_or_fail(draft, deps.store, section_id, "review", problems[0])
         clear_earlier_failure(draft, "review")
-        return SectionResult(usages=[usage])
+        return SectionResult(usages=usages)

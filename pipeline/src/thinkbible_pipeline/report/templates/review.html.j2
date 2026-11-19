@@ -131,7 +131,7 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
         {% if s.failed %}<span class="pill bad">failed: {{ s.failed }}</span>{% endif %}
         {% if not s.generated %}<span class="pill warn">not generated</span>{% endif %}
         {% if s.no_prompt %}<span class="pill info">no question</span>{% endif %}
-        {% if s.central_note %}<span class="pill warn">question 1 off the central idea</span>{% endif %}
+        {% if s.central_note %}<span class="pill info">question 1 on another idea</span>{% endif %}
         {% if s.entry.title_source == "split" %}<span class="pill warn">provisional title</span>{% endif %}
         {% if s.generated %}<span class="pill info">${{ "%.3f"|format(s.cost) }}</span>{% endif %}
       </div>

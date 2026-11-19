@@ -76,10 +76,12 @@ def pick_opener(
     central: str | None,
     start: int,
     end: int,
+    big: frozenset[str] | set[str] = frozenset(),
 ) -> dict[str, Any] | None:
-    """The question that goes first: the best-graded one on the central idea, if it grades at
-    least ``OPENER_MIN_SCORE`` (2026-11-18). Ties go to one about at least half the passage, then
-    the writer's order. None when there is no such question: the picks then run as before.
+    """The question kept for the central idea: the best-graded one on it, if it grades at least
+    ``OPENER_MIN_SCORE`` (2026-11-18). Ties go to one the grader marked big-picture (``big``,
+    2026-11-19), then one about at least half the passage, then the writer's order. None when
+    there is no such question: the picks then run as before.
     """
     on_central = [
         (n, c)
@@ -90,7 +92,12 @@ def pick_opener(
         return None
     _, best = min(
         on_central,
-        key=lambda nc: (-scores[nc[1]["id"]], not is_big_picture(nc[1], start, end), nc[0]),
+        key=lambda nc: (
+            -scores[nc[1]["id"]],
+            nc[1]["id"] not in big,
+            not is_big_picture(nc[1], start, end),
+            nc[0],
+        ),
     )
     return best
 
@@ -102,23 +109,27 @@ def pick_best(
     start: int,
     end: int,
     covered: set[str] | None = None,
+    big: frozenset[str] | set[str] = frozenset(),
 ) -> list[str]:
     """The IDs of up to ``cap`` candidates, returned in the writer's order.
 
     Quality first (revised 2026-11-17): each place goes to the highest-graded candidate left, so a
     lower grade never beats a higher one. Among equal grades, prefer one aimed at a key idea the
-    picks so far (and ``covered``) don't cover, then one aimed at a better-graded idea (2026-11-19:
-    Mark 1:1-11 kept a question on an idea graded 3 over one on an idea graded 5), then one about
-    at least half the passage, then the writer's order.
+    picks so far (and ``covered``) don't cover, then one the grader marked big-picture (``big``;
+    2026-11-19: Mark 3:1-6 dropped "Why might a clear act of mercy lead to a plot rather than
+    belief?", a big-picture 5, for two detail 5s on the writer's order), then one aimed at a
+    better-graded idea (2026-11-19: Mark 1:1-11 kept a question on an idea graded 3 over one on an
+    idea graded 5), then one about at least half the passage, then the writer's order.
     (Covering every idea first had kept a 3 over a 5, and a reserved place for a whole-passage
     question had let broad questions beat sharper ones; Mark 1:21-28.)
     """
 
-    def rank(n: int, covered: set[str]) -> tuple[int, bool, int, bool, int]:
+    def rank(n: int, covered: set[str]) -> tuple[int, bool, bool, int, bool, int]:
         c = candidates[n]
         return (
             -scores.get(c["id"], 0),
             not (set(c["targets"]) - covered),
+            c["id"] not in big,
             -max((scores.get(t, 0) for t in c["targets"]), default=0),
             not is_big_picture(c, start, end),
             n,

@@ -76,9 +76,9 @@ def _central_note(
     if central is None or not questions or "review" not in draft.stages:
         return None
     if central not in idea_ids:
-        return "The grader dropped the central idea, so question 1 is the best-graded one kept."
+        return "The grader dropped the central idea."
     if central not in questions[0]["targets"]:
-        return "No question on the central idea graded 4 or more, so question 1 is about another."
+        return "Question 1 is about another idea: a better-graded or big-picture question leads."
     return None
 
 
@@ -154,7 +154,6 @@ def section_view(
             "central_note": central_note,
             # Worth a look: a failure, or an item dropped for being wrong rather than for overflow.
             "problem": bool(draft.failed)
-            or central_note is not None
             or any(not d.reason.startswith(ROUTINE_DROPS) for d in draft.dropped),
         }
     )
