@@ -36,8 +36,8 @@ pipeline/
 │   ├── intro/v2.md                 # the book introduction ("About Mark")
 │   ├── intro-review/v2.md          # the grader's rubric for the introduction
 │   ├── summaries/v1.md             # one-line summary
-│   ├── extract/v16.md              # generate call 1: key ideas, context, views differ
-│   ├── questions/v16.md            # generate call 2: candidate questions in reading order
+│   ├── extract/v18.md              # generate call 1: key ideas, context, views differ
+│   ├── questions/v18.md            # generate call 2: candidate questions in reading order
 │   ├── question-guide/v5.md        # quality rules + the owner's favorite questions
 │   └── review/v12.md               # the grader's rubric + the owner's worked examples
 ├── scripts/
@@ -180,7 +180,7 @@ drafts in S3.
 | `sections` | once per book, in `PlanStage` | none | free | Splits the book into 3-12 verse sections (`sections/builder.py`, R5): each BSB heading starts one, never across chapters; a 1-2 verse piece joins the passage it finishes; a long one splits at Henry's division nearest the middle. IDs come from the first verse (`mrk-2-18`) and are permanent once live. Writes `sections.json`. |
 | `intro` | the book's first section | Sonnet writes, Opus grades | about $0.15 per book | "About Mark", the book's first post: 80-120 words from each commentator's preface (who wrote it, to whom, when, why, what to watch for), each source backed by an exact quote. Graded 2 or less: one rewrite with the reason; still failing, a scorecard blocker. |
 | `summaries` | every section | Haiku | about $0.002 | One line about the passage. The next section's `generate` gets it as "the previous section", for its context note's "how this follows". Questions are never written from it. |
-| `generate` | every section | Sonnet | about $0.10 | The content. Code gathers each commentator's notes on the section (`commentary/gather.py`, R4; notes running past the section are labelled so). Call 1 writes the key ideas (one marked as the central meaning) and background facts, each source with an exact quote, plus the context and "views differ" notes. Code keeps only sources whose quote is found word for word. Call 2 writes up to 8 candidate questions in reading order, 2-3 on the central idea. Code checks each one (length, "?", in the section's verses, aimed at a key idea). |
+| `generate` | every section | Sonnet | about $0.10 | The content. Code gathers each commentator's notes on the section (`commentary/gather.py`, R4; notes running past the section are labelled so). Call 1 writes the key ideas (one marked as the central meaning) and background facts, each source with an exact quote, plus the context and "views differ" notes. Code keeps only sources whose quote is found word for word. Call 2 writes up to 10 candidate questions in reading order, 2-3 on the central idea. Code checks each one (length, "?", in the section's verses, aimed at a key idea). |
 | `check` | every section | none | free | The published format's rules on the finished section: lengths, verse references that resolve in both translations, no cut-off text. A section that breaks one is regenerated on the next run, once; then it fails. |
 | `review` | every section | Opus | about $0.13 | The quality gate: the calibrated grader scores every key idea, candidate question and note 1-5. At 2 or less an item is dropped. Up to 3 questions are kept (never more than the key ideas): the best on the central idea first if it grades 4 or more, then the best of the rest. A weak views note is removed; a weak context note regenerates the section. |
 | `report` | once per book, in `PlanStage` | none | free | `scorecard.json` (pass rates, failed and ungenerated sections, calibration, cost, what blocks promotion) and `review.html` (`make status` opens it), and the book's status. |

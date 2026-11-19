@@ -99,7 +99,7 @@ class QuestionsOut(_Out):
     """``generate`` call 2 (``questions``): candidates in reading order; the grader picks 3."""
 
     questions: list[QuestionOut] = Field(
-        description="Up to 8 candidate questions, in the order a reader should meet them."
+        description="Up to 10 candidate questions, in the order a reader should meet them."
     )
 
 

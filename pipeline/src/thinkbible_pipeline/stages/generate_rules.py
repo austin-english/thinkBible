@@ -10,7 +10,7 @@ anything was dropped:
   the first key idea it kept is central. The central idea ranks first, then agreed ones; at most 5;
   verses must lie inside the section.
 - **Questions (R11, revised 2026-11-17)**: an ordered list with no levels. The model writes
-  up to 8 candidates in the order a reader should meet them. Every one that passes the checks is
+  up to 10 candidates in the order a reader should meet them. Every one that passes the checks is
   kept as a candidate; the grader scores them all and ``review`` keeps the best 3 (never more than
   the key ideas): the best on the central idea first if it grades 4 or more, then the best of the
   rest in the writer's order (``gate.outcomes.pick_opener``, ``pick_best``). Until

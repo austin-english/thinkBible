@@ -607,6 +607,27 @@ risk.
   (39% of Mark's questions ask "Why might…"; a taste call for after reading Mark in the app),
   merging the three "answers itself" sections of the questions prompt, and the writer's
   three-step method.
+- **Names what it asks about** (2026-11-19, `questions/v17`, `review/v13`; `extract/v17` is
+  v16 unchanged): Mark 1:21-28's "What does that obedience make them think about everything else
+  he has been saying?" points at teaching the question never mentions, and the owner couldn't
+  answer it; the grader called it "slightly loose" and gave a 4. Pointers to the sentence just
+  before ("What does that choice suggest…") are fine and common (most of 11 in 1.0.0); a pointer
+  to something the question never names is now graded 3 at most, or 2 when the reader can't tell
+  what is asked, and the writer is told to say what it means.
+  **Reverted the same day:** with v17/v13 the owner judged Mark's first five sections worse
+  (1:12 lost its "repent and believe" question, 1:16 led with a detail). Back to `questions/v16`
+  (as `v18`) and `review/v12`. Lesson: one run per section can't tell a prompt's effect from
+  chance (1:12's central idea varies between runs), and writer changes move everything the writer
+  produces; prompt changes now go through a fixed test set judged blind by the owner.
+- **Up to 10 candidates** (2026-11-19, `questions/v18` = v16 with 10 instead of 8): in 1.0.0, 48
+  of 100 sections had no unused question graded 4 or 5, so the grader often had no strong
+  alternative; two more candidates per section give it more to choose from without changing what
+  the writer is asked to write.
+- **Question 1 stays central-first** (2026-11-19): putting the best-graded question first, with
+  the central idea breaking ties, was tried on the existing grades of Mark's first five sections
+  and reverted. It led 1:16-20 with a detail question the grader rates 5 because it mirrors an
+  owner-loved example, and moved 1:21-28's opener off the central idea. The grades, not the
+  order, are the limit: a later round can teach the grader to rank big-picture questions higher.
 - **Giveaway check**: code drops a question that repeats an idea's title word for word. A check
   for an 8-word run from the idea's body was removed (`checks-v2`): a plain question describes
   the same scene the body does, and it dropped Mark 1:21-28's best question. The grader's

@@ -7,7 +7,7 @@ Per section:
    ``noPrompt`` when the commentators give nothing a question could target.
 3. Keep only grounded ideas (``generate_rules.process_ideas``); if none survive, extract once more.
 4. Unless ``noPrompt``, call 2, ``questions`` (with the question guide), given the passage, the
-   commentators' notes and the kept ideas: up to 8 candidates in reading order. All that pass the
+   commentators' notes and the kept ideas: up to 10 candidates in reading order. All that pass the
    checks are kept for the grader, which picks the best 3 in ``review``
    (``generate_rules.process_questions``). With no usable question the questions are regenerated
    once, with the problem named; then the section fails (FR-018).

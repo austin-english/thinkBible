@@ -61,7 +61,7 @@ requests_per_minute = 10
 model = "claude-sonnet-5-5"
 thinking = "adaptive"
 effort = "high"
-prompt = "v16"  # v16: when the passage says it outright; application within Scripture (audit)
+prompt = "v18"  # v18 = v16 with up to 10 candidates (v17 was reverted: the owner preferred v16)
 default_cost_usd = 0.12  # measured on 10 Mark sections with Sonnet 5.5 (2026-11-18)
 requests_per_minute = 4
 
@@ -77,11 +77,11 @@ requests_per_minute = 10
 # The quality gate's grader: a stronger model than the generator (research R16). Calibrated:
 # Opus 5.5 with review/v9 agreed with the owner on 92% of 36 held-out ratings (2026-11-18); v10
 # adds only what neutral means for Christ in the Old Testament, v11 the in-section line, v12 the
-# "says it outright" line (re-run `calibrate` after a change).
+# "says it outright" line, at 89% (re-run `calibrate` after a change).
 model = "claude-opus-5-5"
 thinking = "adaptive"
 effort = "high"
-prompt = "v12"  # v12: a question answered by the passage's own statement fails; v11: in-section
+prompt = "v12"  # v12: says it outright (v13 reverted with questions v17, 2026-11-19)
 default_cost_usd = 0.12  # measured on 9 Mark sections with Opus 5.5 (2026-11-18)
 requests_per_minute = 4
 
