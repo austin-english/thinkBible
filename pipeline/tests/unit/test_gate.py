@@ -246,6 +246,20 @@ def test_ties_go_to_a_new_idea_then_to_the_whole_passage(tmp_path: Path, make_li
     assert ids(deps.store.read_draft_or_new(SID)) == ["q4", "q2", "q3"]
 
 
+def test_equal_questions_go_to_the_better_graded_idea(tmp_path: Path, make_library: Any) -> None:
+    """Mark 1:1-11 (2026-11-19): a 4 on an idea graded 3 had beaten a 4 on an idea graded 5."""
+    qs = [question(1, [1], 1, 8), question(2, [2], 2, 2), question(3, [3], 3, 3),
+          question(4, [4], 4, 4)]  # fmt: skip
+    section = {**SECTION, "keyIdeas": [idea(1), idea(2), idea(3), idea(4)], "questions": qs}
+    scores = {"k1": 4, "k2": 3, "k3": 5, "k4": 4, "q1": 5, "q2": 4, "q3": 4, "q4": 4}
+    deps = setup(tmp_path, make_library, {("review", SID): grades(scores)}, section,
+                 central=f"{SID}-k1")  # fmt: skip
+    asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
+    # Three places: q1 opens (the central k1); q2, q3, q4 tie at 4 on new ideas, and the ideas
+    # graded 5 and 4 beat the one graded 3, though the writer put q2 first.
+    assert ids(deps.store.read_draft_or_new(SID)) == ["q1", "q3", "q4"]
+
+
 def test_the_notes_are_graded_too(tmp_path: Path, make_library: Any) -> None:
     section = {**SECTION, "viewsDiffer": "Clarke reads this differently from Henry."}
     scores = {**ALL_GOOD, "views": 2, "context": 4}

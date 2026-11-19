@@ -34,8 +34,8 @@ min_agreement = 0.85
 min_calibration_items = 30
 
 [prompts]
-shared_context = "v1"
-question_guide = "v4"  # v4 (2026-11-17): the owner's favorites; deeper meaning (approved, not a draft)
+shared_context = "v2"  # v2 (2026-11-19): the role every stage shares (prompt audit)
+question_guide = "v5"  # v5: v4's favorites; current neutrality; plain "Holy Spirit" isn't quoting
 
 # Per stage: model; thinking ("adaptive" or "none"); effort (output_config.effort); prompt
 # version; the default cost per section used until the run records have history; and pacing.
@@ -45,7 +45,7 @@ question_guide = "v4"  # v4 (2026-11-17): the owner's favorites; deeper meaning 
 model = "claude-sonnet-5-5"
 thinking = "adaptive"
 effort = "high"
-prompt = "v1"
+prompt = "v2"  # intro/v2 = v1; intro-review/v2: current neutrality
 default_cost_usd = 0.15
 requests_per_minute = 4
 
@@ -61,7 +61,7 @@ requests_per_minute = 10
 model = "claude-sonnet-5-5"
 thinking = "adaptive"
 effort = "high"
-prompt = "v15"  # v15: stay inside the section; v14: Christ in the Old Testament; v13: central meaning
+prompt = "v16"  # v16: when the passage says it outright; application within Scripture (audit)
 default_cost_usd = 0.12  # measured on 10 Mark sections with Sonnet 5.5 (2026-11-18)
 requests_per_minute = 4
 
@@ -76,12 +76,12 @@ requests_per_minute = 10
 [stages.review]
 # The quality gate's grader: a stronger model than the generator (research R16). Calibrated:
 # Opus 5.5 with review/v9 agreed with the owner on 92% of 36 held-out ratings (2026-11-18); v10
-# adds only what neutral means for Christ in the Old Testament, v11 the in-section line (re-run
-# `calibrate` after a change).
+# adds only what neutral means for Christ in the Old Testament, v11 the in-section line, v12 the
+# "says it outright" line (re-run `calibrate` after a change).
 model = "claude-opus-5-5"
 thinking = "adaptive"
 effort = "high"
-prompt = "v11"  # v11 = v10 + in-section; v10: neutral, Christ in the OT; v9: purpose-first rubric
+prompt = "v12"  # v12: a question answered by the passage's own statement fails; v11: in-section
 default_cost_usd = 0.12  # measured on 9 Mark sections with Opus 5.5 (2026-11-18)
 requests_per_minute = 4
 

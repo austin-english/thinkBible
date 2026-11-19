@@ -107,17 +107,19 @@ def pick_best(
 
     Quality first (revised 2026-11-17): each place goes to the highest-graded candidate left, so a
     lower grade never beats a higher one. Among equal grades, prefer one aimed at a key idea the
-    picks so far (and ``covered``) don't cover, then one about at least half the passage, then the
-    writer's order.
+    picks so far (and ``covered``) don't cover, then one aimed at a better-graded idea (2026-11-19:
+    Mark 1:1-11 kept a question on an idea graded 3 over one on an idea graded 5), then one about
+    at least half the passage, then the writer's order.
     (Covering every idea first had kept a 3 over a 5, and a reserved place for a whole-passage
     question had let broad questions beat sharper ones; Mark 1:21-28.)
     """
 
-    def rank(n: int, covered: set[str]) -> tuple[int, bool, bool, int]:
+    def rank(n: int, covered: set[str]) -> tuple[int, bool, int, bool, int]:
         c = candidates[n]
         return (
             -scores.get(c["id"], 0),
             not (set(c["targets"]) - covered),
+            -max((scores.get(t, 0) for t in c["targets"]), default=0),
             not is_big_picture(c, start, end),
             n,
         )

@@ -29,15 +29,17 @@ pipeline/
 ├── pyproject.toml                  # package thinkbible-pipeline; CLI script `thinkbible-pipeline`
 ├── config/
 │   ├── settings.toml               # model, effort, prompt version, default cost per stage; concurrency
-│   ├── pricing.toml                # Bedrock USD per million tokens, per model
+│   ├── pricing.toml                # USD per million tokens, per model
 │   └── aws.toml                    # buckets, ledger table, state machine ARN (from `terraform output`)
 ├── prompts/
-│   ├── _shared/context-v1.md       # opening text of every system prompt
+│   ├── _shared/context-v2.md       # opening text of every system prompt
+│   ├── intro/v2.md                 # the book introduction ("About Mark")
+│   ├── intro-review/v2.md          # the grader's rubric for the introduction
 │   ├── summaries/v1.md             # one-line summary
-│   ├── extract/v15.md              # generate call 1: key ideas, context, views differ
-│   ├── questions/v15.md            # generate call 2: candidate questions in reading order
-│   ├── question-guide/v4.md        # quality rules + the owner's favorite questions
-│   └── review/v11.md               # the grader's rubric + the owner's worked examples
+│   ├── extract/v16.md              # generate call 1: key ideas, context, views differ
+│   ├── questions/v16.md            # generate call 2: candidate questions in reading order
+│   ├── question-guide/v5.md        # quality rules + the owner's favorite questions
+│   └── review/v12.md               # the grader's rubric + the owner's worked examples
 ├── scripts/
 │   └── build_bundle.py             # `make lambda-bundle`: builds pipeline/out/lambda.zip
 ├── src/thinkbible_pipeline/
@@ -71,6 +73,12 @@ pipeline/
 │   │   ├── checks.py               # rule checks: lengths, "?", yes/no, giveaways, names, placeholders
 │   │   ├── outcomes.py             # drop items and what depends on them, flag a section for regeneration
 │   │   └── calibration.py          # your pass/fail grades vs the grader's (evals/calibration.json)
+│   ├── publish/
+│   │   ├── build.py                # drafts + snapshot → study pack and verse files, versioned (R13)
+│   │   ├── publish_check.py        # live content only grows: nothing reworded or removed (FR-024)
+│   │   ├── channel.py              # the draft/ and live/ channels of the packs bucket, behind CloudFront
+│   │   ├── draft.py                # publish to the draft channel (automatic after a passing run)
+│   │   └── promote.py              # copy the draft version byte for byte to live, gated
 │   ├── report/
 │   │   ├── scorecard.py            # the book's numbers: kept, dropped, failed, cost
 │   │   ├── render.py               # review.html (Jinja2): every section, its ideas and questions
@@ -84,7 +92,7 @@ pipeline/
 │   │   ├── messages.py             # JSON payloads between the state machine's steps
 │   │   └── ledger.py               # DynamoLedger: the spend ledger in DynamoDB
 │   ├── llm/
-│   │   ├── runner.py               # BedrockRunner (Claude on Bedrock) and FakeRunner (tests)
+│   │   ├── runner.py               # the model runner (Claude API by default; Bedrock as a profile) and FakeRunner (tests)
 │   │   ├── budget.py               # pricing, cost estimate, the Proceed? [y/N] prompt
 │   │   ├── outputs.py              # what each model call must return (structured output)
 │   │   └── prompts.py              # assembles the versioned system prompt for a stage
@@ -113,10 +121,8 @@ infra/modules/pipeline/             # Terraform for the cloud side
 ├── state_machine.asl.json.tftpl    # the state machine definition (a Terraform template)
 ├── variables.tf
 └── outputs.tf                      # values to copy into config/aws.toml
+infra/modules/cdn/                  # CloudFront in front of the packs bucket (origin access control)
 ```
-
-Later user stories add `sections/`, `commentary/`, `gate/`, `report/`, `publish/` and the
-individual stages (US1–US3).
 
 ## How a run flows
 
@@ -130,16 +136,59 @@ flowchart TD
     subgraph aws ["AWS: state machine thinkbible-pipeline"]
         SR["StartRun<br/>check sources vs manifest, create ledger item"]
         SR --> ST["Stages (one at a time)"]
-        ST --> PS["PlanStage<br/>hash inputs, list sections to run"]
-        PS --> SEC["Sections (10 at a time)<br/>RunSection: one Lambda per section"]
+        ST --> PS["PlanStage<br/>book-level stages run here;<br/>hash inputs, list sections to run"]
+        PS --> SEC["Sections (3 at a time)<br/>RunSection: one Lambda per section"]
         SEC --> FS["FinishStage<br/>write run record, stop at the cap"]
         FS --> ST
-        ST --> FR["FinishRun<br/>status, counts, exit code"]
+        ST --> FR["FinishRun<br/>status, counts, exit code;<br/>publish to the draft channel"]
     end
 
     SFN --> SR
     FR --> WAIT["--wait: app.wait_for_execution<br/>→ exit 0 / 2 / 3 / 4"]
 ```
+
+### The two Map states
+
+The state machine (`infra/modules/pipeline/state_machine.asl.json.tftpl`) has two Map states, one
+inside the other. Steps pass only small JSON messages (run ID, request, cap, stage, section ID,
+costs); a section's content never travels through Step Functions. Each Lambda reads and writes
+drafts in S3.
+
+- **`Stages`** iterates over `$.request.stages`: the stages named on the command line (`all`
+  expands to the seven below). One at a time and in order, because each stage needs the one
+  before finished for the whole book (a section's context uses the previous section's summary;
+  the grader needs the generated content). For each stage:
+  1. **`PlanStage`** (Lambda) returns the stage's `sectionIds`: each section whose inputs, prompt
+     version or model changed since the stage last ran there. Done sections are skipped, so a
+     re-run pays only for what changed. A stage that applies to some sections only lists those
+     (`intro`: the book's first). A book-level stage (`sections`, `report`) runs right here and
+     lists none. After the cap is reached, it lists none.
+  2. **`Sections`** iterates over `$.sectionIds`, `max_concurrency` (3) at a time, one
+     **`RunSection`** Lambda per section (below). A throttled Claude API call raises `Throttled`,
+     and Step Functions retries after 20 s, doubling to at most 5 minutes, up to 6 times, with
+     jitter. Any other error records the section as failed; the rest carry on.
+  3. **`FinishStage`** (Lambda) totals the outcomes (done, skipped, failed, cost) into the stage's
+     result and stops the run once spend reaches the cap.
+- **`FinishRun`** records the final status. When the run included `report` and no section
+  failed, it publishes the book to the draft channel (`publish/draft.py`); a book with sections
+  still to generate is reported and left for a later run. Its output is what `--wait` prints.
+
+### The stages, in run order
+
+| Stage | Runs | Model | Cost | What it does |
+|---|---|---|---|---|
+| `sections` | once per book, in `PlanStage` | none | free | Splits the book into 3-12 verse sections (`sections/builder.py`, R5): each BSB heading starts one, never across chapters; a 1-2 verse piece joins the passage it finishes; a long one splits at Henry's division nearest the middle. IDs come from the first verse (`mrk-2-18`) and are permanent once live. Writes `sections.json`. |
+| `intro` | the book's first section | Sonnet writes, Opus grades | about $0.15 per book | "About Mark", the book's first post: 80-120 words from each commentator's preface (who wrote it, to whom, when, why, what to watch for), each source backed by an exact quote. Graded 2 or less: one rewrite with the reason; still failing, a scorecard blocker. |
+| `summaries` | every section | Haiku | about $0.002 | One line about the passage. The next section's `generate` gets it as "the previous section", for its context note's "how this follows". Questions are never written from it. |
+| `generate` | every section | Sonnet | about $0.10 | The content. Code gathers each commentator's notes on the section (`commentary/gather.py`, R4; notes running past the section are labelled so). Call 1 writes the key ideas (one marked as the central meaning) and background facts, each source with an exact quote, plus the context and "views differ" notes. Code keeps only sources whose quote is found word for word. Call 2 writes up to 8 candidate questions in reading order, 2-3 on the central idea. Code checks each one (length, "?", in the section's verses, aimed at a key idea). |
+| `check` | every section | none | free | The published format's rules on the finished section: lengths, verse references that resolve in both translations, no cut-off text. A section that breaks one is regenerated on the next run, once; then it fails. |
+| `review` | every section | Opus | about $0.13 | The quality gate: the calibrated grader scores every key idea, candidate question and note 1-5. At 2 or less an item is dropped. Up to 3 questions are kept (never more than the key ideas): the best on the central idea first if it grades 4 or more, then the best of the rest. A weak views note is removed; a weak context note regenerates the section. |
+| `report` | once per book, in `PlanStage` | none | free | `scorecard.json` (pass rates, failed and ungenerated sections, calibration, cost, what blocks promotion) and `review.html` (`make status` opens it), and the book's status. |
+
+In all, about $0.23 per section. `align` (KJV wording variants and manuscript notes, US5) is
+planned and not built yet.
+
+### One `RunSection`
 
 Every step inside AWS calls one shared function in `stages/base.py`. `run --local` calls the same
 functions in-process. What one `RunSection` does:
@@ -148,7 +197,7 @@ functions in-process. What one `RunSection` does:
 flowchart TD
     IN(["sectionId"]) --> CAP{"ledger.can_start()<br/>spend under cap?"}
     CAP -- no --> NS["not_started"]
-    CAP -- yes --> EXEC["stage.execute()<br/>→ llm/runner.parse() → Bedrock"]
+    CAP -- yes --> EXEC["stage.execute()<br/>→ llm/runner.parse() → Claude API"]
     EXEC -- "Throttled" --> RETRY["raised: Step Functions retries with backoff"]
     EXEC -- "other error" --> FAIL["StageRecord failed<br/>(other sections continue)"]
     EXEC -- ok --> SAVE["price() → StageRecord done<br/>write draft to S3, ledger.add(cost)"]
@@ -230,6 +279,8 @@ Everything here is safe to re-run. `…` stands for
 ```bash
 make pipeline BOOK=mark STAGE=all       # in AWS: estimate, confirm, start, wait for the result
 make status BOOK=mark                   # latest runs, spend, and opens the scorecard (review.html)
+make publish BOOK=mark                  # publish to the draft channel (a passing run does this itself)
+make promote BOOK=mark                  # copy the draft version to live, if the gate allows it
 uv run --package thinkbible-pipeline thinkbible-pipeline run --book mark --stage generate \
   --local --sections mrk-1-1,mrk-1-9    # in-process, two sections, using the repo's prompts
 ```
@@ -292,7 +343,7 @@ A stage implements four methods; the runner does the rest, in the cloud and loca
 | Method | What it returns |
 |---|---|
 | `prompt_version()` | The prompt version it uses (recorded and hashed) |
-| `model()` | The Bedrock model ID it calls, or `None` if it calls no model |
+| `model()` | The model ID it calls (from `settings.toml`), or `None` if it calls no model |
 | `inputs()` | Everything its output depends on, as JSON-ready data. Hashed to decide skips |
 | `execute()` | Does the work, updates the section's draft in place, and returns the token usage |
 

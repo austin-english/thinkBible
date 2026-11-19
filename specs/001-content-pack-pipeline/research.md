@@ -585,6 +585,28 @@ risk.
   they share and `viewsDiffer` describes the difference. Questions let the reader make the
   connection and ask what it opens up, never only "who is this about?". The prompts' example is
   the Passover lamb, not either test passage.
+- **When the passage says it outright** (2026-11-19, `questions/v16`, `review/v12`; `extract/v16`
+  is v15 unchanged): Mark 1:1-11's first question asked why Mark names Jesus the Son of God, and
+  its honest answer was the statement itself. The grader passed it (a 4) because the owner's
+  round 1 verdict on a near-identical question named only its wording. The writer now asks what a
+  stated meaning sets up or asks of the reader (example from Psalm 23, not Mark); the grader
+  fails a question whose answer is the passage's own statement, and the round 1 example carries
+  the owner's added note. Code also breaks ties between equal questions by their idea's grade
+  (`pick_best`): 1:1-11 had kept a 4 on an idea graded 3 over a 4 on an idea graded 5.
+- **Prompt audit** (2026-11-19, against the 5.5 models): no pressure language, step-by-step
+  scaffolds or model-era workarounds; the request setup (structured outputs, adaptive thinking
+  with effort, cached instructions, no tools or sampling settings) is current. Fixed, all in new
+  or unrun versions so one regeneration carries them: the key-ideas field description now agrees
+  with the prompt (key and background, central first); `_shared/context-v2` states the role all
+  stages share (the old line told every model to restate the commentators, which the question
+  writer must not do); `application` questions stay within the passage and Scripture, since
+  questions about the reader's own life are deferred (they were the lowest-graded type, 2.8);
+  `question-guide/v5` and `intro-review/v2` use the current neutrality, and the guide says plain
+  "Holy Spirit" is not quoting a translation; single quotation marks stay as house style without
+  the old reason (structured outputs keep JSON valid). Left as they are: asking-sentence variety
+  (39% of Mark's questions ask "Why might…"; a taste call for after reading Mark in the app),
+  merging the three "answers itself" sections of the questions prompt, and the writer's
+  three-step method.
 - **Giveaway check**: code drops a question that repeats an idea's title word for word. A check
   for an 8-word run from the idea's body was removed (`checks-v2`): a plain question describes
   the same scene the body does, and it dropped Mark 1:21-28's best question. The grader's
