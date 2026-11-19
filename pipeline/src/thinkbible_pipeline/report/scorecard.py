@@ -9,9 +9,11 @@ thresholds, and the grader's calibration for its current prompt and model is goo
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import Field
 
+from thinkbible_core.rules import max_questions
 from thinkbible_pipeline.config import Settings, load_settings
 from thinkbible_pipeline.drafts.models import RunRecord, SectionDraft, SectionMapEntry
 from thinkbible_pipeline.gate.calibration import CalibrationSet
@@ -43,7 +45,12 @@ class Calibration(JsonModel):
 
 class Thresholds(JsonModel):
     min_idea_pass_rate: float | None = None
-    min_question_pass_rate: float | None = None
+    min_strong_first_rate: float | None = None
+    min_full_set_rate: float | None = None
+
+
+# A section's first question is "strong" at this grade or above.
+STRONG_FIRST_GRADE = 4
 
 
 class Scorecard(JsonModel):
@@ -57,7 +64,14 @@ class Scorecard(JsonModel):
     kept_ideas: int = 0  # in the sections now, after every drop
     kept_questions: int = 0
     idea_pass_rate: float | None = None
+    # Every graded candidate question: information, not a bar (the writer over-produces on purpose).
     question_pass_rate: float | None = None
+    # What readers get, per section with questions to ask (2026-11-19): a first question graded 4 or
+    # 5, and as many questions as the section's key ideas allow (up to 3).
+    strong_first: Rate = Field(default_factory=Rate)
+    full_sets: Rate = Field(default_factory=Rate)
+    strong_first_rate: float | None = None
+    full_set_rate: float | None = None
     dropped_by_stage: dict[str, int] = Field(default_factory=dict)  # generate, check, review, …
     failed_sections: list[SectionIssue] = Field(default_factory=list)
     not_generated: list[str] = Field(default_factory=list)
@@ -106,7 +120,8 @@ def build_scorecard(
         prompt_versions={k: v for r in records for k, v in r.prompt_versions.items()},
         thresholds=Thresholds(
             min_idea_pass_rate=settings.gate.min_idea_pass_rate,
-            min_question_pass_rate=settings.gate.min_question_pass_rate,
+            min_strong_first_rate=settings.gate.min_strong_first_rate,
+            min_full_set_rate=settings.gate.min_full_set_rate,
         ),
     )
     ungraded = 0
@@ -141,9 +156,13 @@ def build_scorecard(
                 rate.dropped += 1
         for d in draft.dropped:
             card.dropped_by_stage[d.stage] = card.dropped_by_stage.get(d.stage, 0) + 1
+        if not draft.failed and not section.get("noPrompt") and review and review.status == "done":
+            _count_reader_measures(card, section, draft)
     card.graded = bool(sections) and not card.not_generated and ungraded == 0
     card.idea_pass_rate = card.ideas.pass_rate
     card.question_pass_rate = card.questions.pass_rate
+    card.strong_first_rate = card.strong_first.pass_rate
+    card.full_set_rate = card.full_sets.pass_rate
 
     if grader is not None:
         version, model = grader
@@ -160,6 +179,23 @@ def build_scorecard(
     card.promotable = not card.blockers
     card.promotable_reason = "; ".join(card.blockers)
     return card
+
+
+def _count_reader_measures(card: Scorecard, section: dict[str, Any], draft: SectionDraft) -> None:
+    """A graded section's first question and question count, as readers will meet them."""
+    questions = [q for q in section.get("questions", []) if q.get("status", "active") == "active"]
+    ideas = [
+        i
+        for i in section.get("keyIdeas", [])
+        if i.get("kind", "key") == "key" and i.get("status", "active") == "active"
+    ]
+    first = draft.grades.get(questions[0]["id"]) if questions else None
+    card.strong_first.total += 1
+    if first is not None and first.score >= STRONG_FIRST_GRADE:
+        card.strong_first.passed += 1
+    card.full_sets.total += 1
+    if questions and len(questions) >= max_questions(len(ideas)):
+        card.full_sets.passed += 1
 
 
 def _introduction_problem(
@@ -193,12 +229,15 @@ def _blockers(card: Scorecard, settings: Settings, ungraded: int) -> list[str]:
         out.append(f"{len(card.failed_sections)} sections failed")
     if card.idea_pass_rate is not None and card.idea_pass_rate < gate.min_idea_pass_rate:
         out.append(f"idea pass rate {card.idea_pass_rate:.2f} < {gate.min_idea_pass_rate:.2f}")
-    if (
-        card.question_pass_rate is not None
-        and card.question_pass_rate < gate.min_question_pass_rate
-    ):
+    if card.strong_first_rate is not None and card.strong_first_rate < gate.min_strong_first_rate:
         out.append(
-            f"question pass rate {card.question_pass_rate:.2f} < {gate.min_question_pass_rate:.2f}"
+            f"first questions graded 4 or 5: {card.strong_first_rate:.2f} < "
+            f"{gate.min_strong_first_rate:.2f}"
+        )
+    if card.full_set_rate is not None and card.full_set_rate < gate.min_full_set_rate:
+        out.append(
+            f"sections with a full set of questions: {card.full_set_rate:.2f} < "
+            f"{gate.min_full_set_rate:.2f}"
         )
     cal = card.calibration
     if cal is None or not cal.current:

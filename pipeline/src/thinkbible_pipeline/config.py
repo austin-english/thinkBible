@@ -49,7 +49,8 @@ class GateSettings:
     """When a graded book may be promoted (R16, constitution v1.2.0)."""
 
     min_idea_pass_rate: float = 0.90
-    min_question_pass_rate: float = 0.80
+    min_strong_first_rate: float = 0.90  # sections whose first question is graded 4 or 5
+    min_full_set_rate: float = 0.95  # sections with as many questions as their ideas allow
     min_agreement: float = 0.85  # the grader's agreement with the owner's calibration grades
     min_calibration_items: int = 30
 

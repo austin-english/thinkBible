@@ -100,8 +100,9 @@ make status BOOK=mark                    # opens the scorecard
    including the Opus grader) and the cap, and asks for confirmation. Then it prints the
    execution ARN and a console link.
 2. The run ends with the book published to the draft channel (no failed sections).
-3. The scorecard shows the pass rates against the thresholds (90% of ideas, 80% of questions:
-   SC-004), every dropped item with its reason, the calibration agreement, and the cost.
+3. The scorecard shows the measures against their thresholds (SC-004: 90% of ideas pass, 90% of
+   sections lead with a question graded 4 or 5, 95% have a full set of questions), every dropped
+   item with its reason, the calibration agreement, and the cost.
 
 **Prompt tuning** (no deploy): `thinkbible-pipeline run --book mark --stage generate,check,review
 --local --sections mrk-1-1,mrk-1-9 --fresh` runs two sections in-process with the repo's prompts.
@@ -142,8 +143,8 @@ curl -s https://<distribution>/live/v1/index.json | jq .
 1. **Failed section**: make one section fail (a recorded fake output with no usable
    question in the integration test). **Expected**: nothing is published to the draft channel, exit code 3, and
    the scorecard names the section.
-2. **Below threshold**: set `gate.min_question_pass_rate` above the book's rate and `promote`.
-   **Expected**: exit code 5, "question pass rate 0.84 < 0.90".
+2. **Below threshold**: set `gate.min_strong_first_rate` above the book's rate and `promote`.
+   **Expected**: exit code 5, "first questions graded 4 or 5: 0.95 < 0.99".
 3. **Stale calibration**: add a new grader prompt version, then `promote`. **Expected**: exit
    code 5, "grader calibration is for review v1; run `calibrate`".
 4. **Frozen live text**: after a promotion, change a promoted question's text and

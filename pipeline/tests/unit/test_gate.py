@@ -152,7 +152,24 @@ def test_pass_rates_count_grades_before_drops(tmp_path: Path, make_library: Any)
     card = build_scorecard("MRK", [ENTRY], {SID: draft}, [], datetime.now(UTC))
     assert (card.ideas.passed, card.ideas.total) == (3, 3) and card.idea_pass_rate == 1.0
     assert (card.questions.passed, card.questions.total) == (1, 3)  # q1, q3 counted though dropped
-    assert any("question pass rate 0.33 < 0.80" in b for b in card.blockers)
+    # The candidates' pass rate is information; what blocks is what readers get. q2 (a 4) leads,
+    # but three ideas allow three questions and only one is left.
+    assert not any("pass rate" in b and "question" in b for b in card.blockers)
+    assert (card.strong_first.passed, card.strong_first.total) == (1, 1)
+    assert (card.full_sets.passed, card.full_sets.total) == (0, 1)
+    assert any("sections with a full set of questions: 0.00 < 0.95" in b for b in card.blockers)
+
+
+def test_a_weak_first_question_blocks_promotion(tmp_path: Path, make_library: Any) -> None:
+    deps = setup(tmp_path, make_library,
+                 {("review", SID): grades({**ALL_GOOD, "q1": 3, "q2": 3, "q3": 3})})  # fmt: skip
+    asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
+    from datetime import UTC, datetime
+
+    card = build_scorecard("MRK", [ENTRY], {SID: deps.store.read_draft_or_new(SID)}, [],
+                           datetime.now(UTC))  # fmt: skip
+    assert card.full_set_rate == 1.0 and card.strong_first_rate == 0.0
+    assert any("first questions graded 4 or 5: 0.00 < 0.90" in b for b in card.blockers)
 
 
 def test_a_section_left_without_a_question_is_regenerated_once_then_failed(

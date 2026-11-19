@@ -482,7 +482,11 @@ place and confirm the publish check refuses the version.
 - **SC-003**: Promoting Mark needs no item-by-item review: the owner's work is the one-time grader
   calibration (about 30 items) and reading the book in the app on the draft channel.
 - **SC-004**: In the content spike, the calibrated grader passes at least 90% of Mark's key ideas
-  and at least 80% of its questions before any item is dropped, and the owner's in-app read agrees.
+  before any item is dropped; at least 90% of sections lead with a question graded 4 or 5, and at
+  least 95% have as many questions as their key ideas allow (up to 3); and the owner's in-app read
+  agrees. (Revised 2026-11-19: a share of all candidate questions had been the bar, but the writer
+  offers 8 to 10 per section on purpose, so a stricter grader lowered it while what readers got
+  improved.)
 - **SC-005**: Re-running a finished book with an unchanged prompt version makes zero model calls.
 - **SC-006**: Zero published packs violate ID permanence or lack provenance (enforced by the
   publish gate).
@@ -516,5 +520,6 @@ place and confirm the publish check refuses the version.
   from the automatic gate, the owner's in-app read before promotion, and reader feedback after
   launch (spec 007).
 - The grader is Claude Opus 5.5, so a stronger model grades the generator's (Sonnet 5.5) output.
-  The gate's thresholds (drop at a grade of 2 or less; promotion at 90% of ideas and 80% of
-  questions passing) are settings, tuned during the Mark spike.
+  The gate's thresholds (drop at a grade of 2 or less; promotion at 90% of ideas passing, 90% of
+  sections with a first question graded 4 or 5, and 95% with a full set of questions) are
+  settings, tuned during the Mark spike.

@@ -695,7 +695,8 @@ order, and a section left without a usable question is regenerated and then mark
 
   Add `ReviewOut` and `LevelsAnswerOut`/`LevelsJudgeOut` to `llm/outputs.py`. In
   `pipeline/config/settings.toml`, set `stages.review.model = "anthropic.claude-opus-5-5"` and add
-  `[gate] min_idea_pass_rate = 0.90, min_question_pass_rate = 0.80`. (Done 2026-11-17 on Opus 4.6
+  `[gate] min_idea_pass_rate = 0.90, min_question_pass_rate = 0.80` (replaced 2026-11-19 by
+  `min_strong_first_rate = 0.90` and `min_full_set_rate = 0.95`, SC-004). (Done 2026-11-17 on Opus 4.6
   until 5.5 opens; the level check's two parts are `prompts/levels-answer/` and
   `prompts/levels-judge/`, one call each per section; `[gate]` also holds `min_agreement` and
   `min_calibration_items`.)

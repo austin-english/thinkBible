@@ -775,8 +775,14 @@ risk.
   - The grader sees the passage, the commentators' excerpts and the item, so it can judge
     faithfulness. Items graded at or below `review_flag_threshold` (2) are dropped (the other
     questions keep their order, R11).
-  - Book pass rates (ideas and questions graded above the threshold, before drops) are compared
-    with `gate.min_idea_pass_rate` (0.90) and `gate.min_question_pass_rate` (0.80) for promotion.
+  - For promotion, the book's idea pass rate (ideas graded above the threshold, before drops) is
+    compared with `gate.min_idea_pass_rate` (0.90); for questions, what readers get: the share of
+    sections whose first question is graded 4 or 5 (`gate.min_strong_first_rate`, 0.90) and the
+    share with as many questions as their ideas allow, up to 3 (`gate.min_full_set_rate`, 0.95).
+    The share of all candidates passing stays on the scorecard as information about the writer
+    (2026-11-19: it was the bar at 0.80, but with 8 to 10 candidates per section a stricter
+    grader lowered it while the kept questions improved; Mark's first five sections went from 80%
+    to 78% on one re-graded candidate).
 - **Managed alternatives considered** (2026-11-17): Bedrock Guardrails' contextual grounding
   check scores whether a text is supported by a source (0 to 1, through `ApplyGuardrail` with no
   model call, about $0.10 per 1,000 characters). It covers only faithfulness, penalises the

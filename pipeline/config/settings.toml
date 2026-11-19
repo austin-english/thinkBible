@@ -29,7 +29,11 @@ refusal_fallback_model = "claude-opus-5"
 
 [gate]
 min_idea_pass_rate = 0.90
-min_question_pass_rate = 0.80
+# What readers get (2026-11-19): sections whose first question is graded 4 or 5, and sections with
+# as many questions as their key ideas allow (up to 3). The candidates' pass rate stays on the
+# scorecard as information: the writer over-produces on purpose, so it can't be a bar.
+min_strong_first_rate = 0.90
+min_full_set_rate = 0.95
 min_agreement = 0.85
 min_calibration_items = 30
 
