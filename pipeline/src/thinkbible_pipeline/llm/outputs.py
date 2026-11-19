@@ -110,6 +110,11 @@ class ItemGradeOut(_Out):
         default_factory=list, description="The rubric lines this item breaks, by their names."
     )
     reason: str = Field(description="One short sentence on the grade, at most 200 characters.")
+    focus: Literal["big-picture", "detail"] | None = Field(
+        default=None,
+        description="Questions only: big-picture or detail (the rubric's `focus`), separate from "
+        "the grade.",
+    )
 
 
 class ReviewOut(_Out):

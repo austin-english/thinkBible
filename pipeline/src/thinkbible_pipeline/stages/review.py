@@ -42,6 +42,7 @@ class ItemGrade:
     score: int
     reason: str
     failed_rules: tuple[str, ...]
+    focus: str | None = None  # questions: "big-picture" or "detail"
 
 
 def stamp(draft: SectionDraft, stage: str) -> str | None:
@@ -102,11 +103,50 @@ async def grade_items(
     )
     wanted = {i["id"] for i in items}
     grades = {
-        g.item_id: ItemGrade(max(1, min(5, g.score)), g.reason.strip(), tuple(g.failed_rules))
+        g.item_id: ItemGrade(
+            max(1, min(5, g.score)), g.reason.strip(), tuple(g.failed_rules), g.focus
+        )
         for g in out.items
         if g.item_id in wanted
     }
     return grades, usage
+
+
+# A big-picture question leads only if the grader gives it at least this.
+BIG_PICTURE_MIN_SCORE = 4
+
+
+def big_picture_first(
+    kept: list[dict[str, Any]],
+    grades: dict[str, ItemGrade],
+    scores: dict[str, int],
+    central: str | None,
+) -> list[dict[str, Any]]:
+    """The kept questions with a big-picture one first, if any graded 4 or more (2026-11-19).
+
+    Which questions are kept doesn't change; only which comes first. Among big-picture questions
+    the best-graded leads, then one on the central idea, then the order so far. (Mark 1:16-20 had
+    led with "leave everything", a 4 on the run's central idea, ahead of the owner's preferred
+    big-picture "Why might he start with men like these?", a 5.)
+    """
+    big = [
+        c
+        for c in kept
+        if (g := grades.get(c["id"])) is not None
+        and g.focus == "big-picture"
+        and g.score >= BIG_PICTURE_MIN_SCORE
+    ]
+    if not big:
+        return kept
+    first = max(
+        big,
+        key=lambda c: (
+            scores.get(c["id"], 0),
+            central is not None and central in c["targets"],
+            -kept.index(c),
+        ),
+    )
+    return [first, *(c for c in kept if c is not first)]
 
 
 def choose_questions(
@@ -159,6 +199,7 @@ def choose_questions(
             key=lambda c: (scores.get(c["id"], 0), c["verseEnd"] - c["verseStart"], -kept.index(c)),
         )
         kept = [first, *(c for c in kept if c is not first)]
+    kept = big_picture_first(kept, grades, scores, central)
     for c in eligible:
         if c["id"] not in picked:
             score = scores.get(c["id"])
@@ -238,6 +279,7 @@ class ReviewStage(SectionStage):
                 score=g.score,
                 notes=g.reason
                 + (f" (breaks: {', '.join(g.failed_rules)})" if g.failed_rules else ""),
+                focus=g.focus,
             )
             for item_id, g in grades.items()
         }

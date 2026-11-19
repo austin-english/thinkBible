@@ -285,3 +285,32 @@ def test_a_section_left_without_a_key_idea_is_flagged(tmp_path: Path, make_libra
     asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
     draft = deps.store.read_draft_or_new(SID)
     assert draft.section["keyIdeas"] == [] and draft.regenerate is not None
+
+
+def test_a_big_picture_question_graded_4_or_more_goes_first(
+    tmp_path: Path, make_library: Any
+) -> None:
+    """Mark 1:16-20 (2026-11-19): the grader's focus mark decides which kept question leads."""
+    qs = [question(1, [1], 1, 8), question(2, [2], 4, 4), question(3, [3], 3, 5)]
+    scores = {"k1": 5, "k2": 5, "k3": 5, "q1": 5, "q2": 4, "q3": 5}
+
+    def graded(focus: dict[str, str]) -> dict[str, Any]:
+        out = grades(scores)
+        for item in out["items"]:
+            name = item["itemId"].removeprefix(f"{SID}-")
+            if name in focus:
+                item["focus"] = focus[name]
+        return out
+
+    def order(focus: dict[str, str], name: str) -> list[str]:
+        deps = setup(tmp_path / name, make_library, {("review", SID): graded(focus)},
+                     {**SECTION, "questions": qs}, central=f"{SID}-k2")  # fmt: skip
+        asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
+        draft = deps.store.read_draft_or_new(SID)
+        assert draft.grades[f"{SID}-q1"].focus == focus.get("q1")
+        return ids(draft)
+
+    # The central q2 (a 4, a detail) would open; the big-picture q1 (a 5) leads instead.
+    assert order({"q1": "big-picture", "q2": "detail", "q3": "detail"}, "big") == ["q1", "q2", "q3"]
+    # With no big-picture question, the central-first order stands.
+    assert order({"q1": "detail", "q2": "detail", "q3": "detail"}, "none") == ["q2", "q1", "q3"]

@@ -88,6 +88,7 @@ class DroppedItem(JsonModel):
 class Grade(JsonModel):
     score: Annotated[int, Field(ge=1, le=5)]
     notes: str | None = None
+    focus: str | None = None  # questions: "big-picture" or "detail" (review/v14, 2026-11-19)
 
 
 class StageRecord(JsonModel):

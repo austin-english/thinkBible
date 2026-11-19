@@ -165,7 +165,7 @@ blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--r
             {% for q in s.questions %}
             <li>
               <div class="q">{{ q.text }}</div>
-              <div class="qmeta">{% if q.grade %}<b>graded {{ q.grade.score }}</b>: {{ q.grade.notes }}<br>{% endif %}{{ q.type }} · {{ q.scope }} · aims at: {{ q.targets|join("; ") }} · <span class="mono">{{ q.id }}</span></div>
+              <div class="qmeta">{% if q.grade %}<b>graded {{ q.grade.score }}{% if q.grade.focus %} · {{ q.grade.focus }}{% endif %}</b>: {{ q.grade.notes }}<br>{% endif %}{{ q.type }} · {{ q.scope }} · aims at: {{ q.targets|join("; ") }} · <span class="mono">{{ q.id }}</span></div>
             </li>
             {% endfor %}
           </ol>

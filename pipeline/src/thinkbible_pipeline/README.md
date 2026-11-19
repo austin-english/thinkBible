@@ -39,7 +39,7 @@ pipeline/
 │   ├── extract/v18.md              # generate call 1: key ideas, context, views differ
 │   ├── questions/v18.md            # generate call 2: candidate questions in reading order
 │   ├── question-guide/v5.md        # quality rules + the owner's favorite questions
-│   └── review/v12.md               # the grader's rubric + the owner's worked examples
+│   └── review/v14.md               # the grader's rubric + the owner's worked examples
 ├── scripts/
 │   └── build_bundle.py             # `make lambda-bundle`: builds pipeline/out/lambda.zip
 ├── src/thinkbible_pipeline/
