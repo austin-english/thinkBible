@@ -147,6 +147,22 @@ opened for this account. The key lives only in Parameter Store:
 - **Bucket naming**: `thinkbible-<purpose>-<ThinkBible account id>`, for example
   `thinkbible-sources-<id>` and `thinkbible-packs-<id>`. Lowercase, hyphens, no dots.
 
+## What Terraform created (infra/, us-west-2 unless noted)
+
+`terraform -chdir=infra output` prints the real names; the pipeline reads them from
+`pipeline/config/aws.toml`. `<id>` is the ThinkBible account ID.
+
+| Resource | Name | What it holds |
+|---|---|---|
+| Sources bucket | `thinkbible-sources-<id>` | The frozen snapshot: Bible text and commentaries, write-once (`sources push`). Checked against `content/sources/manifest.json` |
+| Drafts bucket | `thinkbible-drafts-<id>` | Pipeline state per book: `sections.json`, one draft per section, run records, `scorecard.json`, `review.html` |
+| Packs bucket | `thinkbible-packs-<id>` | Published packs under `draft/` and `live/`. Private: read only through CloudFront |
+| CloudFront (global) | distribution in `aws.toml` (`distribution_id`, `cdn_base_url`) | Serves the packs bucket to the app (origin access control). `publish` and `promote` invalidate the index |
+| Spend ledger | DynamoDB `thinkbible-pipeline-runs` | Each cloud run's cap, spend and status, shared by the section Lambdas |
+| State machine | Step Functions `thinkbible-pipeline` | One run: stages in order, sections 3 at a time |
+| Lambdas | `StartRun`, `PlanStage`, `RunSection`, `FinishStage`, `FinishRun` (one zip) | The steps of the state machine (`cloud/handlers.py`) |
+| Parameter | SSM `anthropic-api-key` (SecureString, made by hand) | The Claude API key; see above |
+
 ## Later (not needed yet)
 
 - **No prod account** (2026-11-13): ThinkBible runs as one environment. Draft and live content

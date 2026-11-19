@@ -908,15 +908,18 @@ text edit is refused.
 
 ## Phase 9: Polish and cross-cutting concerns
 
-- [ ] T083 [P] Implement `eval` (R16, FR-029):
-  - `pipeline/evals/mark-sample.json` holds 15–25 section IDs chosen after T057 (narrative,
-    teaching, miracle, parable, a list, Mark 7 manuscript, Mark 16 ending, and more);
-  - `pipeline/src/thinkbible_pipeline/evals/run.py` runs `generate` and `review` in
-    local mode for the current and a candidate prompt set into temporary `LocalBlobStore`s,
-    grades both with the calibrated grader, and renders a side-by-side report with pass rates per
-    rubric line;
+- [x] T083 [P] Implement `eval` (R16, FR-029):
+  - `pipeline/evals/mark-sample.json` holds 21 Mark sections (narrative, teaching, miracle,
+    parable, controversy, Mark 7 manuscript, Mark 16 ending, and more); candidates are settings
+    overlays in `pipeline/evals/candidates/` (`control.toml` changes nothing: an A/A noise test);
+  - `pipeline/src/thinkbible_pipeline/evals/run.py` reuses the current drafts when their versions
+    match (else generates them), runs the candidate's `generate`, `align` and `check` (`--repeats`
+    times) in scratch `LocalBlobStore`s, and grades every arm with the current calibrated grader;
+  - `evals/report.py` compares the gate's measures (strong first, full sets, big-picture first,
+    mean kept grade, idea pass; rubric lines broken for information) and renders `eval.html`
+    side by side; tests in `tests/integration/test_eval.py` (scripted runner);
   - it costs money, so it is never run in CI.
-- [ ] T084 [P] Update the docs:
+- [x] T084 [P] Update the docs:
   - `pipeline/CLAUDE.md` (commands, stage order);
   - `README.md` (a pipeline quick reference);
   - `docs/aws-setup.md` (sources, drafts and packs buckets, ledger table, state machine and

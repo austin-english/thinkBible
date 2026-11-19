@@ -149,13 +149,9 @@ def _config_dir(config_dir: Path | None) -> Path:
     return config_dir if config_dir is not None else repo_paths().config
 
 
-def _apply_profile(raw: dict[str, Any], profile: str) -> dict[str, Any]:
-    """``raw`` with ``[profiles.<profile>]`` laid over it: top-level keys replace, and each
-    ``[profiles.<profile>.stages.<name>]`` table updates that stage's keys."""
-    profiles = raw.get("profiles", {})
-    if profile not in profiles:
-        raise ConfigError(f"no [profiles.{profile}] in settings.toml (known: {sorted(profiles)})")
-    overlay = profiles[profile]
+def apply_overlay(raw: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
+    """``raw`` with ``overlay`` laid over it: each ``stages.<name>`` table, and the ``prompts``
+    and ``gate`` tables, update the keys they name; other top-level keys replace."""
     merged = {k: v for k, v in raw.items() if k != "profiles"}
     for key, value in overlay.items():
         if key == "stages":
@@ -163,18 +159,35 @@ def _apply_profile(raw: dict[str, Any], profile: str) -> dict[str, Any]:
             for name, changes in value.items():
                 stages.setdefault(name, {}).update(changes)
             merged["stages"] = stages
+        elif key in ("prompts", "gate") and isinstance(value, dict):
+            merged[key] = {**raw.get(key, {}), **value}
         else:
             merged[key] = value
     return merged
 
 
-def load_settings(config_dir: Path | None = None, profile: str | None = None) -> Settings:
+def _apply_profile(raw: dict[str, Any], profile: str) -> dict[str, Any]:
+    """``raw`` with ``[profiles.<profile>]`` laid over it (``apply_overlay``)."""
+    profiles = raw.get("profiles", {})
+    if profile not in profiles:
+        raise ConfigError(f"no [profiles.{profile}] in settings.toml (known: {sorted(profiles)})")
+    return apply_overlay(raw, profiles[profile])
+
+
+def load_settings(
+    config_dir: Path | None = None,
+    profile: str | None = None,
+    overlay: dict[str, Any] | None = None,
+) -> Settings:
     """``settings.toml``, with the ``[profiles.<profile>]`` overlay if one is named (the
-    ``profile`` argument, else the ``THINKBIBLE_PROFILE`` environment variable)."""
+    ``profile`` argument, else the ``THINKBIBLE_PROFILE`` environment variable), then
+    ``overlay`` (an eval candidate's changes, ``evals/run.py``)."""
     raw = _read(_config_dir(config_dir) / "settings.toml")
     profile = profile or os.environ.get(PROFILE_ENV) or None
     if profile:
         raw = _apply_profile(raw, profile)
+    if overlay:
+        raw = apply_overlay(raw, overlay)
     stages: dict[str, StageSettings] = {}
     for name, s in raw.get("stages", {}).items():
         effort = s.get("effort") or None  # "" lets a profile turn effort off

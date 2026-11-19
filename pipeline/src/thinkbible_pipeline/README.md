@@ -41,6 +41,10 @@ pipeline/
 │   ├── questions/v18.md            # generate call 2: candidate questions in reading order
 │   ├── question-guide/v5.md        # quality rules + the owner's favorite questions
 │   └── review/v14.md               # the grader's rubric + the owner's worked examples
+├── evals/
+│   ├── calibration.json            # the owner's grades the grader is measured against (`calibrate`)
+│   ├── mark-sample.json            # 21 Mark sections `eval` compares prompts on
+│   └── candidates/                 # prompt changes to try, as settings overlays (control.toml: none)
 ├── scripts/
 │   └── build_bundle.py             # `make lambda-bundle`: builds pipeline/out/lambda.zip
 ├── src/thinkbible_pipeline/
@@ -85,7 +89,10 @@ pipeline/
 │   ├── report/
 │   │   ├── scorecard.py            # the book's numbers: kept, dropped, failed, cost
 │   │   ├── render.py               # review.html (Jinja2): every section, its ideas and questions
-│   │   └── templates/review.html.j2
+│   │   └── templates/              # review.html.j2, eval.html.j2
+│   ├── evals/
+│   │   ├── run.py                  # `eval`: the current and candidate arms, in scratch stores
+│   │   └── report.py               # the gate's measures per arm, the verdict, eval.html
 │   ├── commentary/
 │   │   ├── crossrefs.py            # "See on Mt 4:1-11", "( = Lu …)": pointers to another note
 │   │   ├── preface.py              # each commentator's book preface, split from their first note
@@ -188,7 +195,7 @@ drafts in S3.
 | `generate` | every section | Sonnet | about $0.10 | The content. Code gathers each commentator's notes on the section (`commentary/gather.py`, R4; notes running past the section are labelled so). Call 1 writes the key ideas (one marked as the central meaning) and background facts, each source with an exact quote, plus the context and "views differ" notes. Code keeps only sources whose quote is found word for word. Call 2 writes up to 10 candidate questions in reading order, 2-3 on the central idea. Code checks each one (length, "?", in the section's verses, aimed at a key idea). |
 | `align` | every section | Haiku, only where needed | about $0.0001 | For KJV readers: a question that quotes a phrase the KJV words differently ('I am willing' / 'I will') or names someone the KJV spells differently (Elijah / Elias) gets a KJV wording (`textByTranslation.kjv`); the question itself is unchanged. Code also writes neutral manuscript notes for verses one translation has and the other doesn't (Mark 7:16) and for early endings (after Mark 16:8). |
 | `check` | every section | none | free | The published format's rules on the finished section: lengths, verse references that resolve in both translations, no cut-off text. A section that breaks one is regenerated on the next run, once; then it fails. |
-| `review` | every section | Opus | about $0.13 | The quality gate: the calibrated grader scores every key idea, candidate question and note 1-5. At 2 or less an item is dropped. Up to 3 questions are kept (never more than the key ideas): the best on the central idea first if it grades 4 or more, then the best of the rest. A weak views note is removed; a weak context note regenerates the section. |
+| `review` | every section | Opus | about $0.13 | The quality gate: the calibrated grader scores every key idea, candidate question and note 1-5. At 2 or less an item is dropped. Up to 3 questions are kept (never more than the key ideas): the best on the central idea if one grades 4 or more, then the best of the rest, quality first. The grader also marks each question big-picture or detail: a big-picture question graded 4 or more is asked first; otherwise the best-graded is. A weak views note is removed; a weak context note regenerates the section. |
 | `report` | once per book, in `PlanStage` | none | free | `scorecard.json` (pass rates, failed and ungenerated sections, calibration, cost, what blocks promotion) and `review.html` (`make status` opens it), and the book's status. |
 
 In all, about $0.27 per section.
@@ -216,6 +223,9 @@ Things to know:
   next run retries it.
 - **Spend has a cap,** by default twice the estimate. Once spend reaches it, no new section starts;
   sections already running finish.
+- **Out of credit stops the run.** If the Claude API says the account's credit is used up, nothing
+  more starts and `status` says so. Add credit, then re-run the same command: done sections are
+  skipped.
 
 ## Freezing the sources (once)
 
@@ -311,6 +321,29 @@ introduction blocks and the parallel passage notes it follows), with no model ca
 uv run --package thinkbible-pipeline thinkbible-pipeline excerpts --book mark --section mrk-1-12
 #   --commentator jamieson-fausset-brown   only one commentator;  --full   every part in full
 ```
+
+## Tuning prompts
+
+Two commands measure quality instead of judging one run by eye. Both call models, so each shows
+its estimate and asks first.
+
+- **`calibrate`**: is the grader trustworthy? It grades the owner's labelled items
+  (`pipeline/evals/calibration.json`) and records how often it agrees (at least 85% on 30 items
+  to promote). Run it after any change to the grader (`prompts/review/`, its model, or the shared
+  context). `calibrate --label` adds the owner's grades.
+- **`eval`**: is a prompt change better? Put the change in `pipeline/evals/candidates/NAME.toml`
+  (see the README there), then:
+
+  ```bash
+  uv run --package thinkbible-pipeline thinkbible-pipeline eval --sample mark-sample --candidate NAME
+  ```
+
+  The current prompts' drafts are reused when they match (free); the candidate writes the 21
+  sample sections again in a scratch folder (`pipeline/out/evals/`, about $5), and the same
+  calibrated grader grades both. Adopt the candidate (bump the version in `settings.toml`) only
+  if it does at least as well on every measure: strong first questions, full sets, big-picture
+  first questions, mean kept grade and key ideas passing. `--repeats 2` averages two candidate
+  runs; the `control` candidate shows how much two runs of the same prompts differ.
 
 ## Deploying
 

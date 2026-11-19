@@ -1,0 +1,34 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Eval: {{ candidate }}</title>
+<style>
+:root { --ink:#1d1b16; --muted:#6b6457; --rule:#e4dccb; --page:#fffdf7; --desk:#f3eee2;
+        --good:#1f6f43; --bad:#9b2c1c; }
+@media (prefers-color-scheme: dark) { :root { --ink:#ece6d8; --muted:#a59d8c; --rule:#3a3528;
+        --page:#1f1c16; --desk:#161410; --good:#7fc79c; --bad:#e58b78; } }
+body { margin:0; background:var(--desk); color:var(--ink); font:14px/1.5 system-ui, sans-serif; }
+main { max-width:1200px; margin:0 auto; padding:16px; }
+table { border-collapse:collapse; width:100%; background:var(--page); }
+td, th { border:1px solid var(--rule); padding:6px 8px; text-align:left; vertical-align:top; }
+.ok { color:var(--good); font-weight:600; } .no { color:var(--bad); font-weight:600; }
+.grid { display:grid; grid-template-columns:repeat({{ arms|length }}, minmax(0, 1fr)); gap:8px; }
+.cell { background:var(--page); border:1px solid var(--rule); border-radius:8px; padding:8px; }
+.meta { color:var(--muted); font-size:12px; } h2 { margin-top:28px; }
+@media (max-width: 700px) { .grid { grid-template-columns:1fr; } }
+</style></head><body><main>
+<h1>Eval: {{ candidate }} <span class="meta">on {{ sample }} ({{ sections|length }} sections)</span></h1>
+<p class="{{ 'ok' if verdict.adopt else 'no' }}">{{ "At least as good on every measure: may be adopted." if verdict.adopt else "Worse on at least one measure: keep the current prompts." }}</p>
+<table><tr><th>Measure</th><th>Current</th><th>Candidate</th><th></th></tr>
+{% for label, cur, cand, ok in verdict.rows %}<tr><td>{{ label }}</td>
+<td>{{ "%.2f"|format(cur) if label.startswith("Mean") else "%d%%"|format(cur * 100) }}</td>
+<td>{{ "%.2f"|format(cand) if label.startswith("Mean") else "%d%%"|format(cand * 100) }}</td>
+<td class="{{ 'ok' if ok else 'no' }}">{{ "at least as well" if ok else "worse" }}</td></tr>{% endfor %}
+<tr><td>Candidate questions passing (information)</td><td>{{ "%d%%"|format(current.candidate_pass * 100) }}</td><td>{{ "%d%%"|format(cand_m.candidate_pass * 100) }}</td><td></td></tr>
+<tr><td>Failed sections</td><td>{{ current.failed }}</td><td>{{ cand_m.failed }}</td><td></td></tr>
+<tr><td>Rubric lines broken</td><td>{{ current.broken.most_common(6)|map("join", ": ")|join(", ") }}</td><td>{{ cand_m.broken.most_common(6)|map("join", ": ")|join(", ") }}</td><td></td></tr>
+<tr><td>Cost</td><td>${{ "%.2f"|format(current.cost_usd) }}</td><td>${{ "%.2f"|format(cand_m.cost_usd) }}</td><td></td></tr>
+</table>
+{% for sid in sections %}<h2>{{ sid }}</h2><div class="grid">
+{% for arm in arms %}{% set v = arm.views[sid] %}<div class="cell"><div class="meta"><b>{{ arm.label }}</b>{% if not v.missing %} · central: {{ v.central or "-" }}{% endif %}</div>
+{% if v.missing %}<p class="meta">no draft</p>{% elif v.failed %}<p class="no">failed: {{ v.failed }}</p>{% else %}<ol>{% for q in v.questions %}<li>{{ q.text }} <span class="meta">({{ q.grade }}{% if q.focus %}, {{ q.focus }}{% endif %}{% if q.central %}, central{% endif %})</span></li>{% endfor %}</ol>{% endif %}</div>{% endfor %}
+</div>{% endfor %}
+</main></body></html>

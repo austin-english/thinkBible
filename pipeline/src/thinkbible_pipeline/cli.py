@@ -649,9 +649,90 @@ def calibrate(
 
 @app.command("eval")
 def eval_(
-    sample: Annotated[str, typer.Option(help="Sample set, e.g. mark-sample.")],
-    candidate: Annotated[str, typer.Option(help="Candidate prompt set.")],
+    sample: Annotated[str, typer.Option(help="Sample in pipeline/evals/, e.g. mark-sample.")],
+    candidate: Annotated[
+        str, typer.Option(help="Candidate in pipeline/evals/candidates/, e.g. control.")
+    ],
+    repeats: Annotated[
+        int, typer.Option(help="Fresh runs of the candidate; more runs, less chance.")
+    ] = 1,
+    fresh_current: Annotated[
+        bool, typer.Option("--fresh-current", help="Generate the current arm again too.")
+    ] = False,
+    open_report: Annotated[bool, typer.Option("--open/--no-open")] = True,
     yes: Annotated[bool, typer.Option("--yes")] = False,
 ) -> None:
-    """Compare a candidate prompt set with the current one on a fixed sample."""
-    _not_implemented("eval")
+    """Compare a candidate prompt set with the current one on a fixed sample (FR-029)."""
+    import webbrowser
+    from datetime import UTC, datetime
+
+    from thinkbible_pipeline import app as wiring
+    from thinkbible_pipeline.config import Settings
+    from thinkbible_pipeline.drafts.store import DraftStore
+    from thinkbible_pipeline.evals import report
+    from thinkbible_pipeline.evals.run import (
+        EvalError,
+        candidate_settings,
+        load_candidate,
+        load_sample,
+        plan_eval,
+        run_eval,
+    )
+    from thinkbible_pipeline.llm.runner import BedrockRunner
+    from thinkbible_pipeline.paths import repo_paths
+    from thinkbible_pipeline.stages.base import Deps
+
+    try:
+        chosen = load_sample(sample)
+        overlay = load_candidate(candidate)
+        request = RunRequest(book=chosen.book, stages=["generate"])
+    except EvalError as e:
+        _exit(ExitCode.USAGE, str(e))
+    except ValidationError as e:
+        _usage(e)
+    deps = wiring.local_deps(request, echo=typer.echo)
+    current, cand = deps.settings, candidate_settings(overlay)
+    try:
+        plan = plan_eval(deps.store, chosen, current, cand, repeats=repeats,
+                         fresh_current=fresh_current)  # fmt: skip
+    except EvalError as e:
+        _exit(ExitCode.USAGE, str(e))
+    reuse = "reused (free)" if plan.current else f"generated ({len(plan.stale)} sections stale)"
+    typer.echo(f"eval {candidate} on {sample}: {len(chosen.sections)} sections; current arm "
+               f"{reuse}; {repeats} candidate run(s); about ${plan.cost_usd:.2f}")  # fmt: skip
+    if not yes and not typer.confirm("Proceed?", default=False):
+        _exit(ExitCode.OK, "not run")
+
+    def deps_for(store: DraftStore, settings: Settings) -> Deps:
+        return Deps(
+            store=store, settings=settings, pricing=deps.pricing,
+            runner_factory=lambda: BedrockRunner(settings), approve_estimate=lambda _s: True,
+            stages=deps.stages, preflight=deps.preflight, echo=typer.echo,
+            code_version=deps.code_version, library=deps.library,
+        )  # fmt: skip
+
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S")
+    root = repo_paths().pipeline / "out" / "evals" / f"{sample}-{candidate}-{stamp}"
+    base, runs = asyncio.run(
+        run_eval(plan, deps.store, root, current=current, candidate=cand, deps_for=deps_for,
+                 echo=typer.echo)
+    )  # fmt: skip
+    threshold = current.review_flag_threshold
+    base_m = report.measure(base, threshold)
+    cand_m = report.averaged([report.measure(r, threshold) for r in runs])
+    verdict = report.compare(base_m, cand_m)
+    for label, cur, new, ok in verdict.rows:
+        spec = ".2f" if label.startswith("Mean") else ".0%"
+        typer.echo(f"  {label}: {cur:{spec}} -> {new:{spec}}  {'ok' if ok else 'WORSE'}")
+    typer.echo(f"  cost ${base_m.cost_usd + cand_m.cost_usd:.2f}; failed sections "
+               f"{base_m.failed} -> {cand_m.failed}")  # fmt: skip
+    page = report.render(sample, candidate, chosen.sections, [base, *runs], base_m, cand_m, verdict)
+    out = root / "eval.html"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(page, encoding="utf-8")
+    typer.echo(f"  report: {out}")
+    typer.echo("  at least as good on every measure: may be adopted" if verdict.adopt
+               else "  worse on at least one measure: keep the current prompts")  # fmt: skip
+    if open_report:
+        webbrowser.open(out.as_uri())
+    _exit(ExitCode.OK)

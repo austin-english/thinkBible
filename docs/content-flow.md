@@ -11,7 +11,7 @@ see [`content/schema/fixtures/valid/`](../content/schema/fixtures/valid/).
 flowchart LR
     SRC["Frozen sources<br/>Bible text + 3 commentaries"]
     PIPE["Pipeline<br/>AI drafts key ideas<br/>and questions"]
-    REV{{"You review<br/>and approve"}}
+    REV{{"Quality gate<br/>then you promote"}}
     PACK[("Content pack<br/>per book, versioned")]
     APP["iPhone app<br/>read + reflect"]
     API["Compare API<br/>which ideas you caught"]
@@ -23,7 +23,9 @@ flowchart LR
 - **Sources** are downloaded once and frozen. Nothing reads from the web after that.
 - The **pipeline** drafts the study content for one book at a time. AI only summarises what the
   commentators say.
-- **You** review the drafts and approve them before anything is published.
+- An automatic **quality gate** (rule checks, an evidence check and a calibrated grader) drops
+  weak items. A passing book goes to the draft channel; you read it in the app and `promote` it
+  to live.
 - A **content pack** is published per book and version, and the app downloads it and keeps it
   offline.
 - The **app** compares a reader's answer with the pack's key ideas. That is the only live AI call.

@@ -41,6 +41,27 @@ aws sts get-caller-identity                # should show assumed-role/AWSReserve
   certificate use **us-east-1**. An organization policy blocks other uses, so see
   `docs/aws-setup.md` → Regions.
 
+## Content pipeline
+
+The batch pipeline (spec 001) turns the frozen sources into reviewed content packs, one book at a
+time, in AWS. Details: [`pipeline/src/thinkbible_pipeline/README.md`](pipeline/src/thinkbible_pipeline/README.md).
+
+```bash
+make pipeline BOOK=mark STAGE=all   # estimate, confirm, run every stage in AWS, wait
+make status BOOK=mark               # latest runs, spend, and the scorecard (review.html)
+make publish BOOK=mark              # to the draft channel (a passing run does this itself)
+make promote BOOK=mark              # draft → live, only if the quality gate passed
+make deploy                         # after changing pipeline code, config or prompts
+```
+
+- **Stages:** `sections`, `intro`, `summaries`, `generate`, `align`, `check`, `review`, `report`.
+  Unchanged sections are skipped, so a re-run pays only for what changed.
+- **Quality:** the `review` stage is an Opus grader calibrated against your own grades
+  (`calibrate`). Prompt changes are compared with the current prompts on a fixed sample first
+  (`eval`).
+- **Cost:** about $0.27 per section, shown before every run, with a spend cap.
+- **Live content is frozen:** to change a promoted question, `retire --replace` it.
+
 ## Spec Kit
 
 Spec Kit is already initialised (Claude integration plus the git extension), and its
@@ -61,7 +82,7 @@ thinkbible/
 ├─ content/         schema/ (pack contract), sources/manifest.json (snapshot checksums; text in S3), drafts/
 ├─ shared/          Python pack models (thinkbible_core)
 ├─ backend/         Lambdas: compare, authorizer
-├─ pipeline/        batch jobs + versioned prompts
+├─ pipeline/        batch jobs, versioned prompts, evals/ (calibration set, eval samples)
 ├─ infra/           Terraform modules + envs
 ├─ ios/             Xcode app + Packages/ (DesignSystem, ContentKit, ReflectionKit, APIClient)
 ├─ specs/           Spec Kit features (NNN-name/spec.md, plan.md, tasks.md) + README.md
