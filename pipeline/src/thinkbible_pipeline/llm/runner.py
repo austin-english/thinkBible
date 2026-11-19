@@ -83,6 +83,17 @@ class ModelError(Exception):
     """A model call failed for this section. The stage runner marks the section failed."""
 
 
+class OutOfCredit(ModelError):
+    """The Claude API account is out of credit (2026-11-19). No retry or other section can
+    succeed, so the run stops: sections already running finish, no new ones start, and the
+    refused section is left as it was for the next run."""
+
+
+OUT_OF_CREDIT = (
+    "out of Claude API credit: add credit in the Claude Console (Plans & Billing), then run again"
+)
+
+
 class Throttled(ModelError):
     """Bedrock is throttling or overloaded (429/503/529) even after the SDK's own retries.
 
@@ -299,6 +310,8 @@ class BedrockRunner:
                     raise Throttled(
                         f"{section_id}: {e.status_code} after {throttled} retries: {e}"
                     ) from e
+                if "credit balance is too low" in str(e):
+                    raise OutOfCredit(OUT_OF_CREDIT) from e
                 raise ModelError(f"{section_id}: {type(e).__name__}: {e}") from e
             except anthropic.APIError as e:
                 raise ModelError(f"{section_id}: {type(e).__name__}: {e}") from e

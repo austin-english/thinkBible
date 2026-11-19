@@ -205,4 +205,4 @@ class RunRecord(JsonModel):
     models: list[str]
     prompt_versions: dict[str, str]
     code_version: str | None = None  # git HEAD of the bundle (or working tree for --local)
-    stopped_by: Literal["cap", "error"] | None = None
+    stopped_by: Literal["cap", "credit", "error"] | None = None

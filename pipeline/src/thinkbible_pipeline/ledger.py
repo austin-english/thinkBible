@@ -20,6 +20,7 @@ class LedgerState:
     cap_usd: float | None
     spent_usd: float = 0.0
     status: RunStatus = "running"
+    stop_reason: Literal["cap", "credit"] | None = None
     counts: dict[str, int] = field(default_factory=dict)
     execution_arn: str | None = None
 
@@ -41,8 +42,9 @@ class SpendLedger(Protocol):
 
     def add(self, run_id: str, cost_usd: float) -> None: ...
 
-    def mark_stopped(self, run_id: str) -> None:
-        """The cap was reached: no new sections start for the rest of the run."""
+    def mark_stopped(self, run_id: str, reason: Literal["cap", "credit"] = "cap") -> None:
+        """The cap was reached, or the account ran out of credit: no new sections start for the
+        rest of the run."""
         ...
 
     def finish(self, run_id: str, status: RunStatus, counts: dict[str, int]) -> None: ...
@@ -77,8 +79,10 @@ class InMemoryLedger:
     def add(self, run_id: str, cost_usd: float) -> None:
         self._state(run_id).spent_usd += cost_usd
 
-    def mark_stopped(self, run_id: str) -> None:
-        self._state(run_id).status = "stopped-cap"
+    def mark_stopped(self, run_id: str, reason: Literal["cap", "credit"] = "cap") -> None:
+        state = self._state(run_id)
+        state.status = "stopped-cap"
+        state.stop_reason = state.stop_reason or reason
 
     def finish(self, run_id: str, status: RunStatus, counts: dict[str, int]) -> None:
         state = self._state(run_id)

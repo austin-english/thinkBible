@@ -53,6 +53,9 @@ class RunRequest(_Request):
     sections: list[str] | None = None
     fresh: bool = False
     refresh: bool = False
+    # A run that includes `report` and passes publishes to the draft channel unless this is False
+    # (`--no-publish`: test a few sections and read the report without publishing).
+    publish: bool = True
     cap_usd: Annotated[float, Field(gt=0)] | None = None  # None = 2x the estimate
     auto_approve: bool = False
 

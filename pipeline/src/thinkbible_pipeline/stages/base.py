@@ -37,7 +37,7 @@ from thinkbible_pipeline.exitcodes import ExitCode
 from thinkbible_pipeline.jsonio import JsonModel, compact_canonical, sha256_hex
 from thinkbible_pipeline.ledger import InMemoryLedger, RunStatus, SpendLedger
 from thinkbible_pipeline.llm.budget import EstimateSummary, StageEstimate, estimate, price
-from thinkbible_pipeline.llm.runner import ModelRunner, Usage
+from thinkbible_pipeline.llm.runner import ModelRunner, OutOfCredit, Usage
 from thinkbible_pipeline.requests import RunRequest
 from thinkbible_pipeline.sources.snapshot import SourceError, SourceLibrary
 
@@ -64,6 +64,10 @@ class SectionStage(ABC):
     @abstractmethod
     def model(self, deps: Deps) -> str | None:
         """The model ID this stage calls, or None for stages without model calls."""
+
+    def costs_nothing(self, section_id: str, draft: SectionDraft, deps: Deps) -> bool:
+        """Whether running this section will make no model call (for the estimate)."""
+        return False
 
     def applies_to(self, section_id: str, deps: Deps) -> bool:
         """Whether this stage runs for the section at all (``intro``: only the first)."""
@@ -162,6 +166,7 @@ class StagePlan(JsonModel):
     items: list[PlanItem] = Field(default_factory=list)
     skipped: int = 0
     live: int = 0  # live sections a content stage leaves alone (use --refresh; US6)
+    free: int = 0  # of the items, those that will make no model call (stored grades reused)
     estimate_usd: float = 0.0
 
     @property
@@ -187,7 +192,7 @@ class StageResult(JsonModel):
     not_started: int = 0
     spent_usd: float = 0.0
     estimate_usd: float = 0.0
-    stopped_by: Literal["cap"] | None = None
+    stopped_by: Literal["cap", "credit"] | None = None
     failures: dict[str, str] = Field(default_factory=dict)
 
 
@@ -206,14 +211,14 @@ class RunResult:
     def stopped_by(self) -> str | None:
         if self.declined:
             return "declined"
-        return "cap" if any(s.stopped_by == "cap" for s in self.stages) else None
+        return next((s.stopped_by for s in self.stages if s.stopped_by), None)
 
     @property
     def exit_code(self) -> ExitCode:
         if self.error_code is not None:
             return self.error_code
-        if any(s.stopped_by == "cap" for s in self.stages):
-            return ExitCode.CAP_REACHED
+        if any(s.stopped_by for s in self.stages):
+            return ExitCode.CAP_REACHED  # the cap, or out of credit: the run stopped
         if any(s.failed for s in self.stages):
             return ExitCode.SECTIONS_FAILED
         return ExitCode.OK
@@ -300,11 +305,16 @@ def plan_stage(
             plan.skipped += 1
         else:
             plan.items.append(PlanItem(section_id=sid, input_hash=h))
-    if model is not None and plan.items:
-        plan.estimate_usd = estimate(
-            stage.name, len(plan.items), deps.store.read_runs(), deps.settings
-        )
+            if stage.costs_nothing(sid, draft, deps):
+                plan.free += 1
+    paid = len(plan.items) - plan.free
+    if model is not None and paid:
+        plan.estimate_usd = estimate(stage.name, paid, deps.store.read_runs(), deps.settings)
     return plan
+
+
+# The smallest default cap for a run with model stages to process (2026-11-19).
+MIN_DEFAULT_CAP_USD = 1.0
 
 
 def estimate_run(request: RunRequest, deps: Deps) -> tuple[list[StagePlan], EstimateSummary]:
@@ -327,6 +337,9 @@ def estimate_run(request: RunRequest, deps: Deps) -> tuple[list[StagePlan], Esti
             changed.update(plan.section_ids)
     total = sum(p.estimate_usd for p in plans)
     cap = request.cap_usd if request.cap_usd is not None else 2 * total
+    if request.cap_usd is None and cap == 0 and any(p.model is not None and p.items for p in plans):
+        # An estimate of $0 (stored grades reused) still gets a cap, in case a model is called.
+        cap = MIN_DEFAULT_CAP_USD
     summary = EstimateSummary(
         stages=tuple(
             StageEstimate(
@@ -334,6 +347,7 @@ def estimate_run(request: RunRequest, deps: Deps) -> tuple[list[StagePlan], Esti
                 to_process=len(p.items),
                 skipped=p.skipped,
                 live=p.live,
+                free=p.free,
                 estimate_usd=p.estimate_usd,
                 calls_model=p.model is not None,
             )
@@ -368,6 +382,11 @@ async def run_one_section(
         res = await stage.execute(section_id, inputs, draft, deps)
     except reraise:
         raise
+    except OutOfCredit as e:
+        # Nothing can succeed until credit is added: stop the run; this section is untouched.
+        deps.ledger.mark_stopped(run_id, "credit")
+        deps.echo(f"  {section_id}: {e}")
+        return SectionOutcome(section_id=section_id, status="not_started", error=str(e))
     except Exception as e:  # one failure marks only this section (research R8)
         fresh = store.read_draft_or_new(section_id)
         fresh.stages[stage.name] = StageRecord(
@@ -442,8 +461,9 @@ def finish_stage(
         tokens.cache_write += o.tokens.cache_write
         models.update(o.models)
     if result.not_started:
-        result.stopped_by = "cap"
-        deps.ledger.mark_stopped(run_id)
+        state = deps.ledger.get(run_id)
+        result.stopped_by = state.stop_reason if state and state.stop_reason else "cap"
+        deps.ledger.mark_stopped(run_id, result.stopped_by)
     deps.store.write_run(
         RunRecord(
             run_id=run_id,
@@ -459,7 +479,7 @@ def finish_stage(
             models=sorted(models),
             prompt_versions={plan.stage: plan.prompt_version} if plan.prompt_version else {},
             code_version=deps.code_version,
-            stopped_by="cap" if result.stopped_by == "cap" else None,
+            stopped_by=result.stopped_by,
         )
     )
     return result
@@ -512,9 +532,9 @@ async def run(request: RunRequest, deps: Deps, *, run_id: str | None = None) -> 
             plan, outcomes, run_id=run_id, started=started, deps=deps, cap_usd=summary.cap_usd
         )
         result.stages.append(sr)
-        if sr.stopped_by == "cap":
+        if sr.stopped_by:
             break
 
-    status: RunStatus = "stopped-cap" if result.stopped_by == "cap" else "succeeded"
+    status: RunStatus = "stopped-cap" if result.stopped_by else "succeeded"
     deps.ledger.finish(run_id, status, run_counts(result.stages))
     return result

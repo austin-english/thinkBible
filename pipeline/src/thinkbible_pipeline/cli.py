@@ -250,6 +250,11 @@ def _print_stages(stages: list[StageResult]) -> None:
             line += f", ${s.spent_usd:.3f}"
         if s.stopped_by == "cap":
             line += f"; stopped: cap reached ({s.not_started} not started)"
+        elif s.stopped_by == "credit":
+            line += (
+                f"; stopped: out of Claude API credit ({s.not_started} not started). Add credit "
+                "in the Claude Console, then run the same command again"
+            )
         typer.echo(line)
 
 
@@ -266,6 +271,9 @@ def run(
     local: Annotated[
         bool, typer.Option("--local", help="Run in this process (a few sections, prompt tuning).")
     ] = False,
+    no_publish: Annotated[
+        bool, typer.Option("--no-publish", help="Don't publish to the draft channel afterwards.")
+    ] = False,
 ) -> None:
     """Run one stage, several, or all of them: in AWS by default, or in-process with --local."""
     from thinkbible_pipeline.stages import expand_all
@@ -279,6 +287,7 @@ def run(
             refresh=refresh,
             cap_usd=cap,
             auto_approve=yes,
+            publish=not no_publish,
         )
     except ValidationError as e:
         _usage(e)
@@ -296,8 +305,10 @@ def run(
         if result.declined:
             _exit(ExitCode.OK, "not run (estimate declined)")
         _print_stages(result.stages)
-        if "report" in request.stages and result.exit_code == ExitCode.OK:
+        if "report" in request.stages and result.exit_code == ExitCode.OK and request.publish:
             publish_after_run(deps.store, deps.sources, wiring.channels(), deps.clock(), typer.echo)
+        elif "report" in request.stages and not request.publish:
+            typer.echo("publish: skipped (--no-publish)")
         _exit(result.exit_code)
 
     started = wiring.start_cloud_run(request, echo=typer.echo)
@@ -408,7 +419,8 @@ def status(
         stages = ", ".join(
             f"{r.stage} {r.sections.done}/{r.sections.failed}/{r.sections.skipped}" for r in records
         )
-        stop = " (stopped: cap)" if any(r.stopped_by == "cap" for r in records) else ""
+        reason = next((r.stopped_by for r in records if r.stopped_by), None)
+        stop = f" (stopped: {'out of credit' if reason == 'credit' else reason})" if reason else ""
         typer.echo(f"  run {rid}: ${spent:.3f}{stop}  [done/failed/skipped] {stages}")
     if not run_ids:
         typer.echo("  no runs yet")

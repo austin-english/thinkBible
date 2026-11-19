@@ -51,8 +51,12 @@ def test_no_cap_and_stop(ledger: SpendLedger) -> None:
     ledger.create("run-2", "mrk", None)
     ledger.add("run-2", 50.0)
     assert ledger.can_start("run-2")
-    ledger.mark_stopped("run-2")
+    ledger.mark_stopped("run-2", "credit")
     assert not ledger.can_start("run-2")
+    # The first reason stays: later stages that find the run stopped report why.
+    ledger.mark_stopped("run-2", "cap")
+    state = ledger.get("run-2")
+    assert state is not None and state.stop_reason == "credit"
 
 
 def test_finish_records_counts(ledger: SpendLedger) -> None:

@@ -308,6 +308,10 @@ class ReviewStage(SectionStage):
             "selection": SELECTION_RULES,
         }
 
+    def costs_nothing(self, section_id: str, draft: SectionDraft, deps: Deps) -> bool:
+        candidates = draft.candidates or draft.section.get("questions", [])
+        return self._stored_grades(draft, candidates, deps) is not None
+
     def _stored_grades(
         self, draft: SectionDraft, candidates: list[dict[str, Any]], deps: Deps
     ) -> dict[str, ItemGrade] | None:

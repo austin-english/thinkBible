@@ -285,6 +285,7 @@ Everything here is safe to re-run. `…` stands for
 make pipeline BOOK=mark STAGE=all       # in AWS: estimate, confirm, start, wait for the result
 make status BOOK=mark                   # latest runs, spend, and opens the scorecard (review.html)
 make publish BOOK=mark                  # publish to the draft channel (a passing run does this itself)
+# A test run with the report but no publishing: add --no-publish
 make promote BOOK=mark                  # copy the draft version to live, if the gate allows it
 ```
 

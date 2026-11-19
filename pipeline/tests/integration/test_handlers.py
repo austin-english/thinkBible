@@ -264,6 +264,11 @@ def test_a_passing_run_with_report_publishes_to_the_draft_channel(
     out = _json(handlers.finish_run({**start, "stageResults": []}))
     assert out["publishable"] and out["publish"] == "publish: 1.0.0 on the draft channel (first)"
     assert calls == [("mrk", ("draft", "live"))]
+    # With --no-publish, a passing run with `report` says so and publishes nothing.
+    start["request"]["publish"] = False
+    out = _json(handlers.finish_run({**start, "stageResults": []}))
+    assert out["publish"] == "publish: skipped (--no-publish)" and len(calls) == 1
+    start["request"]["publish"] = True
     # Without `report`, nothing is published.
     start["request"]["stages"] = ["summaries"]
     out = _json(handlers.finish_run({**start, "stageResults": []}))

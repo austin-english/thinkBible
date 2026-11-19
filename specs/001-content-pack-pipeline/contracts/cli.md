@@ -32,7 +32,7 @@ Functions execution whose input carries the same request as JSON:
 | `sources push` | Upload cache files listed in the manifest but missing from S3. Write-once (`If-None-Match: *`); refuses if an existing object's checksum differs | S3 (sources bucket) | No |
 | `sources pull [--books …]` | Download manifest files missing from the local cache, then verify them | S3 (sources bucket) | No |
 | `verify [--remote]` | Re-check every cached file against `manifest.json`; with `--remote`, download every file from the sources bucket and check it instead (the local cache is untouched) | S3 with `--remote` | No |
-| `run --book B --stage S [--sections ID,…] [--fresh] [--refresh] [--cap USD] [--yes] [--wait] [--local]` | Run one stage or all of them (see below). By default: estimate from the S3 drafts, confirm, then start the Step Functions execution and print its ARN and console link. `--wait` polls until it finishes and exits with its code. `--local` runs in-process against the same S3 drafts, for a few sections while tuning prompts | Step Functions, S3, DynamoDB (cloud); Bedrock, S3 (`--local`) | Yes, except `sections`, `check` and `report` |
+| `run --book B --stage S [--sections ID,…] [--fresh] [--refresh] [--cap USD] [--yes] [--wait] [--local] [--no-publish]` | Run one stage or all of them (see below). By default: estimate from the S3 drafts, confirm, then start the Step Functions execution and print its ARN and console link. `--wait` polls until it finishes and exits with its code. `--local` runs in-process against the same S3 drafts, for a few sections while tuning prompts | Step Functions, S3, DynamoDB (cloud); Bedrock, S3 (`--local`) | Yes, except `sections`, `check` and `report` |
 | `status --book B [--open]` | Book status, the latest runs (from the ledger and run records) with spend and counts, the latest scorecard's pass rates and failed sections, and what is left. `--open` downloads `review.html` and opens it | S3, DynamoDB, Step Functions | No |
 | `publish --book B [--dry-run]` | Build the pack from the S3 drafts and publish it to the **draft** channel (no additive check there). A run that includes `report` does this automatically when no section failed; this command repeats it by hand | S3 / CloudFront (dev) | No |
 | `promote --book B` | Copy the book's current draft version, byte for byte, to **live**: refuses (exit 5) unless the gate passed, pass rates meet the thresholds, the grader calibration is current and at least 85%, and the live publish check passes. Then updates prod's index and invalidates it (FR-021, FR-024) | S3 / CloudFront (draft → live) | No |
@@ -93,17 +93,21 @@ they drop failing items and record why.
 ## Cost behaviour (FR-027, FR-028)
 
 1. Before any stage that calls a model, the CLI prints:
-   - sections to process;
-   - sections skipped because they're already done;
+   - sections to process, and how many of them reuse their stored grades at no cost;
+   - sections skipped because they're already done, or because they're live (use `--refresh`);
    - the estimated cost;
    - the cap.
 
    It then asks `Proceed? [y/N]`. `--yes` skips the prompt; CI never runs these stages. For a
    multi-stage run the first stage's count is exact; later stages count every section whose
    inputs will change, which is all sections an earlier stage in the run will process.
-2. When spend passes the cap (default 2× the estimate), no new sections start. Sections in flight
-   finish, and the run stops with status `stopped: cap reached`. `status` shows what is left.
-3. Every stage run writes a record to `drafts/{book}/runs/`: stage, sections, tokens by kind,
+2. When spend passes the cap (default 2× the estimate, and $1 when the estimate is $0), no new
+   sections start. Sections in flight finish, and the run stops with status `stopped: cap
+   reached`. `status` shows what is left.
+3. When the Claude API account is out of credit, the run stops the same way, at the first refused
+   call: `stopped: out of Claude API credit`, exit code 4. The refused section is left as it was,
+   so the same command, run again after adding credit, picks up where it stopped.
+4. Every stage run writes a record to `drafts/{book}/runs/`: stage, sections, tokens by kind,
    cost, models, prompt versions and code version.
 
 ## Exit codes

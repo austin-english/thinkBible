@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import time
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from thinkbible_pipeline.ledger import LedgerError, LedgerState, RunStatus
 
@@ -66,6 +66,7 @@ class DynamoLedger:
             status=item["status"]["S"],  # type: ignore[arg-type]
             counts=counts,
             execution_arn=item.get("executionArn", {}).get("S"),
+            stop_reason=item.get("stopReason", {}).get("S"),  # type: ignore[arg-type]
         )
 
     def _require(self, run_id: str) -> LedgerState:
@@ -88,13 +89,13 @@ class DynamoLedger:
             ExpressionAttributeValues={":c": {"N": _num(cost_usd)}},
         )
 
-    def mark_stopped(self, run_id: str) -> None:
+    def mark_stopped(self, run_id: str, reason: Literal["cap", "credit"] = "cap") -> None:
         self._db.update_item(
             TableName=self.table,
             Key={"runId": {"S": run_id}},
-            UpdateExpression="SET #s = :s",
-            ExpressionAttributeNames={"#s": "status"},
-            ExpressionAttributeValues={":s": {"S": "stopped-cap"}},
+            UpdateExpression="SET #s = :s, #r = if_not_exists(#r, :r)",
+            ExpressionAttributeNames={"#s": "status", "#r": "stopReason"},
+            ExpressionAttributeValues={":s": {"S": "stopped-cap"}, ":r": {"S": reason}},
         )
 
     def finish(self, run_id: str, status: RunStatus, counts: dict[str, int]) -> None:

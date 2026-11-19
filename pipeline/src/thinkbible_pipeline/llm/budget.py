@@ -48,6 +48,7 @@ class StageEstimate:
     estimate_usd: float
     calls_model: bool
     live: int = 0  # live sections left alone (US6)
+    free: int = 0  # sections to process with no model call (stored grades reused)
 
 
 @dataclass(frozen=True)
@@ -60,7 +61,7 @@ class EstimateSummary:
 
     @property
     def calls_model(self) -> bool:
-        return any(s.calls_model and s.to_process for s in self.stages)
+        return any(s.calls_model and s.to_process > s.free for s in self.stages)
 
 
 def confirm(
@@ -75,7 +76,9 @@ def confirm(
         line = f"{s.stage}: {s.to_process} sections to process, {s.skipped} skipped (already done)"
         if s.live:
             line += f", {s.live} skipped: live (use --refresh)"
-        if s.calls_model and s.to_process:
+        if s.free:
+            line += f", {s.free} reusing stored grades (no cost)"
+        if s.calls_model and s.to_process > s.free:
             line += f", about ${s.estimate_usd:.2f}"
         echo(line)
     cap = f"${summary.cap_usd:.2f}" if summary.cap_usd is not None else "none"

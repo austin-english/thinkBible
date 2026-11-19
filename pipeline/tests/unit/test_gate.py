@@ -368,3 +368,14 @@ def test_a_selection_change_reuses_the_stored_grades(tmp_path: Path, make_librar
     assert result.exit_code == ExitCode.OK and len(runner.calls) == calls
     again = deps.store.read_draft_or_new(SID)
     assert again.grades == first.grades and ids(again) == ids(first)
+
+
+def test_the_estimate_counts_reused_grades_at_no_cost(tmp_path: Path, make_library: Any) -> None:
+    from thinkbible_pipeline.stages.base import MIN_DEFAULT_CAP_USD, estimate_run
+
+    deps = setup(tmp_path, make_library, {("review", SID): grades(ALL_GOOD)})
+    asyncio.run(run(RunRequest(book="mark", stages=["review"]), deps))
+    plans, summary = estimate_run(RunRequest(book="mark", stages=["review"], fresh=True), deps)
+    assert (len(plans[0].items), plans[0].free, plans[0].estimate_usd) == (1, 1, 0.0)
+    assert not summary.calls_model  # nothing to approve: no model call is expected
+    assert summary.cap_usd == MIN_DEFAULT_CAP_USD  # but a cap stays, in case one is made

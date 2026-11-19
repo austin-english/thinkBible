@@ -195,11 +195,13 @@ def run_section(event: Event, _context: object = None) -> Event:
 def finish_stage_handler(event: Event, _context: object = None) -> Event:
     """Write the stage's run record; mark the run stopped if the cap stopped any section."""
     inp = FinishStageInput.model_validate(event)
-    if inp.stopped:
-        return _dump(StageResult(stage=inp.stage, stopped_by="cap"))
-    if inp.plan.book_level:
+    if inp.plan.book_level and not inp.stopped:
         return _dump(StageResult(stage=inp.stage, done=1))
     deps = DEPS_FACTORY(inp.request)
+    if inp.stopped:
+        state = deps.ledger.get(inp.run_id)
+        reason = state.stop_reason if state and state.stop_reason else "cap"
+        return _dump(StageResult(stage=inp.stage, stopped_by=reason))
     result = finish_stage(
         inp.plan,
         inp.outcomes,
@@ -216,7 +218,7 @@ def finish_run(event: Event, _context: object = None) -> Event:
     inp = FinishRunInput.model_validate(event)
     deps = DEPS_FACTORY(inp.request)
     stages = inp.stage_results
-    stopped = any(s.stopped_by == "cap" for s in stages)
+    stopped = any(s.stopped_by for s in stages)
     deps.ledger.finish(inp.run_id, "stopped-cap" if stopped else "succeeded", run_counts(stages))
     out = RunOutput(
         run_id=inp.run_id,
@@ -227,7 +229,9 @@ def finish_run(event: Event, _context: object = None) -> Event:
         stages=stages,
         publishable="report" in inp.request.stages and not any(s.failed for s in stages),
     )
-    if out.publishable and not stopped:
+    if out.publishable and not stopped and not inp.request.publish:
+        out.publish = "publish: skipped (--no-publish)"
+    elif out.publishable and not stopped:
         out.publish = publish_after_run(
             deps.store, deps.library, CHANNELS_FACTORY(), deps.clock(), deps.echo
         )
