@@ -1,7 +1,7 @@
 # ThinkBible
 
 Read a section of the Bible, answer one question in your own words, then see what the
-commentators noticed. iPhone app + small live API + batch content pipeline, in one repo.
+commentators noticed. iPhone and iPad app + small live API + batch content pipeline, in one repo.
 
 - Product and architecture: [`docs/brief.md`](docs/brief.md)
 - UI spec and screens: [`docs/design/README.md`](docs/design/README.md) (book feel) and [`docs/design/DESIGN.md`](docs/design/DESIGN.md) (paywall, fallbacks, copy)

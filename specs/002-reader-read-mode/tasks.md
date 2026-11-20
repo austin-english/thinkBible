@@ -50,7 +50,8 @@ commands to bundle packs and run tests.
 - [ ] T002 Create the build settings files:
   - `ios/Config/Shared.xcconfig`: `IPHONEOS_DEPLOYMENT_TARGET = 17.0`, `SWIFT_VERSION = 6.0`,
     `SWIFT_STRICT_CONCURRENCY = complete`, `CONTENT_BASE_URL = https:/$()/d2ne647g2cqb22.cloudfront.net`,
-    `PRODUCT_BUNDLE_IDENTIFIER = app.thinkbible.ThinkBible`, `TARGETED_DEVICE_FAMILY = 1`;
+    `PRODUCT_BUNDLE_IDENTIFIER = com.austinenglish.thinkbible` (the owner's registered App ID),
+    `DEVELOPMENT_TEAM = LM5PGHSW42`, `CODE_SIGN_STYLE = Automatic`, `TARGETED_DEVICE_FAMILY = 1,2` (iPhone and iPad, constitution v1.4.0);
   - `ios/Config/Debug.xcconfig` and `ios/Config/Beta.xcconfig`: include Shared, `CONTENT_CHANNEL = draft`;
   - `ios/Config/Release.xcconfig`: include Shared, `CONTENT_CHANNEL = live`.
 - [ ] T003 Bootstrap `ios/ThinkBible.xcodeproj` with XcodeGen (`brew install xcodegen` is done) from a
@@ -63,6 +64,8 @@ commands to bundle packs and run tests.
   - local package dependencies `ios/Packages/DesignSystem` and `ios/Packages/ContentKit`;
   - `Info.plist` keys `ContentChannel = $(CONTENT_CHANNEL)` and `ContentBaseURL = $(CONTENT_BASE_URL)`,
     URL scheme `thinkbible`, `UILaunchScreen` with the `desk` background color,
+    `UISupportedInterfaceOrientations` portrait (iPhone) and all four on iPad
+    (`UISupportedInterfaceOrientations~ipad`), `UIRequiresFullScreen` false,
     `UIUserInterfaceStyle` unset (follows the system);
   - one scheme `ThinkBible` (Run uses Debug, Archive uses Release) and a second scheme
     `ThinkBible Beta` (Archive uses Beta).
@@ -72,8 +75,9 @@ commands to bundle packs and run tests.
   iOS 17 and macOS 14 so `swift test` runs on a Mac, library `DesignSystem`, resources
   `Resources/Colors.xcassets`, test target `DesignSystemTests`) with empty source and test folders.
 - [ ] T005 [P] Create `ios/Packages/ContentKit/Package.swift` (same platforms, library `ContentKit`,
-  no dependencies, test target `ContentKitTests` with resources copied from
-  `content/schema/fixtures/` by a symlink `Tests/ContentKitTests/Fixtures -> ../../../../../content/schema/fixtures`).
+  no dependencies, test target `ContentKitTests`). Tests read the shared fixtures in place
+  through a helper `Tests/ContentKitTests/Fixtures.swift` that resolves
+  `content/schema/fixtures/` relative to `#filePath` (five levels up), not as package resources.
 - [ ] T006 [P] Add to `.gitignore`: `ios/ThinkBible/Resources/Packs/`, `ios/**/.build/`,
   `ios/**/.swiftpm/`.
 - [ ] T007 [P] Create `ios/scripts/fetch_packs.py` (Python 3.12 standard library only; run with
@@ -92,7 +96,8 @@ commands to bundle packs and run tests.
     `CHANNEL ?= draft`;
   - `ios-test`: `swift test` in `ios/Packages/DesignSystem` and `ios/Packages/ContentKit`, then
     `xcodebuild -project ios/ThinkBible.xcodeproj -scheme ThinkBible -destination
-    'platform=iOS Simulator,name=iPhone 16 Pro' test`;
+    'platform=iOS Simulator,name=iPhone 16 Pro' -destination 'platform=iOS Simulator,name=iPad
+    Pro 13-inch (M4)' test`;
   - add both to `.PHONY`.
 - [ ] T009 Add a "Check bundled packs" Run Script build phase to the `ThinkBible` target (before
   Compile Sources) that fails with `error: run make ios-packs CHANNEL=$(CONTENT_CHANNEL)` when
@@ -113,9 +118,9 @@ library and the app shell. Every story needs these.
 ### Tests first
 
 - [ ] T010 [P] Write `ios/Packages/ContentKit/Tests/ContentKitTests/ContractTests.swift`: every file in
-  `Fixtures/valid/` decodes with the model chosen by file-name prefix (`study-pack-*` → `StudyPack`,
+  `content/schema/fixtures/valid/` (via the `Fixtures` helper) decodes with the model chosen by file-name prefix (`study-pack-*` → `StudyPack`,
   `verses-*` → `VerseText`, `index-*` → `PackIndex`) and passes `validate()`; every file in
-  `Fixtures/invalid/` is rejected by decoding or `validate()`. Name each failing fixture in the
+  `fixtures/invalid/` is rejected by decoding or `validate()`. Name each failing fixture in the
   test's output.
 - [ ] T011 [P] Write `ios/Packages/ContentKit/Tests/ContentKitTests/BooksTests.swift`: 66 books, 39 in
   the Old Testament and 27 in the New, 1,189 chapters in total, codes unique and in Bible order,
@@ -147,7 +152,8 @@ library and the app shell. Every story needs these.
   Expose both `Font` and `UIFont` forms.
 - [ ] T016 [P] Create `ios/Packages/DesignSystem/Sources/DesignSystem/Metrics.swift`: card side margin 12,
   gap between cards 20, card radius 4, page padding 22/30/14, page minimum height 300, header height
-  48 + safe area, pill height 34, avatar 34, minimum target 44, page shadow values from the README.
+  48 + safe area, pill height 34, avatar 34, minimum target 44, page shadow values from the README,
+  `readingColumnMaxWidth` 680 and the narrow page padding 18 used below 360 pt (research R15).
 - [ ] T017 Create the pack models in `ios/Packages/ContentKit/Sources/ContentKit/Models/`
   (`PackIndex.swift`, `StudyPack.swift`, `Section.swift`, `VerseText.swift`, `Identifiers.swift`)
   mirroring `content/schema/*.schema.json` field for field (data-model.md §1), all `Sendable`,
@@ -284,18 +290,22 @@ pages; no verse is split.
   `rule` hairline.
 - [ ] T038 [US1] Create `ios/ThinkBible/Feed/ReaderFeedView.swift`: the fixed header over a
   `ScrollView` + `LazyVStack` of `FeedModel.items` (12 pt side margins, 20 pt between cards), with
-  `scrollPosition(id:anchor: .top)` tracking the top item; the pill follows the top item's chapter;
+  `scrollPosition(id:anchor: .top)` tracking the top item; the feed column limited to
+  `readingColumnMaxWidth` and centered on `desk` while the header spans the window (FR-022); a
+  window size change (rotation, Split View) re-paginates and keeps the same section and verse on
+  screen; the pill follows the top item's chapter;
   nearing `bookEnd` calls `appendNextBook()`; changing translation or text size re-paginates and
   keeps the same section on screen, on the page holding the first verse previously shown (spec
   US1-5 and edge case). No translation, mode or text-size control anywhere in the feed (FR-003).
 - [ ] T039 [P] [US1] Create `ios/ThinkBible/Previews/FeedPreviews.swift`: previews of the first card on
   page 1 and page 2, a one-page card, a `noPrompt` card, the "About Mark" card, the end-of-chapter
   and end-of-book pages, each in light and dark and at the largest accessibility text size, using
-  the bundled Mark pack. Compare with `screens/01-feed.png` and `02-page-2.png` and list the
-  differences in the PR.
+  the bundled Mark pack, at 320, 375 and 440 pt wide and on an iPad in portrait and landscape.
+  Compare with `screens/01-feed.png` and `02-page-2.png` and list the differences in the PR.
 - [ ] T040 [US1] Write `ios/ThinkBibleTests/PaginationAllMarkTests.swift` (SC-004): for every Mark section,
   in BSB and KJV, at every Dynamic Type size from `extraSmall` to `accessibilityExtraExtraExtraLarge`,
-  paginating with `TextKitMeasurer` at an iPhone 16 Pro card width gives every verse exactly once,
+  paginating with `TextKitMeasurer` at card widths for 320, 393 and 680 pt windows (SC-007) gives
+  every verse exactly once,
   in order, with none split. Skips (with a message) when the bundled Mark pack is missing.
 
 **Checkpoint**: Mark reads as the design shows, from "About Mark" to Mark 16 and into Philippians.
@@ -320,10 +330,12 @@ card; open the book list, pick Mark again, return to the chapters view.
   from `contracts/app-interfaces.md`: it loads the section's book into the feed if needed and
   scrolls that card to the top. Make T041 pass.
 - [ ] T043 [US2] Create `ios/ThinkBible/Panel/ChapterPanel.swift` per README › Chapter panel: drops down
-  from under the header over the `backdrop` dim (tap to close), `panel` fill, bottom radius 22,
+  from under the header over the `backdrop` dim (tap to close), as wide as the reading column and
+  centered (FR-022), `panel` fill, bottom radius 22,
   shadow, maximum height screen − header − 54, **one** `ScrollView` showing either view.
 - [ ] T044 [US2] Create `ios/ThinkBible/Panel/ChaptersView.swift`: the dark 40 pt book button (book icon,
-  name, chevron); "CHAPTERS" and an 8-column `LazyVGrid` of 42 pt tiles with the number only (the
+  name, chevron); an "About this book" link under it, when the pack has an introduction, that
+  closes the panel and scrolls the feed to `{book}-intro` (FR-002a); "CHAPTERS" and an 8-column `LazyVGrid` of 42 pt tiles with the number only (the
   current chapter filled rubric; VoiceOver "Mark chapter 1"); "SECTIONS IN MARK 1" and the section
   rows (range 13 bold rubric tabular, title serif 15 on one line, no status pill until spec 005;
   VoiceOver reads range and title); for an unpublished book "Genesis is coming soon" (no Notify
@@ -464,6 +476,11 @@ link, and no answer text.
 - [ ] T068 [P] Update docs: `specs/README.md` (002 status), root `CLAUDE.md` › Commands (`make
   ios-packs`, `make ios-test` now real), `docs/design/README.md` (any dark values changed in T013,
   and that first launch opens on "About Mark").
+- [ ] T069 iPad and size check (FR-022, SC-007): run `make ios-test` (both simulators) and, on the
+  `iPad Pro 13-inch (M4)` simulator, read Mark in portrait and landscape, in half and one-third
+  Split View and in Slide Over: a centered column, nothing clipped, pages re-split on each change
+  with the same section on screen, the panel as wide as the column. Add the same checks to
+  `ios/ThinkBibleUITests/IPadLayoutUITests.swift` where XCUITest can drive them (rotation).
 
 ---
 

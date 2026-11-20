@@ -46,7 +46,10 @@ tests for resume and jumps; contract tests decode every fixture in `content/sche
 (valid must decode, every invalid must be rejected); a pagination test over every Mark section
 at every text size when the bundled packs are present
 
-**Target Platform**: iPhone, iOS 17 minimum (constitution)
+**Target Platform**: iPhone and iPad, iOS 17 minimum (constitution v1.4.0), one adaptive layout
+from 320 pt wide to iPad Pro landscape with a centered reading column up to 680 pt (research
+R15). Mac later via "Designed for iPad", with no Mac-specific work. Bundle ID
+`com.austinenglish.thinkbible` (registered by the owner), Apple team `LM5PGHSW42`
 
 **Project Type**: mobile app (iOS) reading a static CDN contract
 
@@ -147,7 +150,8 @@ first feature that needs them.
 Swift packages so most tests run with `swift test` in seconds and agents edit plain Swift files
 and `Package.swift`, not the project file. The Makefile gains `ios-packs` (fetch the channel's
 packs for bundling) and `ios-project` is not needed after the bootstrap. `make ios-test`'s
-simulator changes to one that exists (`iPhone 16 Pro`).
+simulator changes to one that exists (`iPhone 16 Pro`), and it also runs the app tests on
+`iPad Pro 13-inch (M4)`.
 
 ## Complexity Tracking
 

@@ -141,8 +141,11 @@ and future theming correct by construction.
 ## Technology & Platform Constraints
 
 - **iOS app:** Swift 6 (strict concurrency), SwiftUI with Observation, SwiftData with CloudKit,
-  StoreKit 2, Swift Testing. iPhone, iOS 17 minimum. Local Swift packages: DesignSystem,
-  ContentKit, ReflectionKit, APIClient.
+  StoreKit 2, Swift Testing. iPhone and iPad, iOS 17 minimum: one adaptive layout from 320 pt
+  wide (iPad Slide Over) to iPad Pro in landscape, with a centered reading column on wide screens.
+  No separate iPad design (sidebar or multiple columns) in the MVP, and no Mac-specific build;
+  after launch the iPad app MAY be offered on Apple-silicon Macs ("Designed for iPad"). Local
+  Swift packages: DesignSystem, ContentKit, ReflectionKit, APIClient.
 - **Backend:** Python 3.12 AWS Lambdas (`compare`, `authorizer`) behind API Gateway, AWS Lambda
   Powertools for logging, validation and tracing, Amazon Bedrock (Haiku-class model) for
   comparison, DynamoDB for operational data only (caps, cache, pipeline state, anonymous
@@ -201,4 +204,4 @@ and future theming correct by construction.
   implementing any feature that touches content, privacy or payments.
 - Runtime guidance for agents lives in the root `CLAUDE.md` and per-area `CLAUDE.md` files.
 
-**Version**: 1.3.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-17
+**Version**: 1.4.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-20

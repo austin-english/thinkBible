@@ -243,3 +243,26 @@ used by the feed and fails under 4.5:1 in either mode; values that fail are adju
 in `docs/design/README.md`. VoiceOver follows FR-021: chapter tiles read "Mark chapter 1", section
 rows read the range, title and state, the drop cap is decorative with the full first word read,
 page dots are hidden and the counter reads "Page 1 of 2".
+
+## R15. iPhone and iPad sizes (constitution v1.4.0)
+
+**Decision**: one adaptive layout, no size-class branches:
+- **Reading column**: the feed, cards and chapter panel are limited to 680 pt wide and centered on
+  the `desk` background; the header spans the window. 680 pt keeps Scripture lines at about 70–80
+  characters at the default size, a comfortable book measure.
+- **Range**: 320 pt (iPad Slide Over and the narrowest Split View pane) to 1376 pt (iPad Pro 13"
+  landscape); 667 pt the shortest height (iPhone SE). At 320 pt the card's side margins stay 12 pt
+  and the page padding shrinks from 30 to 18 so a line still holds about 30 characters.
+- **Orientation**: iPhone portrait only (a reading feed); iPad every orientation, which Split View
+  and Slide Over require.
+- **Size changes**: pagination is keyed by width (research R5), so a rotation or a Split View
+  resize re-splits pages and the feed keeps the same section and verse on screen.
+- **Mac**: nothing to build. After launch, "Make available on Mac" in App Store Connect offers the
+  iPad app on Apple-silicon Macs.
+
+**Why**: a centered column is how a printed page sits on a desk, which is the book-feel design's
+idea; a separate iPad layout (sidebar, two columns) would be a second design to build and test.
+
+**Testing**: previews at 320, 375, 440 pt and on an iPad in both orientations; the all-Mark
+pagination test at 320, 393 and 680 pt; app tests also run on the `iPad Pro 13-inch (M4)`
+simulator.

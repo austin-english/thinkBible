@@ -35,7 +35,9 @@ fixture pack).
 ### Session 2026-11-20
 
 - Q: Which content channel does each kind of build read? → A: Debug and TestFlight builds read
-  the draft channel; App Store builds read only the live channel. A book's draft is not
+  the draft channel; App Store builds read only the live channel. (Implemented per build
+  configuration: TestFlight and the App Store share one binary, so testers get Beta builds; see
+  FR-019a.) A book's draft is not
   regenerated while TestFlight testers are reading it.
 - Q: Should spec 002 build all six stories now, or only what the TestFlight prototype test needs?
   → A: Build US1–US5 (feed, chapter panel, resume, offline, Share). US6 (the `…` menu) and
@@ -50,6 +52,10 @@ fixture pack).
   and newer versions, download as usual.
 - Q: Where does a first launch open? → A: At the "About Mark" post (the book's introduction), so
   every new reader meets the book first; Mark 1:1–8 follows directly below it.
+- Q: Which devices does the MVP support? → A: iPhone and iPad (constitution v1.4.0): one adaptive
+  layout from 320 pt wide (iPad Slide Over) to iPad Pro in landscape, with a centered reading
+  column on wide screens; no separate iPad design. Mac only later, as the iPad app on
+  Apple-silicon Macs ("Designed for iPad").
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -134,8 +140,8 @@ view.
 6. **Given** the reader picks an unpublished book (Genesis), **When** the chapters view shows,
    **Then** it shows the chapter grid and "Genesis is coming soon". ("Notify me" is deferred: see
    FR-015.)
-7. **Given** the panel's bottom rows, **When** shown, **Then** they are "Saved passages" with a
-   count (spec 005) and "You & settings" (spec 006).
+7. **Given** the panel's bottom rows, **When** shown, **Then** they are "You & settings" (a placeholder until spec 006) and, once spec 005 provides
+   it, "Saved passages" with a count.
 
 ---
 
@@ -218,7 +224,8 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
 
 - A pack download fails or is interrupted: keep using the cached version. Never show a half-written
   pack.
-- A downloaded pack fails schema validation: discard it, keep the previous version, and report it.
+- A downloaded pack fails schema validation: discard it, keep the previous version, and log it on the device (`pack_rejected`; reporting
+  to a server waits for spec 007).
 - The channel's catalog is missing or forbidden (the live channel returns 403 until a book is
   promoted) or unreachable: keep the cached catalog and the bundled books, and treat other
   books as not published. Never show an error in the reading path.
@@ -228,9 +235,12 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
   range. Packs are additive, so this should not happen.
 - A single verse taller than one page at a very large text size: it gets a page to itself and the
   page grows to fit. Verses are never split.
-- Very large Dynamic Type sizes: justified text turns off at the largest size (spec 006), nothing is
+- Very large Dynamic Type sizes: justified text turns off at the accessibility sizes above `accessibilityLarge`, nothing is
   clipped, and page count grows.
 - Jumping to a section deep in a long book must land exactly on that card's top.
+- The window changes size (iPad rotation, Split View, Slide Over, a different iPhone width): pages
+  re-split for the new width and the same section stays on screen, on the page holding the first
+  verse that was showing.
 - A verse present in one translation but bracketed or missing in the other: the pack's neutral
   manuscript note is shown at that point.
 - Changing translation while a card is on page 2: the card resets to the page that holds the first
@@ -243,8 +253,8 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
 **Header and feed**
 
 - **FR-001**: The app MUST open on the feed, with a fixed header: wordmark ("Think" ink + "Bible"
-  rubric), the chapter pill showing the chapter on screen, and the avatar (the user's initial with
-  the streak badge from spec 005). The pill opens the chapter panel; the avatar opens You &
+  rubric), the chapter pill showing the chapter on screen, and the avatar (a person symbol until spec
+  006 provides an initial; the streak badge arrives with spec 005). The pill opens the chapter panel; the avatar opens You &
   settings (spec 006).
 - **FR-002**: The feed MUST be one vertical scroll through the whole book: for each chapter, a
   title row and one page card per section, then an end-of-chapter page, then the next chapter.
@@ -261,7 +271,8 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
 **Page card**
 
 - **FR-004**: Each card MUST show a header row (book avatar, reference, title on one line; the
-  `…` button arrives with US6), the pages, an action row (Send, Save) and a footer slot for the question (spec 003).
+  `…` button arrives with US6), the pages, an action row (Send; Save is shown once spec 005 provides it, so there is never a button
+  that does nothing) and a footer slot for the question (spec 003).
 - **FR-005**: Pages MUST be set as book pages: first-page italic heading with a rubric rule, a
   decorative drop cap on the first word, justified and hyphenated serif text with old-style figures,
   rubric superscript verse numbers, and a verse-range folio on every page.
@@ -284,7 +295,8 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
   or Books.
 - **FR-012**: The Chapters view MUST show the book button, an 8-column chapter grid (current
   chapter filled, numbers only), the selected chapter's sections (range, title, trailing status
-  from spec 005), and bottom rows for Saved passages and You & settings. Tapping a section MUST
+  from spec 005), an "About this book" link to the book's first post (FR-002a), and bottom rows for Saved
+  passages (shown once spec 005 provides it) and You & settings. Tapping a section MUST
   close the panel and scroll the feed to that card.
 - **FR-013**: Reflection counts MUST appear only on the section rows. Chapter tiles, the sections
   header and the book list carry no counts.
@@ -309,9 +321,10 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
   background, validate them against the schema, and switch to the new version atomically at the
   next launch, never while the app is running. A failed or invalid download never replaces a
   good cached pack.
-- **FR-019a**: The content channel MUST be fixed by the build: Debug and TestFlight builds read
-  the `draft/` channel, and App Store builds read only `live/`. There is no in-app channel
-  switch. The bundled packs (FR-018) come from the same channel as the build.
+- **FR-019a**: The content channel MUST be fixed by the build configuration: Debug builds (run from
+  Xcode) and Beta builds (the ones uploaded for TestFlight testers) read the `draft/` channel, and
+  Release builds (submitted to the App Store) read only `live/`. A Release build installed through
+  TestFlight therefore reads `live/`. There is no in-app channel switch. The bundled packs (FR-018) come from the same channel as the build.
 
 **Design and accessibility**
 
@@ -321,6 +334,15 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
   "Mark chapter 1". Section rows read the range, title and state. The drop cap is decorative and
   VoiceOver reads the whole first word. Page dots are hidden and the counter announces "Page 1 of
   2". Text contrast is at least 4.5:1 in both modes.
+
+**Devices and sizes**
+
+- **FR-022**: The app MUST run on iPhone and iPad (iOS 17 or later) with one adaptive layout at any
+  width from 320 pt (iPad Slide Over) to iPad Pro 13" in landscape, and any height from 667 pt
+  (iPhone SE). On wide screens the feed, its cards and the chapter panel sit in a centered
+  reading column of at most 680 pt on the `desk` background; the header spans the full width.
+  iPhone runs in portrait; iPad runs in every orientation and in Split View and Slide Over.
+  There is no separate iPad layout (no sidebar or multiple columns).
 
 ### Key Entities
 
@@ -341,7 +363,8 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
 - **SC-001**: From a cold launch, a returning reader sees the section they left in under 2 seconds
   on a recent iPhone, with no taps.
 - **SC-002**: Scrolling a full chapter (Mark 1) and paging its cards stays smooth on an iPhone two
-  generations old.
+  generations old: Instruments' hitch-time ratio stays under 5 ms/s on a physical iPhone 16 or
+  older.
 - **SC-003**: 100% of every bundled book (Mark and Philippians today) is readable in both
   translations in airplane mode on first launch.
 - **SC-004**: In pagination tests across every Mark section at every text size, 0 verses are split
@@ -350,6 +373,9 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
   book list, Send, Copy).
 - **SC-006**: A reader can reach any section of Mark from anywhere in 3 taps or fewer (pill,
   chapter, section).
+- **SC-007**: At widths of 320, 375, 440 and 680 pt (the reading column on iPad), nothing is
+  clipped or scrolls sideways outside a card's pages, and the SC-004 pagination test passes at
+  each width. On an iPad in landscape and in Split View, the feed reads as a centered column.
 
 ## Assumptions
 

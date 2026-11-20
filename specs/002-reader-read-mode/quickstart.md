@@ -95,6 +95,14 @@ Open `ios/ThinkBible.xcodeproj` and run the `ThinkBible` scheme (Debug, draft ch
   re-split with no verse cut.
 - Switch to dark mode: every surface uses the dark tokens, and text stays readable.
 
+## 7a. iPad and sizes (FR-022, SC-007)
+
+- On the `iPad Pro 13-inch (M4)` simulator, the feed is a centered column of at most 680 pt on the
+  desk background, in portrait and landscape; the chapter panel is as wide as the column.
+- Rotate while a card shows page 2, then open Split View and Slide Over: pages re-split each time,
+  nothing is clipped, and the same section stays on screen.
+- Previews at 320, 375 and 440 pt show no clipping; the all-Mark pagination test passes at each width.
+
 ## 8. Smoothness (SC-002)
 
 On a physical iPhone 16 or older, record Instruments' "Hitches" template while flinging through Mark

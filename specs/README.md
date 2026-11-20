@@ -1,7 +1,7 @@
 # ThinkBible specs
 
 Spec Kit feature specs, in build order. The constitution lives at
-[`.specify/memory/constitution.md`](../.specify/memory/constitution.md) (v1.3.0).
+[`.specify/memory/constitution.md`](../.specify/memory/constitution.md) (v1.4.0).
 
 | # | Feature | Status | Open clarifications |
 |---|---|---|---|
@@ -65,6 +65,13 @@ time comes.
 
   Questions point at key idea IDs, so the pool only works while the ideas stay fixed. About a
   day of work; it fits with spec 001 US6 (refresh) or as a feature of its own.
+- **Accounts / sign-in** (noted 2026-11-20). The MVP has no login (constitution VI): answers and
+  progress sync through the reader's iCloud, the subscription belongs to their Apple ID
+  (StoreKit, Restore purchases), and App Attest limits free use per device. Revisit if the app
+  needs Android or a website, shared features such as readers' notes others can see, or moving
+  between Apple and non-Apple devices. Start with **Sign in with Apple** (one tap, private), added
+  without losing saved reflections, since those stay in the reader's iCloud. Accounts need a
+  constitution amendment and in-app account deletion (an App Store rule).
 - **A question about the reader's own life** as a section's third question (noted 2026-11-17,
   research R11). Deferred until the first two questions are steady.
 - **The commentators as people in the comment thread** (noted 2026-11-17, `docs/design/README.md`
@@ -102,6 +109,13 @@ constitution and these specs:
   in the app and runs `promote`. Frozen text and the additive publish check apply to live only.
 - Constitution amended to v1.2.0 for this. In v1.2.1 (2026-11-13), draft and live became two
   channels of one packs bucket in a single AWS environment, instead of two environments.
+
+### iPhone and iPad (2026-11-20)
+
+- The MVP supports **iPhone and iPad** with one adaptive layout (320 pt to iPad Pro landscape) and a
+  centered reading column on wide screens; no separate iPad design. Mac later, as the iPad app on
+  Apple-silicon Macs ("Designed for iPad"). Constitution amended to v1.4.0. Spec 002 carries the
+  requirement (FR-022, SC-007).
 
 ### Questions without levels, a week apart (2026-11-17)
 

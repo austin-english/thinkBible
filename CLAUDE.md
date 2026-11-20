@@ -1,6 +1,6 @@
 # ThinkBible: monorepo guide for agents
 
-ThinkBible is an iPhone app for reading the Bible one section at a time.
+ThinkBible is an iPhone and iPad app for reading the Bible one section at a time.
 1. After each section the reader answers a question in their own words.
 2. A small live AI call compares the answer with key ideas that were prepared ahead of time from three public-domain commentaries (Matthew Henry, Jamieson-Fausset-Brown, Adam Clarke).
 3. The app shows what they caught and what they missed.
