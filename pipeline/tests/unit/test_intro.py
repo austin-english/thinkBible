@@ -112,7 +112,7 @@ def test_the_introduction_is_written_once_for_the_book_and_graded(
                                              ("review.intro", "mrk-1-1"): graded(4)})  # fmt: skip
     result = asyncio.run(run(RunRequest(book="mark", stages=["intro"]), deps))
     assert result.exit_code == ExitCode.OK
-    runner = deps.runner
+    runner = deps.runner_factory()  # the FakeRunner (deps.runner meters it)
     assert isinstance(runner, FakeRunner)
     assert runner.calls == [("intro.write", "mrk-1-1"), ("review.intro", "mrk-1-1")]  # once
     intro = deps.store.read_draft_or_new("mrk-1-1").book_intro
@@ -133,7 +133,7 @@ def test_a_weak_introduction_is_rewritten_once_then_reported(
                  ("review.intro", "mrk-1-1"): [graded(2), graded(1)]}  # fmt: skip
     deps = deps_for(tmp_path, make_library, responses)
     asyncio.run(run(RunRequest(book="mark", stages=["intro"]), deps))
-    runner = deps.runner
+    runner = deps.runner_factory()  # the FakeRunner (deps.runner meters it)
     assert isinstance(runner, FakeRunner)
     assert "A previous attempt was rejected: graded 2: Reason 2." in runner.prompts[2]
     intro = deps.store.read_draft_or_new("mrk-1-1").book_intro

@@ -119,6 +119,7 @@ def custom_id(params: dict[str, Any], attempt: int, occurrence: int = 0) -> str:
 class _Replay:
     stage: str
     seen: dict[str, int] = field(default_factory=dict)
+    usages: list[Usage] = field(default_factory=list)  # every answer this run of the stage got
 
     def occurrence(self, params: dict[str, Any]) -> int:
         base = sha256_hex(compact_canonical(params))
@@ -131,14 +132,45 @@ _REPLAY: ContextVar[_Replay | None] = ContextVar("thinkbible_replay", default=No
 
 
 @contextmanager
-def replay_scope(stage: str) -> Iterator[None]:
+def replay_scope(stage: str) -> Iterator[_Replay]:
     """One run of ``stage`` for one section: which stage is running (so its calls are batched
-    or not) and how many times each request has been made so far."""
-    token = _REPLAY.set(_Replay(stage))
+    or not), how many times each request has been made so far, and the usage of every answer
+    (``MeteredRunner``), so a section that fails still has its spend counted."""
+    scope = _Replay(stage)
+    token = _REPLAY.set(scope)
     try:
-        yield
+        yield scope
     finally:
         _REPLAY.reset(token)
+
+
+class MeteredRunner:
+    """Records each answer's usage in the running section's scope. Other attributes pass
+    through (tests read ``FakeRunner.calls``)."""
+
+    def __init__(self, inner: ModelRunner) -> None:
+        self._inner = inner
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._inner, name)
+
+    async def parse(
+        self,
+        stage: str,
+        system: Sequence[BetaTextBlockParam],
+        user: str,
+        output_model: type[T],
+        *,
+        section_id: str,
+        call: str | None = None,
+    ) -> tuple[T, Usage]:
+        out, usage = await self._inner.parse(
+            stage, system, user, output_model, section_id=section_id, call=call
+        )
+        scope = _REPLAY.get()
+        if scope is not None:
+            scope.usages.append(usage)
+        return out, usage
 
 
 def _usage_json(u: Usage) -> dict[str, Any]:

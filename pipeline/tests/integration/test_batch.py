@@ -330,3 +330,35 @@ def test_a_stage_that_never_settles_fails_after_the_round_limit(
     assert review.failed == len(deps.store.section_ids()) and review.done == 0
     assert len(fake.batches) == MAX_ROUNDS
     assert all("batch rounds" in e for e in review.failures.values())
+
+
+def test_a_failed_section_still_counts_what_it_spent(tmp_path: Path, make_library: Any) -> None:
+    from thinkbible_pipeline.llm.runner import Usage
+    from thinkbible_pipeline.stages import registry
+
+    deps, _scripted = make(tmp_path, make_library)
+    asyncio.run(run(RunRequest(book="mark", stages=["sections"]), deps))
+    ids = deps.store.section_ids()
+    paid = Usage(model="claude-haiku-5-5", output_tokens=100_000)
+    runner = FakeRunner(usage=paid, responses={
+        **{("summaries.write", s): {"summary": "draft"} for s in ids},
+        **{("summaries.grade", s): ModelError("boom") for s in ids},
+    })  # fmt: skip
+    deps.runner_factory = lambda: runner
+    deps.stages = {**registry(), "summaries": TwoCalls("summaries", "summaries", "summaries")}
+    deps.__dict__.pop("runner", None)
+    result = asyncio.run(run(RunRequest(book="mark", stages=["summaries"], cap_usd=100), deps))
+    stage = result.stages[0]
+    assert stage.failed == len(ids) and stage.done == 0
+    assert stage.spent_usd > 0  # the first call of each section was paid for
+    record = deps.store.read_draft_or_new(ids[0]).stages["summaries"]
+    assert record.status == "failed" and record.cost_usd > 0
+
+    # And that spend counts toward the cap: with the default (twice the tiny estimate), the run
+    # stops after the first failed section instead of spending on the rest unseen.
+    deps2, _ = make(tmp_path / "again", make_library)
+    asyncio.run(run(RunRequest(book="mark", stages=["sections"]), deps2))
+    deps2.runner_factory = lambda: runner
+    deps2.stages = deps.stages
+    capped = asyncio.run(run(RunRequest(book="mark", stages=["summaries"]), deps2)).stages[0]
+    assert capped.stopped_by == "cap" and capped.failed == 1

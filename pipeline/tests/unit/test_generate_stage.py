@@ -129,7 +129,7 @@ def test_prompts_carry_both_translations_the_notes_and_the_previous_summary(
 ) -> None:
     deps = setup(tmp_path, make_library, base_responses())
     asyncio.run(run(RunRequest(book="mark", stages=["summaries", "generate"]), deps))
-    runner = deps.runner
+    runner = deps.runner_factory()  # the FakeRunner (deps.runner meters it)
     assert isinstance(runner, FakeRunner)
     prompts = dict(zip(runner.calls, runner.prompts, strict=True))
     extract = prompts[("generate.extract", S1)]
@@ -163,7 +163,7 @@ def test_a_broken_pool_is_regenerated_once(tmp_path: Path, make_library: Any) ->
     assert [x["id"] for x in draft.section["questions"]] == [f"{S1}-q3", f"{S1}-q4"]
     first = [d for d in draft.dropped if d.item_id in (f"{S1}-q1", f"{S1}-q2")]
     assert {d.reason for d in first} == {"targets no key idea that was kept"}
-    runner = deps.runner
+    runner = deps.runner_factory()  # the FakeRunner (deps.runner meters it)
     assert isinstance(runner, FakeRunner)
     second = [p for c, p in zip(runner.calls, runner.prompts, strict=True)
               if c == ("generate.questions", S1)][1]  # fmt: skip
@@ -198,7 +198,7 @@ def test_a_note_over_its_limit_asks_once_more(tmp_path: Path, make_library: Any)
     assert result.exit_code == ExitCode.OK
     draft = deps.store.read_draft_or_new(S1)
     assert draft.section["context"] == EXTRACT_S1["context"]
-    runner = deps.runner
+    runner = deps.runner_factory()  # the FakeRunner (deps.runner meters it)
     assert isinstance(runner, FakeRunner)
     extracts = [p for c, p in zip(runner.calls, runner.prompts, strict=True)
                 if c == ("generate.extract", S1)]  # fmt: skip

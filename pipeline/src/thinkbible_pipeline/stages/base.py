@@ -43,6 +43,7 @@ from thinkbible_pipeline.llm.batch import (
     BatchContext,
     BatchReplayRunner,
     BatchStore,
+    MeteredRunner,
     collect_round,
     replay_scope,
     submit_round,
@@ -151,8 +152,9 @@ class Deps:
         batch run, the batch stages' calls are answered from the run's batch store."""
         standard = self.runner_factory()
         if self.batch is None:
-            return standard
-        return BatchReplayRunner(self.settings, standard, BatchStore(self.store, self.batch.run_id))
+            return MeteredRunner(standard)
+        store = BatchStore(self.store, self.batch.run_id)
+        return MeteredRunner(BatchReplayRunner(self.settings, standard, store))
 
     def start_batch(self, run_id: str) -> BatchContext:
         """Make this a batch run (before the runner is first used)."""
@@ -409,8 +411,9 @@ async def run_one_section(
     draft = store.read_draft_or_new(section_id)
     inputs = stage.inputs(section_id, draft, deps)
     h = input_hash(inputs, pv, model)
+    scope = None
     try:
-        with replay_scope(stage.name):
+        with replay_scope(stage.name) as scope:
             res = await stage.execute(section_id, inputs, draft, deps)
     except AwaitingBatch as e:
         # A batch run: the section stops at a call not answered yet. Its draft is left as it was;
@@ -426,30 +429,27 @@ async def run_one_section(
         deps.echo(f"  {section_id}: {e}")
         return SectionOutcome(section_id=section_id, status="not_started", error=str(e))
     except Exception as e:  # one failure marks only this section (research R8)
+        # The calls it made before failing were paid for: count them (2026-11-20).
+        spent = scope.usages if scope is not None else []
+        cost, tokens, models = _priced(spent, deps)
         fresh = store.read_draft_or_new(section_id)
         fresh.stages[stage.name] = StageRecord(
             prompt_version=pv,
             model=model,
             input_hash=h,
             completed_at=deps.clock().isoformat(),
-            cost_usd=0.0,
+            cost_usd=round(cost, 6),
             status="failed",
             error=f"{type(e).__name__}: {e}",
         )
         store.write_draft(section_id, fresh)
+        deps.ledger.add(run_id, cost)
         deps.echo(f"  {section_id}: failed: {e}")
-        return SectionOutcome(section_id=section_id, status="failed", error=str(e))
+        return SectionOutcome(section_id=section_id, status="failed", error=str(e),
+                              cost_usd=round(cost, 6), tokens=tokens,
+                              models=sorted(models))  # fmt: skip
 
-    cost = sum(price(u, deps.pricing) for u in res.usages)
-    tokens = TokenCounts()
-    models: set[str] = set()
-    for u in res.usages:
-        tokens.input += u.input_tokens
-        tokens.output += u.output_tokens
-        tokens.cache_read += u.cache_read_tokens
-        tokens.cache_write += u.cache_write_tokens
-        if not u.is_empty:
-            models.add(u.model)
+    cost, tokens, models = _priced(res.usages, deps)
     draft.stages[stage.name] = StageRecord(
         prompt_version=pv,
         model=model,
@@ -467,6 +467,20 @@ async def run_one_section(
         tokens=tokens,
         models=sorted(models),
     )
+
+
+def _priced(usages: list[Usage], deps: Deps) -> tuple[float, TokenCounts, set[str]]:
+    cost = sum(price(u, deps.pricing) for u in usages)
+    tokens = TokenCounts()
+    models: set[str] = set()
+    for u in usages:
+        tokens.input += u.input_tokens
+        tokens.output += u.output_tokens
+        tokens.cache_read += u.cache_read_tokens
+        tokens.cache_write += u.cache_write_tokens
+        if not u.is_empty:
+            models.add(u.model)
+    return cost, tokens, models
 
 
 def finish_stage(
