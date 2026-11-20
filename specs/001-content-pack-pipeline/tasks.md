@@ -943,7 +943,7 @@ text edit is refused.
   key itself can call any model: limit it with a workspace spend limit in the Anthropic console.
   Live buckets checked 2026-11-20: all three block public access, and the packs policy isn't
   public. The HTTPS-only policies apply with the next `make deploy`.
-- [ ] T087 Claude Message Batches API for cloud runs (added 2026-11-18; before the Old Testament or
+- [X] T087 Claude Message Batches API for cloud runs (added 2026-11-18; before the Old Testament or
   whole-Bible runs, about $500 saved over the Bible at 50% off; not needed for Mark):
   - a batch runner mode: each model step (summaries, extract, questions, review, intro, and the
     retries and regenerations) becomes one batch round across a book's sections, submitted, polled
@@ -952,13 +952,18 @@ text edit is refused.
     the run records after a failure;
   - cost estimates and the ledger use batch prices; `--local` keeps the standard API for tuning;
   - verify on a few sections that content and grades match a standard run before switching.
-  Built 2026-11-20 (verification run pending): `llm/batch.py` (replay in rounds: a section
+  Built 2026-11-20: `llm/batch.py` (replay in rounds: a section
   waits at an unanswered call, unwritten; answers stored per run in the drafts bucket; refusals and
   expired requests re-run on the standard API), `batch = true` per stage (`generate`, `review`)
   and for cloud runs, the SubmitBatch → Wait → CheckBatch loop in the state machine (two new
   Lambdas), `run --batch/--no-batch`, batch prices in estimates and run records. Tests:
   `tests/integration/test_batch.py` (a batch run writes exactly what a standard run writes, at
   half the price of the batch stages, in three rounds) and the cloud loop in `test_handlers.py`.
+  Verified 2026-11-20: 2 John locally (3 rounds, about 10 minutes, half price), then Philippians
+  in the cloud (run `20261120T170618Z-a37873`, 14 sections): every stage 14/0 failed, 38 minutes,
+  $1.67 of the $3.77 cap; generate took 3 rounds (one section's questions retried in round 3),
+  review 1 round. Scorecard promotable: first questions graded 4-5 100%, full sets 100%, idea
+  pass 99%. Mark keeps its standard-API drafts.
 - [x] T088 Psalm titles in the verse files (added 2026-11-18; before Psalms is published): the
   snapshot keeps each psalm's title ("A Psalm of David, when he fled…") as a subtitle before
   verse 1, but verses.schema.json has no field for it, so `publish/build.py` leaves it out. Add a
