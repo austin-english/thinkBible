@@ -623,7 +623,7 @@ every key idea names a commentator. Then, with Bedrock, Mark 1–16 is fully dra
     CLI, so the cloud run gets the same explicit list);
   - `--sections`, `--fresh`, `--cap` and `--yes` work;
   - `BookState.status` follows the data-model.md state machine.
-- [ ] T057 [US1] **Owner run** (needs Bedrock quotas above 0, docs/aws-setup.md):
+- [X] T057 [US1] **Owner run** (needs Bedrock quotas above 0, docs/aws-setup.md):
   1. `make lambda-bundle`, then `terraform apply` in `infra/` (T093), and copy the
      outputs into `pipeline/config/aws.toml`.
   2. Tune on two sections first: `thinkbible-pipeline run --book mark --stage summaries,generate
@@ -633,6 +633,8 @@ every key idea names a commentator. Then, with Bedrock, Mark 1–16 is fully dra
   4. Record a first impression in `specs/001-content-pack-pipeline/spike-notes.md`. The SC-004
      judgement is made with the calibrated grader in T064.
   5. If needed, iterate prompts as new `v2.md` files (tune with `--local`, then redeploy).
+  Done 2026-11-19 on the Claude API (Bedrock's 5.5 quota stayed at 0): Mark, 100 sections, about
+  $19; first impression in `spike-notes.md` §4–§5.
 
 **Checkpoint**: The content spike is possible. US1 works on its own (quickstart §3–§4).
 
@@ -722,10 +724,13 @@ order, and a section left without a usable question is regenerated and then mark
   runs the grader on the set and appends `{graderPromptVersion, graderModel, agreement, runAt}`.
 - [X] T097 [US2] Implement `pipeline/src/thinkbible_pipeline/gate/scorecard.py`: build
   `scorecard.json` (data-model §2) including `promotable`, and show it in `review.html` (T055).
-- [ ] T064 [US2] Register `check` and `review` in `stages/__init__.py` for `run` and
+- [X] T064 [US2] Register `check` and `review` in `stages/__init__.py` for `run` and
   `all` (registered 2026-11-17; the owner step below remains). **Owner step**: label the calibration set (`calibrate --label`, at least 30 items) and
   run `calibrate`; reach 85% agreement (tune `review/vN.md` if not). Then record the SC-004
   judgement for Mark in `spike-notes.md`.
+  Done 2026-11-20: 89% agreement on 36 held-out items (Opus 5.5, `review/v14`); SC-004's measured
+  parts pass for Mark (95% / 99% / 99%), owner agrees (`spike-notes.md` §4). The in-app read
+  waits for spec 002 (T075 step 3).
 
 **Checkpoint**: US1 and US2 both work. Quickstart §3–§4 show the scorecard.
 
