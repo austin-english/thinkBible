@@ -98,11 +98,12 @@ pipeline/
 │   │   ├── preface.py              # each commentator's book preface, split from their first note
 │   │   └── gather.py               # each commentator's excerpt for a section (R4)
 │   ├── cloud/
-│   │   ├── handlers.py             # the five Lambda handlers the state machine calls
+│   │   ├── handlers.py             # the seven Lambda handlers the state machine calls
 │   │   ├── messages.py             # JSON payloads between the state machine's steps
 │   │   └── ledger.py               # DynamoLedger: the spend ledger in DynamoDB
 │   ├── llm/
 │   │   ├── runner.py               # the model runner (Claude API by default; Bedrock as a profile) and FakeRunner (tests)
+│   │   ├── batch.py                # Message Batches: replay in rounds, the answer store, the batch client
 │   │   ├── budget.py               # pricing, cost estimate, the Proceed? [y/N] prompt
 │   │   ├── outputs.py              # what each model call must return (structured output)
 │   │   └── prompts.py              # assembles the versioned system prompt for a stage
@@ -128,7 +129,7 @@ pipeline/
     └── fixtures/                   # trimmed API responses (api/) and recorded model outputs
 
 infra/modules/pipeline/             # Terraform for the cloud side
-├── main.tf                         # drafts bucket, ledger table, the five Lambdas, the state machine
+├── main.tf                         # drafts bucket, ledger table, the seven Lambdas, the state machine
 ├── iam.tf                          # least-privilege roles for the Lambdas and Step Functions
 ├── state_machine.asl.json.tftpl    # the state machine definition (a Terraform template)
 ├── variables.tf
@@ -150,7 +151,10 @@ flowchart TD
         SR --> ST["Stages (one at a time)"]
         ST --> PS["PlanStage<br/>book-level stages run here;<br/>hash inputs, list sections to run"]
         PS --> SEC["Sections (3 at a time)<br/>RunSection: one Lambda per section"]
-        SEC --> FS["FinishStage<br/>write run record, stop at the cap"]
+        SEC --> SB["SubmitBatch<br/>batch run: one batch of every<br/>waiting section's request"]
+        SB -- "sections waiting" --> WB["Wait 5 min → CheckBatch<br/>until the batch has ended"]
+        WB --> SEC
+        SB -- "none waiting" --> FS["FinishStage<br/>write run record, stop at the cap"]
         FS --> ST
         ST --> FR["FinishRun<br/>status, counts, exit code;<br/>publish to the draft channel"]
     end
@@ -179,7 +183,12 @@ drafts in S3.
      **`RunSection`** Lambda per section (below). A throttled Claude API call raises `Throttled`,
      and Step Functions retries after 20 s, doubling to at most 5 minutes, up to 6 times, with
      jitter. Any other error records the section as failed; the rest carry on.
-  3. **`FinishStage`** (Lambda) totals the outcomes (done, skipped, failed, cost) into the stage's
+  3. **`SubmitBatch`** (Lambda), in a batch run: the sections that stopped at a call the batch
+     hasn't answered yet ("waiting", see below) have their requests sent as one batch. Then
+     **`WaitForBatch`** (5 minutes, no Lambda running) and **`CheckBatch`** (Lambda) repeat until
+     the batch has ended and its answers are saved, and **`Sections`** runs the waiting sections
+     again. With no section waiting (always, in a standard run), on to `FinishStage`.
+  4. **`FinishStage`** (Lambda) totals the outcomes (done, skipped, failed, cost) into the stage's
      result and stops the run once spend reaches the cap.
 - **`FinishRun`** records the final status. When the run included `report` and no section
   failed, it publishes the book to the draft channel (`publish/draft.py`); a book with sections
@@ -226,6 +235,35 @@ Things to know:
 - **Out of credit stops the run.** If the Claude API says the account's credit is used up, nothing
   more starts and `status` says so. Add credit, then re-run the same command: done sections are
   skipped.
+
+## Batch runs (half price)
+
+Cloud runs send the two expensive stages, `generate` and `review` (about 90% of the cost),
+through Claude's **Message Batches API**: every token at half price, results usually within the
+hour and at most 24 hours (`llm/batch.py`, T087). The other stages call the standard API as
+usual: they cost cents, and each batch round adds waiting time.
+
+**How it works: replay in rounds.** The stages don't know about batches.
+1. Each section runs from the start. A batch stage's model call looks up its answer in the run's
+   store (`{book}/batches/{runId}/answers/` in the drafts bucket), keyed by the exact request.
+2. A call with no answer yet stops the section there: it's "waiting", its draft isn't written,
+   and its request is saved.
+3. `SubmitBatch` sends every waiting section's request as one batch; `CheckBatch` saves the
+   answers when it ends.
+4. The waiting sections run again from the start. With the same draft, sources and prompts, they
+   make the same requests, get past the answered call, and finish or wait at the next one.
+
+So `generate` takes two rounds (key ideas, then questions) and `review` one: a full book takes
+about three rounds, roughly 1-4 hours instead of 30-60 minutes.
+
+- **Refusals:** a batch can't carry `fallbacks`, so a refused request (or one that expired or
+  hit a server error) is re-run once on the standard API, which falls back server-side.
+- **Invalid output** is retried as one more round; a request the batch rejects fails its section.
+- **Cost:** the estimate halves the batch stages; run records say which stages ran as batches,
+  so later estimates still learn the full price.
+- **The cap and credit** are checked before each batch is submitted.
+- `run --no-batch` uses the standard API (faster); `run --local --batch` runs batches from your
+  machine, polling every minute.
 
 ## Freezing the sources (once)
 
@@ -382,8 +420,8 @@ gitignored):
    Lambdas when the code changed.
 6. **Zips it** and fails if the zip is over 50 MB, Lambda's limit for a direct upload.
 
-The five Lambdas share this one zip; each starts at a different handler in `cloud/handlers.py`.
-`terraform apply` uploads it to all five when it changed.
+The seven Lambdas share this one zip; each starts at a different handler in `cloud/handlers.py`.
+`terraform apply` uploads it to all seven when it changed.
 
 ## Writing a stage
 
@@ -403,6 +441,6 @@ Register a stage in `stages/__init__.py`.
 
 - Only `sources/importer.py` (US4) may import networking modules (`test_network_guard.py`).
 - No model request carries `tools` (`test_no_tools.py`).
-- The state machine calls exactly the five handlers (`test_state_machine.py`).
+- The state machine calls exactly the seven handlers (`test_state_machine.py`).
 - Terraform allows exactly the models and concurrency in `settings.toml` (`test_infra_sync.py`).
 - Tests never call models. They use `FakeRunner`, and AWS is mocked with moto.

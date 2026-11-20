@@ -274,9 +274,25 @@ def run(
     no_publish: Annotated[
         bool, typer.Option("--no-publish", help="Don't publish to the draft channel afterwards.")
     ] = False,
+    batch: Annotated[
+        bool | None,
+        typer.Option(
+            "--batch/--no-batch",
+            help="Message Batches for generate and review: half price, results within the hour "
+            "per round (up to 24 hours). Default: on for cloud runs, off with --local.",
+        ),
+    ] = None,
 ) -> None:
     """Run one stage, several, or all of them: in AWS by default, or in-process with --local."""
+    from thinkbible_pipeline.config import load_settings
     from thinkbible_pipeline.stages import expand_all
+
+    settings = load_settings()
+    if batch and not settings.batch_available:
+        _exit(ExitCode.USAGE, "--batch needs the Claude API endpoint and a stage marked batch")
+    use_batch = settings.batch_available and (
+        batch if batch is not None else (settings.batch and not local)
+    )
 
     try:
         request = RunRequest(
@@ -288,9 +304,14 @@ def run(
             cap_usd=cap,
             auto_approve=yes,
             publish=not no_publish,
+            batch=use_batch,
         )
     except ValidationError as e:
         _usage(e)
+    if use_batch:
+        names = ", ".join(n for n, s in settings.stages.items() if s.batch)
+        typer.echo(f"batch: {names} at half price; each round usually takes under an hour "
+                   "(at most 24). --no-batch for speed.")  # fmt: skip
 
     from thinkbible_pipeline import app as wiring
 

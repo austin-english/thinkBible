@@ -18,6 +18,7 @@ from thinkbible_pipeline.config import AwsConfig, Settings, load_aws, load_prici
 from thinkbible_pipeline.drafts.store import DraftStore
 from thinkbible_pipeline.exitcodes import ExitCode
 from thinkbible_pipeline.gate.calibration import CalibrationSet, load_calibration
+from thinkbible_pipeline.llm.batch import AnthropicBatchClient
 from thinkbible_pipeline.llm.budget import EstimateSummary, confirm
 from thinkbible_pipeline.llm.runner import BedrockRunner, ModelRunner
 from thinkbible_pipeline.paths import RepoPaths, repo_paths
@@ -105,6 +106,7 @@ def local_deps(
         echo=echo,
         code_version=git_head(paths),
         library=SourceLibrary(SourceStore.local(paths), load_manifest(paths)),
+        batch_client_factory=lambda: AnthropicBatchClient(settings),
     )
 
 

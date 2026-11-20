@@ -3,8 +3,9 @@
 Each handler parses its payload, builds the cloud ``Deps`` (S3 drafts and sources, the DynamoDB
 ledger, the Bedrock runner) and calls one shared step from ``stages/base.py``.
 
-    StartRun → Stages (map, one at a time) [PlanStage → Sections (map) [RunSection] → FinishStage]
-             → FinishRun
+    StartRun → Stages (map, one at a time) [PlanStage → Sections (map) [RunSection]
+             → SubmitBatch → (a batch run with sections waiting: Wait → CheckBatch, until the
+               batch has ended → Sections again) → FinishStage] → FinishRun
 """
 
 from __future__ import annotations
@@ -29,6 +30,7 @@ from thinkbible_pipeline.cloud.messages import (
 )
 from thinkbible_pipeline.config import load_pricing, load_settings
 from thinkbible_pipeline.drafts.store import DraftStore
+from thinkbible_pipeline.llm.batch import AnthropicBatchClient, collect_round
 from thinkbible_pipeline.llm.runner import BedrockRunner, ModelRunner, Throttled
 from thinkbible_pipeline.paths import repo_paths
 from thinkbible_pipeline.publish.channel import PackChannel, pack_channels
@@ -52,6 +54,8 @@ from thinkbible_pipeline.stages.base import (
     plan_stage,
     run_counts,
     run_one_section,
+    split_waiting,
+    submit_batch_or_stop,
 )
 from thinkbible_pipeline.storage import S3BlobStore
 
@@ -115,6 +119,7 @@ def cloud_deps(request: RunRequest, env: CloudEnv) -> Deps:
         echo=print,
         code_version=env.code_version,
         library=SourceLibrary(sources, load_manifest(paths)),
+        batch_client_factory=lambda: AnthropicBatchClient(settings),
     )
 
 
@@ -183,6 +188,8 @@ def run_section(event: Event, _context: object = None) -> Event:
     """Run one stage for one section. Throttling escapes so Step Functions retries it."""
     inp = SectionInput.model_validate(event)
     deps = DEPS_FACTORY(inp.request)
+    if inp.request.batch:
+        deps.start_batch(inp.run_id)
     stage = deps.stage(inp.stage)
     if isinstance(stage, BookStage):
         raise TypeError(f"{inp.stage} is a book-level stage; it has no sections")
@@ -192,12 +199,51 @@ def run_section(event: Event, _context: object = None) -> Event:
     return _dump(outcome)
 
 
+def submit_batch(event: Event, _context: object = None) -> Event:
+    """After a Sections map: settle its outcomes, and in a batch run send the waiting sections'
+    requests as one batch. ``batchId`` is null when no section waits (on to FinishStage)."""
+    inp = FinishStageInput.model_validate(event)
+    settled, waiting = split_waiting(inp.round_outcomes)
+    out = inp.model_copy(
+        update={"outcomes": inp.outcomes + settled, "round_outcomes": [], "section_ids": [],
+                "batch_id": None, "batch_ready": False}
+    )  # fmt: skip
+    if waiting:
+        deps = DEPS_FACTORY(inp.request)
+        deps.start_batch(inp.run_id)
+        batch_id, ended = asyncio.run(
+            submit_batch_or_stop(
+                inp.stage, waiting, run_id=inp.run_id, deps=deps, rounds=inp.rounds
+            )
+        )
+        out.outcomes = out.outcomes + ended
+        if batch_id is not None:
+            gone = {o.section_id for o in ended}
+            out.batch_id = batch_id
+            out.section_ids = [s for s in waiting if s not in gone]
+            out.rounds = inp.rounds + 1
+    return _dump(out)
+
+
+def check_batch(event: Event, _context: object = None) -> Event:
+    """Has the batch ended? If so, save its answers; the waiting sections then run again."""
+    inp = FinishStageInput.model_validate(event)
+    if inp.batch_id is None:
+        raise ValueError("CheckBatch needs a batchId")
+    deps = DEPS_FACTORY(inp.request)
+    ctx = deps.start_batch(inp.run_id)
+    ready = asyncio.run(collect_round(inp.batch_id, deps.store, ctx))
+    return _dump(inp.model_copy(update={"batch_ready": ready}))
+
+
 def finish_stage_handler(event: Event, _context: object = None) -> Event:
     """Write the stage's run record; mark the run stopped if the cap stopped any section."""
     inp = FinishStageInput.model_validate(event)
     if inp.plan.book_level and not inp.stopped:
         return _dump(StageResult(stage=inp.stage, done=1))
     deps = DEPS_FACTORY(inp.request)
+    if inp.request.batch:
+        deps.start_batch(inp.run_id)  # so the run record says the stage ran at batch prices
     if inp.stopped:
         state = deps.ledger.get(inp.run_id)
         reason = state.stop_reason if state and state.stop_reason else "cap"

@@ -58,6 +58,8 @@ class RunRequest(_Request):
     publish: bool = True
     cap_usd: Annotated[float, Field(gt=0)] | None = None  # None = 2x the estimate
     auto_approve: bool = False
+    # The stages marked `batch` in settings.toml go through the Message Batches API (T087).
+    batch: bool = False
 
     @field_validator("stages", mode="before")
     @classmethod

@@ -927,7 +927,7 @@ text edit is refused.
   - `specs/README.md` (001 status).
 - [ ] T085 Run quickstart.md §0–§8 end to end and fix anything that fails. Record the results at
   the bottom of `specs/001-content-pack-pipeline/spike-notes.md`.
-- [ ] T086 Security pass:
+- [x] T086 Security pass:
   - the hook in `.pre-commit-config.yaml` rejects staged source text;
   - `grep` confirms no secrets or account credentials in the repo;
   - the network-guard and no-tools tests are in CI;
@@ -941,7 +941,8 @@ text edit is refused.
   groups, read-only sources, the drafts bucket, the packs bucket's `draft/` (write) and `live/`
   (read), its ledger table, the one SSM parameter, and the Bedrock profile's models. The Claude API
   key itself can call any model: limit it with a workspace spend limit in the Anthropic console.
-  Left: confirm the live buckets with `get-public-access-block` after `make deploy`.
+  Live buckets checked 2026-11-20: all three block public access, and the packs policy isn't
+  public. The HTTPS-only policies apply with the next `make deploy`.
 - [ ] T087 Claude Message Batches API for cloud runs (added 2026-11-18; before the Old Testament or
   whole-Bible runs, about $500 saved over the Bible at 50% off; not needed for Mark):
   - a batch runner mode: each model step (summaries, extract, questions, review, intro, and the
@@ -951,6 +952,13 @@ text edit is refused.
     the run records after a failure;
   - cost estimates and the ledger use batch prices; `--local` keeps the standard API for tuning;
   - verify on a few sections that content and grades match a standard run before switching.
+  Built 2026-11-20 (verification run pending): `llm/batch.py` (replay in rounds: a section
+  waits at an unanswered call, unwritten; answers stored per run in the drafts bucket; refusals and
+  expired requests re-run on the standard API), `batch = true` per stage (`generate`, `review`)
+  and for cloud runs, the SubmitBatch → Wait → CheckBatch loop in the state machine (two new
+  Lambdas), `run --batch/--no-batch`, batch prices in estimates and run records. Tests:
+  `tests/integration/test_batch.py` (a batch run writes exactly what a standard run writes, at
+  half the price of the batch stages, in three rounds) and the cloud loop in `test_handlers.py`.
 - [x] T088 Psalm titles in the verse files (added 2026-11-18; before Psalms is published): the
   snapshot keeps each psalm's title ("A Psalm of David, when he fled…") as a subtitle before
   verse 1, but verses.schema.json has no field for it, so `publish/build.py` leaves it out. Add a

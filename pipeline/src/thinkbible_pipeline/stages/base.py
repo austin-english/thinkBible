@@ -36,8 +36,19 @@ from thinkbible_pipeline.drafts.store import DraftStore
 from thinkbible_pipeline.exitcodes import ExitCode
 from thinkbible_pipeline.jsonio import JsonModel, compact_canonical, sha256_hex
 from thinkbible_pipeline.ledger import InMemoryLedger, RunStatus, SpendLedger
+from thinkbible_pipeline.llm.batch import (
+    MAX_ROUNDS,
+    AwaitingBatch,
+    BatchClient,
+    BatchContext,
+    BatchReplayRunner,
+    BatchStore,
+    collect_round,
+    replay_scope,
+    submit_round,
+)
 from thinkbible_pipeline.llm.budget import EstimateSummary, StageEstimate, estimate, price
-from thinkbible_pipeline.llm.runner import ModelRunner, OutOfCredit, Usage
+from thinkbible_pipeline.llm.runner import ModelError, ModelRunner, OutOfCredit, Throttled, Usage
 from thinkbible_pipeline.requests import RunRequest
 from thinkbible_pipeline.sources.snapshot import SourceError, SourceLibrary
 
@@ -123,6 +134,10 @@ class Deps:
     code_version: str = "unknown"
     # The frozen snapshot, checked against the manifest on every read (local cache or S3).
     library: SourceLibrary | None = None
+    # How to reach the Message Batches API, for a run with `batch` set (T087).
+    batch_client_factory: Callable[[], BatchClient] | None = None
+    # Set for the length of a batch run: the batch stages' calls are answered from its store.
+    batch: BatchContext | None = None
 
     @property
     def sources(self) -> SourceLibrary:
@@ -132,8 +147,21 @@ class Deps:
 
     @cached_property
     def runner(self) -> ModelRunner:
-        """Created on first use, so stages without model calls never need AWS credentials."""
-        return self.runner_factory()
+        """Created on first use, so stages without model calls never need AWS credentials. In a
+        batch run, the batch stages' calls are answered from the run's batch store."""
+        standard = self.runner_factory()
+        if self.batch is None:
+            return standard
+        return BatchReplayRunner(self.settings, standard, BatchStore(self.store, self.batch.run_id))
+
+    def start_batch(self, run_id: str) -> BatchContext:
+        """Make this a batch run (before the runner is first used)."""
+        if self.batch is None:
+            if self.batch_client_factory is None:
+                raise UnknownStage("this run has no Message Batches client configured")
+            self.batch = BatchContext(run_id, self.batch_client_factory)
+            self.__dict__.pop("runner", None)
+        return self.batch
 
     def stage(self, name: str) -> Stage:
         stage = self.stages.get(name)
@@ -176,7 +204,8 @@ class StagePlan(JsonModel):
 
 class SectionOutcome(JsonModel):
     section_id: str
-    status: Literal["done", "failed", "not_started"]
+    # waiting: a batch run's section stopped at a call the batch hasn't answered yet (T087)
+    status: Literal["done", "failed", "not_started", "waiting"]
     cost_usd: float = 0.0
     tokens: TokenCounts = Field(default_factory=TokenCounts)
     models: list[str] = Field(default_factory=list)
@@ -309,7 +338,9 @@ def plan_stage(
                 plan.free += 1
     paid = len(plan.items) - plan.free
     if model is not None and paid:
-        plan.estimate_usd = estimate(stage.name, paid, deps.store.read_runs(), deps.settings)
+        plan.estimate_usd = estimate(
+            stage.name, paid, deps.store.read_runs(), deps.settings, batch=request.batch
+        )
     return plan
 
 
@@ -379,7 +410,14 @@ async def run_one_section(
     inputs = stage.inputs(section_id, draft, deps)
     h = input_hash(inputs, pv, model)
     try:
-        res = await stage.execute(section_id, inputs, draft, deps)
+        with replay_scope(stage.name):
+            res = await stage.execute(section_id, inputs, draft, deps)
+    except AwaitingBatch as e:
+        # A batch run: the section stops at a call not answered yet. Its draft is left as it was;
+        # the request waits for the next batch (llm/batch.py).
+        assert deps.batch is not None
+        BatchStore(store, deps.batch.run_id).write_pending(stage.name, e.call)
+        return SectionOutcome(section_id=section_id, status="waiting")
     except reraise:
         raise
     except OutOfCredit as e:
@@ -452,7 +490,7 @@ def finish_stage(
         elif o.status == "failed":
             result.failed += 1
             result.failures[o.section_id] = o.error or ""
-        else:
+        else:  # not started, or still waiting when the run stopped
             result.not_started += 1
         result.spent_usd += o.cost_usd
         tokens.input += o.tokens.input
@@ -480,9 +518,14 @@ def finish_stage(
             prompt_versions={plan.stage: plan.prompt_version} if plan.prompt_version else {},
             code_version=deps.code_version,
             stopped_by=result.stopped_by,
+            batch=deps.batch is not None and is_batch_stage(plan.stage, deps.settings),
         )
     )
     return result
+
+
+def is_batch_stage(stage: str, settings: Settings) -> bool:
+    return stage in settings.stages and settings.stages[stage].batch
 
 
 def run_counts(stages: list[StageResult]) -> dict[str, int]:
@@ -512,6 +555,8 @@ async def run(request: RunRequest, deps: Deps, *, run_id: str | None = None) -> 
 
     run_id = run_id or new_run_id(deps.clock())
     deps.ledger.create(run_id, deps.store.book, summary.cap_usd)
+    if request.batch:
+        deps.start_batch(run_id)
     result = RunResult()
     sem = asyncio.Semaphore(max(1, deps.settings.concurrency))
 
@@ -528,6 +573,11 @@ async def run(request: RunRequest, deps: Deps, *, run_id: str | None = None) -> 
             continue
         plan = plan_stage(stage, request, deps)
         outcomes = list(await asyncio.gather(*(one(stage, sid) for sid in plan.section_ids)))
+        rounds = 0
+        while deps.batch is not None and any(o.status == "waiting" for o in outcomes):
+            outcomes = await _batch_round(stage, outcomes, run_id=run_id, deps=deps, one=one,
+                                          rounds=rounds)  # fmt: skip
+            rounds += 1
         sr = finish_stage(
             plan, outcomes, run_id=run_id, started=started, deps=deps, cap_usd=summary.cap_usd
         )
@@ -538,3 +588,70 @@ async def run(request: RunRequest, deps: Deps, *, run_id: str | None = None) -> 
     status: RunStatus = "stopped-cap" if result.stopped_by else "succeeded"
     deps.ledger.finish(run_id, status, run_counts(result.stages))
     return result
+
+
+async def _batch_round(
+    stage: SectionStage,
+    outcomes: list[SectionOutcome],
+    *,
+    run_id: str,
+    deps: Deps,
+    one: Callable[[SectionStage, str], Any],
+    rounds: int,
+) -> list[SectionOutcome]:
+    """One round locally: submit the waiting sections' requests, wait for the batch, run them
+    again. The cloud does the same with the SubmitBatch and CheckBatch steps."""
+    ctx = deps.batch
+    assert ctx is not None
+    settled, waiting = split_waiting(outcomes)
+    batch_id, extra = await submit_batch_or_stop(
+        stage.name, waiting, run_id=run_id, deps=deps, rounds=rounds
+    )
+    settled += extra
+    if batch_id is None:
+        return settled
+    while not await collect_round(batch_id, deps.store, ctx):
+        await asyncio.sleep(ctx.poll_seconds)
+    pending = [sid for sid in waiting if sid not in {o.section_id for o in extra}]
+    return settled + list(await asyncio.gather(*(one(stage, sid) for sid in pending)))
+
+
+def split_waiting(outcomes: list[SectionOutcome]) -> tuple[list[SectionOutcome], list[str]]:
+    settled = [o for o in outcomes if o.status != "waiting"]
+    return settled, [o.section_id for o in outcomes if o.status == "waiting"]
+
+
+async def submit_batch_or_stop(
+    stage: str, waiting: list[str], *, run_id: str, deps: Deps, rounds: int = 0
+) -> tuple[str | None, list[SectionOutcome]]:
+    """Submit the waiting sections' requests as one batch, unless the run has stopped (the cap,
+    or out of credit) or the stage has had ``MAX_ROUNDS`` already. Returns the batch ID, and
+    outcomes for sections that won't continue."""
+    ctx = deps.batch
+    assert ctx is not None
+    if not waiting:
+        return None, []
+    if rounds >= MAX_ROUNDS:
+        error = f"still waiting after {MAX_ROUNDS} batch rounds"
+        deps.echo(f"  {stage}: {error}: {', '.join(waiting)}")
+        return None, [SectionOutcome(section_id=s, status="failed", error=error) for s in waiting]
+    if not deps.ledger.can_start(run_id):
+        return None, [SectionOutcome(section_id=s, status="not_started") for s in waiting]
+    try:
+        batch_id, missing = await submit_round(stage, waiting, deps.store, ctx)
+    except OutOfCredit as e:
+        deps.ledger.mark_stopped(run_id, "credit")
+        deps.echo(f"  {stage}: {e}")
+        return None, [SectionOutcome(section_id=s, status="not_started", error=str(e))
+                      for s in waiting]  # fmt: skip
+    except Throttled:
+        raise  # the cloud retries the step with backoff
+    except ModelError as e:  # the batch couldn't be created: these sections fail this run
+        deps.echo(f"  {stage}: {e}")
+        return None, [SectionOutcome(section_id=s, status="failed", error=str(e))
+                      for s in waiting]  # fmt: skip
+    lost = [SectionOutcome(section_id=s, status="failed", error="no pending batch request found")
+            for s in missing]  # fmt: skip
+    if batch_id is not None:
+        deps.echo(f"  {stage}: batch {batch_id} for {len(waiting) - len(missing)} sections")
+    return batch_id, lost

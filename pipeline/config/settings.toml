@@ -23,6 +23,9 @@ max_tokens = 16000
 invalid_output_retries = 2
 # Throttled requests (429) are retried this many times, waiting 10s, 20s, 40s, then 60s.
 throttle_retries = 8
+# Cloud runs send the stages marked `batch = true` through the Message Batches API: half price,
+# results within an hour, at most 24 hours (T087, 2026-11-20). `run --no-batch` for speed.
+batch = true
 # Only the Bedrock endpoints use this (client-side refusal fallback); the Claude API falls back
 # server-side.
 refusal_fallback_model = "claude-opus-5"
@@ -68,6 +71,7 @@ effort = "high"
 prompt = "v18"  # v18 = v16 with up to 10 candidates (v17 was reverted: the owner preferred v16)
 default_cost_usd = 0.12  # measured on 10 Mark sections with Sonnet 5.5 (2026-11-18)
 requests_per_minute = 4
+batch = true
 
 [stages.align]
 model = "claude-haiku-5-5"
@@ -88,6 +92,7 @@ effort = "high"
 prompt = "v14"  # v14 = v12 + each question's focus, big-picture or detail; v12: says it outright
 default_cost_usd = 0.12  # measured on 9 Mark sections with Opus 5.5 (2026-11-18)
 requests_per_minute = 4
+batch = true
 
 
 # Claude 4.x on Amazon Bedrock (bedrock-runtime, US cross-region inference profiles), the setup

@@ -27,7 +27,7 @@ from anthropic import (
     BetaRefusalFallbackMiddleware,
 )
 from anthropic.types.beta import BetaTextBlockParam, BetaUsage
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from thinkbible_pipeline.config import Settings
 
@@ -49,6 +49,7 @@ class Usage:
     cache_read_tokens: int = 0
     cache_write_5m_tokens: int = 0
     cache_write_1h_tokens: int = 0
+    batch: bool = False  # answered by the Message Batches API: priced at half (T087)
 
     @property
     def cache_write_tokens(self) -> int:
@@ -63,19 +64,26 @@ class Usage:
 
     @classmethod
     def from_api(cls, model: str, u: BetaUsage) -> Usage:
+        return cls.from_dict(model, u.model_dump())
+
+    @classmethod
+    def from_dict(cls, model: str, u: Mapping[str, Any], *, batch: bool = False) -> Usage:
+        """From a response's ``usage`` as JSON (a batch result is stored that way)."""
         five = one = 0
-        if u.cache_creation is not None:
-            five = u.cache_creation.ephemeral_5m_input_tokens
-            one = u.cache_creation.ephemeral_1h_input_tokens
+        cache = u.get("cache_creation")
+        if cache:
+            five = int(cache.get("ephemeral_5m_input_tokens") or 0)
+            one = int(cache.get("ephemeral_1h_input_tokens") or 0)
         else:
-            five = u.cache_creation_input_tokens or 0
+            five = int(u.get("cache_creation_input_tokens") or 0)
         return cls(
             model=model,
-            input_tokens=u.input_tokens,
-            output_tokens=u.output_tokens,
-            cache_read_tokens=u.cache_read_input_tokens or 0,
+            input_tokens=int(u.get("input_tokens") or 0),
+            output_tokens=int(u.get("output_tokens") or 0),
+            cache_read_tokens=int(u.get("cache_read_input_tokens") or 0),
             cache_write_5m_tokens=five,
             cache_write_1h_tokens=one,
+            batch=batch,
         )
 
 
@@ -199,6 +207,48 @@ def throttle_backoff(attempt: int) -> float:
     return base * random.uniform(0.9, 1.1)
 
 
+def build_request(
+    settings: Settings,
+    stage: str,
+    system: Sequence[BetaTextBlockParam],
+    user: str,
+    *,
+    batch: bool = False,
+) -> dict[str, Any]:
+    """A stage's request body, without the output format. A batch request carries no
+    ``fallbacks`` (the Batches API refuses it): a refusal is re-run on the standard API."""
+    cfg = settings.stage(stage)
+    blocks: list[BetaTextBlockParam] = [dict(b) for b in system]  # type: ignore[misc]
+    if blocks:
+        # Cache the stable prefix (shared context + stage prompt + guide). Per-section
+        # content goes in the user turn, after the breakpoint.
+        blocks[-1] = {**blocks[-1], "cache_control": {"type": "ephemeral"}}
+    params: dict[str, Any] = {
+        "model": cfg.model,
+        "max_tokens": settings.max_tokens,
+        "system": blocks,
+        "messages": [{"role": "user", "content": user}],
+    }
+    # Per model (settings.toml): Claude 4.6 needs adaptive thinking turned on explicitly
+    # (5.5 has it always on); Haiku 4.5 rejects an effort setting, so it gets neither.
+    if cfg.thinking == "adaptive":
+        params["thinking"] = {"type": "adaptive"}
+    if cfg.effort is not None:
+        params["output_config"] = {"effort": cfg.effort}
+    if settings.endpoint == "anthropic" and not batch:
+        params["betas"] = [SERVER_SIDE_FALLBACK_BETA]
+        params["fallbacks"] = "default"
+    assert_no_tools(params)
+    return params
+
+
+def output_format(output_model: type[BaseModel]) -> dict[str, Any]:
+    """``output_config.format`` for ``output_model``, built the way the SDK's ``parse`` builds it
+    (a batch request has no ``parse`` helper, so it carries the schema itself)."""
+    schema = TypeAdapter(output_model).json_schema()
+    return {"type": "json_schema", "schema": anthropic.transform_schema(schema)}
+
+
 class BedrockRunner:
     """On-demand Bedrock calls with structured output, prompt caching and refusal fallback.
 
@@ -252,29 +302,7 @@ class BedrockRunner:
         self, stage: str, system: Sequence[BetaTextBlockParam], user: str
     ) -> dict[str, Any]:
         """The request body, without ``output_format``. Pure, so tests can inspect it."""
-        cfg = self._settings.stage(stage)
-        blocks: list[BetaTextBlockParam] = [dict(b) for b in system]  # type: ignore[misc]
-        if blocks:
-            # Cache the stable prefix (shared context + stage prompt + guide). Per-section
-            # content goes in the user turn, after the breakpoint.
-            blocks[-1] = {**blocks[-1], "cache_control": {"type": "ephemeral"}}
-        params: dict[str, Any] = {
-            "model": cfg.model,
-            "max_tokens": self._settings.max_tokens,
-            "system": blocks,
-            "messages": [{"role": "user", "content": user}],
-        }
-        # Per model (settings.toml): Claude 4.6 needs adaptive thinking turned on explicitly
-        # (5.5 has it always on); Haiku 4.5 rejects an effort setting, so it gets neither.
-        if cfg.thinking == "adaptive":
-            params["thinking"] = {"type": "adaptive"}
-        if cfg.effort is not None:
-            params["output_config"] = {"effort": cfg.effort}
-        if self._settings.endpoint == "anthropic":
-            params["betas"] = [SERVER_SIDE_FALLBACK_BETA]
-            params["fallbacks"] = "default"
-        assert_no_tools(params)
-        return params
+        return build_request(self._settings, stage, system, user)
 
     async def parse(
         self,

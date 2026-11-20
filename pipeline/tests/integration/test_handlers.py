@@ -1,8 +1,9 @@
-"""The five Lambda handlers, driven the way the state machine drives them (moto + FakeRunner).
+"""The Lambda handlers, driven the way the state machine drives them (moto + FakeRunner).
 
 ``simulate`` mirrors infra/modules/pipeline/state_machine.asl.json.tftpl: StartRun, then for
-each stage PlanStage → RunSection per section → FinishStage, then FinishRun, with every payload
-passed through JSON as Step Functions would.
+each stage PlanStage → RunSection per section → SubmitBatch (in a batch run, while sections wait:
+CheckBatch until the batch ends, then RunSection again for those) → FinishStage, then FinishRun,
+with every payload passed through JSON as Step Functions would.
 """
 
 import asyncio
@@ -55,7 +56,8 @@ class SummaryStage(SectionStage):
     async def execute(
         self, section_id: str, inputs: Any, draft: SectionDraft, deps: Deps
     ) -> SectionResult:
-        out, usage = await deps.runner.parse(self.name, [], "x", Summary, section_id=section_id)
+        user = f"Summarise {section_id}."  # each section's request differs, as in real stages
+        out, usage = await deps.runner.parse(self.name, [], user, Summary, section_id=section_id)
         if self.name == "summaries":
             draft.summary = out.summary
         return SectionResult(usages=[usage])
@@ -82,6 +84,8 @@ class Cloud:
     ddb: Any
     runner: FakeRunner
     manifest: SourceManifest
+    batch_client: Any = None  # a FakeBatchClient, for batch runs
+    batch_stages: tuple[str, ...] = ()  # stages marked `batch` for this test
 
     def deps(self, request: RunRequest) -> Deps:
         sources = SourceStore.s3("sources-test", client=self.s3)
@@ -91,9 +95,10 @@ class Cloud:
             if problems:
                 raise SourceError(problems[0].message)
 
+        overlay = {"stages": {s: {"batch": True} for s in self.batch_stages}}
         return Deps(
             store=DraftStore("mrk", S3BlobStore("drafts-test", "drafts/", client=self.s3)),
-            settings=load_settings(),
+            settings=load_settings(overlay=overlay),
             pricing=load_pricing(),
             runner_factory=lambda: self.runner,
             approve_estimate=lambda _s: True,
@@ -101,6 +106,7 @@ class Cloud:
             ledger=DynamoLedger(TABLE, client=self.ddb),
             preflight=preflight,
             code_version="test",
+            batch_client_factory=lambda: self.batch_client,
         )
 
 
@@ -143,8 +149,10 @@ def _json(value: Any) -> Any:
     return json.loads(json.dumps(value))
 
 
-def simulate(stages: list[str], cap_usd: float | None = None, run_id: str = "run-1") -> Any:
-    request = RunRequest(book="mark", stages=stages)
+def simulate(
+    stages: list[str], cap_usd: float | None = None, run_id: str = "run-1", batch: bool = False
+) -> Any:
+    request = RunRequest(book="mark", stages=stages, batch=batch)
     event: dict[str, Any] = {
         "runId": run_id,
         "request": request.model_dump(mode="json", by_alias=True),
@@ -160,24 +168,25 @@ def simulate(stages: list[str], cap_usd: float | None = None, run_id: str = "run
             "capUsd": start["capUsd"],
             "stage": stage,
         }
-        plan = _json(handlers.plan_stage_handler(stage_input))
-        outcomes = [
-            _json(
-                handlers.run_section(
-                    {
-                        "runId": plan["runId"],
-                        "request": plan["request"],
-                        "capUsd": plan["capUsd"],
-                        "stage": plan["stage"],
-                        "sectionId": sid,
-                    }
-                )
-            )
-            for sid in plan["sectionIds"]
-        ]
-        stage_results.append(_json(handlers.finish_stage_handler({**plan, "outcomes": outcomes})))
+        state = _json(handlers.plan_stage_handler(stage_input))
+        while True:
+            # Sections (ResultPath $.roundOutcomes) → SubmitBatch → BatchSubmitted.
+            round_outcomes = [_json(handlers.run_section(section_input(state, sid)))
+                              for sid in state["sectionIds"]]  # fmt: skip
+            state = _json(handlers.submit_batch({**state, "roundOutcomes": round_outcomes}))
+            if state["batchId"] is None:
+                break
+            while not state["batchReady"]:  # WaitForBatch → CheckBatch → BatchReady
+                state = _json(handlers.check_batch(state))
+        stage_results.append(_json(handlers.finish_stage_handler(state)))
     # The Stages map's ResultPath ($.stageResults) is added to StartRun's output.
     return _json(handlers.finish_run({**start, "stageResults": stage_results}))
+
+
+def section_input(state: dict[str, Any], sid: str) -> dict[str, Any]:
+    """The Sections map's ItemSelector."""
+    keys = ("runId", "request", "capUsd", "stage")
+    return {**{k: state[k] for k in keys}, "sectionId": sid}
 
 
 def test_full_run_matches_local_run(cloud: Cloud, tmp_path: Path) -> None:
@@ -273,3 +282,22 @@ def test_a_passing_run_with_report_publishes_to_the_draft_channel(
     start["request"]["stages"] = ["summaries"]
     out = _json(handlers.finish_run({**start, "stageResults": []}))
     assert not out["publishable"] and out.get("publish") is None and len(calls) == 1
+
+
+def test_a_batch_run_loops_through_the_batch_and_finishes(cloud: Cloud) -> None:
+    from thinkbible_pipeline.llm.batch import FakeBatchClient
+
+    cloud.batch_stages = ("summaries",)
+    cloud.batch_client = FakeBatchClient(respond=lambda call: {"summary": f"b:{call.section_id}"},
+                                         polls=2)  # fmt: skip
+    out = simulate(["summaries", "align"], batch=True)
+    assert out["exitCode"] == 0, out
+    assert [(s["stage"], s["done"]) for s in out["stages"]] == [("summaries", 3), ("align", 3)]
+    assert list(cloud.batch_client.batches) == ["msgbatch_1"]  # align isn't a batch stage
+    assert len(cloud.batch_client.batches["msgbatch_1"]) == 3
+    store = DraftStore("mrk", S3BlobStore("drafts-test", "drafts/", client=cloud.s3))
+    assert [store.read_draft_or_new(s).summary for s in IDS] == [f"b:{s}" for s in IDS]
+    records = {r.stage: r for r in store.read_runs()}
+    assert records["summaries"].batch and not records["align"].batch
+    # The fake's usage costs half of the same usage on the standard API.
+    assert out["stages"][0]["spentUsd"] > 0

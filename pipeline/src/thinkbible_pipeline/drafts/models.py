@@ -206,3 +206,5 @@ class RunRecord(JsonModel):
     prompt_versions: dict[str, str]
     code_version: str | None = None  # git HEAD of the bundle (or working tree for --local)
     stopped_by: Literal["cap", "credit", "error"] | None = None
+    # The stage's calls went through the Message Batches API at half price (T087).
+    batch: bool = False

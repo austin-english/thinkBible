@@ -16,15 +16,17 @@ ASL = (
     / "pipeline"
     / "state_machine.asl.json.tftpl"
 )
-FUNCTIONS = {"start_run", "plan_stage", "run_section", "finish_stage", "finish_run"}
+FUNCTIONS = {"start_run", "plan_stage", "run_section", "submit_batch", "check_batch",
+             "finish_stage", "finish_run"}  # fmt: skip
 
 
 def render(max_concurrency: int = 10) -> dict[str, Any]:
     """Fill the Terraform template variables the way `templatefile` does."""
     text = ASL.read_text(encoding="utf-8")
     variables = set(re.findall(r"\$\{(\w+)\}", text))
-    assert variables == {f"{f}_arn" for f in FUNCTIONS} | {"max_concurrency"}
+    assert variables == {f"{f}_arn" for f in FUNCTIONS} | {"max_concurrency", "batch_poll_seconds"}
     text = text.replace("${max_concurrency}", str(max_concurrency))
+    text = text.replace("${batch_poll_seconds}", "300")
     for f in FUNCTIONS:
         text = text.replace(f"${{{f}_arn}}", f"arn:aws:lambda:us-west-2:1:function:{f}")
     doc: dict[str, Any] = json.loads(text)
@@ -40,7 +42,7 @@ def _states(doc: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return out
 
 
-def test_tasks_call_exactly_the_five_handlers() -> None:
+def test_tasks_call_exactly_the_seven_handlers() -> None:
     states = _states(render())
     called = {
         s["Parameters"]["FunctionName"].rsplit(":", 1)[1]
@@ -80,5 +82,21 @@ def test_payload_keys_match_the_handler_messages() -> None:
         selector = states[name]["ItemSelector"]
         assert {"runId.$", "request.$", "capUsd.$"} <= set(selector)
     assert "sectionId.$" in states["Sections"]["ItemSelector"]
-    assert states["Sections"]["ResultPath"] == "$.outcomes"
+    assert states["Sections"]["ResultPath"] == "$.roundOutcomes"
     assert states["Stages"]["ResultPath"] == "$.stageResults"
+
+
+def test_each_stage_loops_through_batches_until_no_section_waits() -> None:
+    states = _states(render())
+    assert states["Sections"]["Next"] == "SubmitBatch"
+    assert states["SubmitBatch"]["Next"] == "BatchSubmitted"
+    submitted = states["BatchSubmitted"]
+    assert submitted["Choices"] == [{"Variable": "$.batchId", "IsNull": False,
+                                     "Next": "WaitForBatch"}]  # fmt: skip
+    assert submitted["Default"] == "FinishStage"
+    assert (
+        states["WaitForBatch"]["Type"] == "Wait" and states["WaitForBatch"]["Next"] == "CheckBatch"
+    )
+    ready = states["BatchReady"]
+    assert ready["Choices"][0]["Variable"] == "$.batchReady"
+    assert ready["Choices"][0]["Next"] == "Sections" and ready["Default"] == "WaitForBatch"

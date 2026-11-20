@@ -38,7 +38,14 @@ class SectionInput(RunInput):
 
 
 class FinishStageInput(PlanOutput):
-    outcomes: list[SectionOutcome] = Field(default_factory=list)
+    """What ``FinishStage`` records. In a batch run the same payload goes round the stage's batch
+    loop (SubmitBatch, Wait, CheckBatch, Sections again) until no section is waiting (T087)."""
+
+    outcomes: list[SectionOutcome] = Field(default_factory=list)  # settled: done, failed, …
+    round_outcomes: list[SectionOutcome] = Field(default_factory=list)  # the last Sections map
+    batch_id: str | None = None  # the batch the waiting sections (sectionIds) wait for
+    batch_ready: bool = False  # it has ended and its answers are saved
+    rounds: int = 0  # batches sent for this stage so far
 
 
 class FinishRunInput(RunInput):

@@ -1,5 +1,5 @@
 # The content pipeline in AWS (specs/001 research R7, R8, R19): a drafts bucket, the run ledger,
-# five Lambdas sharing one bundle, and the Step Functions state machine that drives them.
+# seven Lambdas sharing one bundle, and the Step Functions state machine that drives them.
 
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
@@ -15,6 +15,8 @@ locals {
     start_run    = { handler = "${local.handlers}.start_run", timeout = 300 }
     plan_stage   = { handler = "${local.handlers}.plan_stage_handler", timeout = 300 }
     run_section  = { handler = "${local.handlers}.run_section", timeout = 900 }
+    submit_batch = { handler = "${local.handlers}.submit_batch", timeout = 300 }
+    check_batch  = { handler = "${local.handlers}.check_batch", timeout = 900 }
     finish_stage = { handler = "${local.handlers}.finish_stage_handler", timeout = 120 }
     finish_run   = { handler = "${local.handlers}.finish_run", timeout = 300 }
   }
@@ -94,12 +96,15 @@ resource "aws_sfn_state_machine" "pipeline" {
   role_arn = aws_iam_role.sfn.arn
 
   definition = templatefile("${path.module}/state_machine.asl.json.tftpl", {
-    start_run_arn    = aws_lambda_function.fn["start_run"].arn
-    plan_stage_arn   = aws_lambda_function.fn["plan_stage"].arn
-    run_section_arn  = aws_lambda_function.fn["run_section"].arn
-    finish_stage_arn = aws_lambda_function.fn["finish_stage"].arn
-    finish_run_arn   = aws_lambda_function.fn["finish_run"].arn
-    max_concurrency  = var.max_concurrency
+    start_run_arn      = aws_lambda_function.fn["start_run"].arn
+    plan_stage_arn     = aws_lambda_function.fn["plan_stage"].arn
+    run_section_arn    = aws_lambda_function.fn["run_section"].arn
+    submit_batch_arn   = aws_lambda_function.fn["submit_batch"].arn
+    check_batch_arn    = aws_lambda_function.fn["check_batch"].arn
+    finish_stage_arn   = aws_lambda_function.fn["finish_stage"].arn
+    finish_run_arn     = aws_lambda_function.fn["finish_run"].arn
+    max_concurrency    = var.max_concurrency
+    batch_poll_seconds = var.batch_poll_seconds
   })
 
   logging_configuration {

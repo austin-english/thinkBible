@@ -11,6 +11,8 @@ from thinkbible_pipeline.drafts.models import RunRecord
 from thinkbible_pipeline.llm.runner import Usage
 
 HISTORY_WINDOW = 20
+# The Message Batches API's price: half of every token (T087).
+BATCH_DISCOUNT = 0.5
 
 
 def price(usage: Usage, pricing: Pricing) -> float:
@@ -25,19 +27,33 @@ def price(usage: Usage, pricing: Pricing) -> float:
         + usage.cache_write_5m_tokens * p.cache_write_5m
         + usage.cache_write_1h_tokens * p.cache_write_1h
     )
-    return total / 1_000_000
+    return total / 1_000_000 * (BATCH_DISCOUNT if usage.batch else 1.0)
 
 
 def cost_per_section(stage: str, runs: Sequence[RunRecord], settings: Settings) -> float:
-    """Median cost per section over the last 20 runs of ``stage``, else the settings default."""
-    history = [r.spent_usd / r.sections.done for r in runs if r.stage == stage and r.sections.done]
+    """Median standard-price cost per section over the last 20 runs of ``stage`` (a batch run's
+    cost counted at full price), else the settings default."""
+    history = [
+        r.spent_usd / r.sections.done / (BATCH_DISCOUNT if r.batch else 1.0)
+        for r in runs
+        if r.stage == stage and r.sections.done
+    ]
     if history:
         return statistics.median(history[-HISTORY_WINDOW:])
     return settings.stage(stage).default_cost_usd
 
 
-def estimate(stage: str, n_sections: int, runs: Sequence[RunRecord], settings: Settings) -> float:
-    return n_sections * cost_per_section(stage, runs, settings)
+def estimate(
+    stage: str,
+    n_sections: int,
+    runs: Sequence[RunRecord],
+    settings: Settings,
+    *,
+    batch: bool = False,
+) -> float:
+    """``batch``: a batch run, where the stages marked ``batch`` cost half."""
+    discount = BATCH_DISCOUNT if batch and settings.stage(stage).batch else 1.0
+    return n_sections * cost_per_section(stage, runs, settings) * discount
 
 
 @dataclass(frozen=True)

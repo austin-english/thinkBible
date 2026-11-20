@@ -66,3 +66,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "batch_poll_seconds" {
+  description = "Seconds the state machine waits between checks on a Message Batches batch (T087)."
+  type        = number
+  default     = 300
+}

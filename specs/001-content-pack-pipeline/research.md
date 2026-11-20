@@ -368,7 +368,9 @@ later, from the extraction result (FR-005).
   rather review those sections by hand.
 - **Batch inference**: deferred. Stages call a `ModelRunner` interface so that a Bedrock
   batch-inference runner can replace the on-demand runner for later books without changing stage
-  code.
+  code. *Built 2026-11-20 (T087)* on the Claude API's Message Batches instead, the endpoint in use
+  since 2026-11-18: `generate` and `review` in batch rounds at half price, by replaying each
+  section against stored answers (`llm/batch.py`); the stage code is unchanged.
 
 **Alternatives considered**: the first-party Claude API, which offers Message Batches and
 server-side fallbacks. Rejected for now because the constitution names Bedrock and the rest of

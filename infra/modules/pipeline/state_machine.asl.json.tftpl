@@ -87,8 +87,71 @@
                 }
               }
             },
-            "ResultPath": "$.outcomes",
-            "Next": "FinishStage"
+            "ResultPath": "$.roundOutcomes",
+            "Next": "SubmitBatch"
+          },
+          "SubmitBatch": {
+            "Comment": "Settle the round's outcomes; in a batch run, send the waiting sections' requests as one batch (T087).",
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": { "FunctionName": "${submit_batch_arn}", "Payload.$": "$" },
+            "OutputPath": "$.Payload",
+            "Retry": [
+              {
+                "ErrorEquals": ["Throttled"],
+                "IntervalSeconds": 20,
+                "MaxAttempts": 6,
+                "BackoffRate": 2,
+                "MaxDelaySeconds": 300,
+                "JitterStrategy": "FULL"
+              },
+              {
+                "ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException", "Lambda.TooManyRequestsException"],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 3,
+                "BackoffRate": 2
+              }
+            ],
+            "Next": "BatchSubmitted"
+          },
+          "BatchSubmitted": {
+            "Type": "Choice",
+            "Choices": [{ "Variable": "$.batchId", "IsNull": false, "Next": "WaitForBatch" }],
+            "Default": "FinishStage"
+          },
+          "WaitForBatch": {
+            "Comment": "No Lambda stays open while the batch runs (usually within the hour, at most 24 hours).",
+            "Type": "Wait",
+            "Seconds": ${batch_poll_seconds},
+            "Next": "CheckBatch"
+          },
+          "CheckBatch": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": { "FunctionName": "${check_batch_arn}", "Payload.$": "$" },
+            "OutputPath": "$.Payload",
+            "Retry": [
+              {
+                "ErrorEquals": ["Throttled", "ModelError"],
+                "IntervalSeconds": 30,
+                "MaxAttempts": 5,
+                "BackoffRate": 2,
+                "MaxDelaySeconds": 300,
+                "JitterStrategy": "FULL"
+              },
+              {
+                "ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException", "Lambda.TooManyRequestsException"],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 3,
+                "BackoffRate": 2
+              }
+            ],
+            "Next": "BatchReady"
+          },
+          "BatchReady": {
+            "Type": "Choice",
+            "Choices": [{ "Variable": "$.batchReady", "BooleanEquals": true, "Next": "Sections" }],
+            "Default": "WaitForBatch"
           },
           "FinishStage": {
             "Type": "Task",

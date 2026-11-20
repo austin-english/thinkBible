@@ -36,6 +36,10 @@ class StageSettings:
     # The account's Bedrock requests-per-minute quota for this stage's model. The runner paces
     # requests to stay under it; stages sharing a model share the budget. None: no pacing.
     requests_per_minute: int | None = None
+    # In a batch run, this stage's calls go through the Message Batches API at half price (T087).
+    # Cheap or sequential stages (summaries, align, intro) stay on the standard API: a batch round
+    # can take up to an hour, which isn't worth it for a few cents.
+    batch: bool = False
 
 
 @dataclass(frozen=True)
@@ -75,6 +79,13 @@ class Settings:
     gate: GateSettings = GateSettings()
     # A throttled request (429/503/529) is retried this many times with backoff, then fails.
     throttle_retries: int = 5
+    # Cloud runs use the Message Batches API unless `run --no-batch` (T087); local runs don't
+    # unless `run --local --batch`. Only the Claude API endpoint has batches.
+    batch: bool = False
+
+    @property
+    def batch_available(self) -> bool:
+        return self.endpoint == "anthropic" and any(s.batch for s in self.stages.values())
 
     def stage(self, name: str) -> StageSettings:
         try:
@@ -205,6 +216,7 @@ def load_settings(
             requests_per_minute=int(s["requests_per_minute"])
             if "requests_per_minute" in s
             else None,
+            batch=bool(s.get("batch", False)),
         )
     endpoint = raw.get("endpoint", "runtime")
     if endpoint not in ENDPOINTS:
@@ -228,6 +240,7 @@ def load_settings(
         stages=MappingProxyType(stages),
         gate=GateSettings(**{k: v for k, v in raw.get("gate", {}).items()}),
         throttle_retries=int(raw.get("throttle_retries", 5)),
+        batch=bool(raw.get("batch", False)),
         api_key_parameter=str(raw["api_key_parameter"]) if raw.get("api_key_parameter") else None,
         profile=profile,
     )
