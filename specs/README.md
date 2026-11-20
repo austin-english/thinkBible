@@ -1,16 +1,16 @@
 # ThinkBible specs
 
 Spec Kit feature specs, in build order. The constitution lives at
-[`.specify/memory/constitution.md`](../.specify/memory/constitution.md) (v1.0.1).
+[`.specify/memory/constitution.md`](../.specify/memory/constitution.md) (v1.3.0).
 
 | # | Feature | Status | Open clarifications |
 |---|---|---|---|
-| 001 | [Content pack format and batch pipeline](001-content-pack-pipeline/spec.md) | Draft | Review surface for human review |
-| 002 | [Chapter reader and Read mode](002-reader-read-mode/spec.md) | Draft | none |
-| 003 | [Reflection, comparison and live compare API](003-reflection-live-compare/spec.md) | Draft | Crisis resources; voice input in MVP? |
-| 004 | [Question levels and re-reads](004-question-levels-rereads/spec.md) | Draft | none |
-| 005 | [Contents, saved reflections and progress](005-contents-progress/spec.md) | Draft | none |
-| 006 | [Subscription, paywall and Settings](006-subscription-paywall-settings/spec.md) | Draft | none |
+| 001 | [Content pack format and batch pipeline](001-content-pack-pipeline/spec.md) | Built (US1–US6) and batch runs (T087); Mark 1.2.1 and Philippians on the draft channel. Left: promoting Mark waits for spec 002's reader (T075) | none (review surface: the scorecard, `review.html`) |
+| 002 | [Book-feel feed and chapter panel](002-reader-read-mode/spec.md) | Draft | none |
+| 003 | [Question footer, reply thread and live compare API](003-reflection-live-compare/spec.md) | Draft | Crisis resources; voice input in MVP? |
+| 004 | [Question sequence and weekly unlocks](004-question-levels-rereads/spec.md) | Draft | none |
+| 005 | [Section status, saved passages and progress](005-contents-progress/spec.md) | Draft | none |
+| 006 | [Subscription, paywall and You & settings](006-subscription-paywall-settings/spec.md) | Draft | none |
 | 007 | [Feedback and question analytics](007-feedback-question-analytics/spec.md) | Draft | Event ingestion path |
 
 Before any of this, the brief's **step zero** applies: a content spike on Mark. Spec 001's
@@ -45,25 +45,103 @@ Or set `SPECIFY_FEATURE_DIRECTORY=specs/002-reader-read-mode` for one session.
 New features after these use `/speckit-specify <description>`. Its git hook creates the branch and
 picks the next number.
 
+## Future specs (not yet drafted)
+
+Ideas the owner wants to keep, each likely its own spec. Draft with `/speckit-specify` when the
+time comes.
+
+- **Question pool: stable ideas, questions added over time** (noted 2026-11-17). Today one
+  `generate` stage rewrites a section's key ideas and questions together, so every run is a new
+  sample and question wording can't be compared like for like. Proposal:
+  - split `generate` into an `ideas` stage (written once; re-run only when its prompt changes or
+    with `--fresh`, which starts a new pool) and a `questions` stage;
+  - each new questions prompt version **adds** up to 8 candidates to the section's pool instead
+    of replacing it (`--fresh` clears it); the grader re-scores the whole pool with the current
+    rubric and keeps the best 3; cap the pool (about 16, best-scored kept) so the grader call stays
+    bounded;
+  - this gives like-for-like prompt tuning, cheaper questions-only runs (about $0.15 instead of
+    $0.32 per section), a bank of graded questions for more questions per section later, and
+    ready replacements when a live question is retired (spec 001 Story 6).
+
+  Questions point at key idea IDs, so the pool only works while the ideas stay fixed. About a
+  day of work; it fits with spec 001 US6 (refresh) or as a feature of its own.
+- **A question about the reader's own life** as a section's third question (noted 2026-11-17,
+  research R11). Deferred until the first two questions are steady.
+- **The commentators as people in the comment thread** (noted 2026-11-17, `docs/design/README.md`
+  "Future idea"): their own avatars, names and profiles, building on "In their words".
+- **Readers' own comments under each post** (noted 2026-11-18): an open "Add a note…" under the
+  "About Mark" post and under each section, for the reader's own thoughts beyond the question.
+  Private notes (device and iCloud, like answers) fit the current design and privacy rules; notes
+  other readers can see would need accounts, server storage, moderation and a constitution change
+  (answers and personal text never live on the server today). Decide which before specifying.
+
 ## Decisions
 
 Confirmed by the product owner on 2026-11-04 and applied to `docs/brief.md`, `DESIGN.md`, the
 constitution and these specs:
 
 - **Free tier:** 3 reflections in total per device. After that, the reader must subscribe.
-- **Follow-up questions:** when a reader re-reads a section, they get its next, harder question
-  from the reviewed pool. The live model never writes questions.
-- **Pack shape:** follows DESIGN.md ("Data the UI reads"). Questions have `level`, verse scope,
-  `targets`, `isAlternate` and `status`, and keep `type` as pipeline metadata. Key ideas have
+- **Follow-up questions:** a section's next, harder question from the reviewed pool. The live
+  model never writes questions. *Superseded 2026-11-10:* it unlocks 24 hours after the previous
+  level is answered, not on a re-read. *Superseded 2026-11-17:* the section's next question in
+  order, a week after the previous answer, with no levels (see below).
+- **Pack shape:** follows DESIGN.md ("Data the UI reads"). Questions have verse scope, `targets`
+  and `status`, and keep `type` as pipeline metadata (`level` and `isAlternate` were removed on
+  2026-11-17, see below). Key ideas have
   `title`, `body` and verse scope. The brief's example section now uses this shape.
+
+### Spec 001: cloud runs and an automatic quality gate (2026-11-10)
+
+- **Runs execute in AWS**: Step Functions with one Lambda per section per stage, drafts in S3, a
+  DynamoDB spend ledger. The CLI estimates, confirms and starts runs; `--local` runs a few
+  sections in-process for prompt tuning.
+- **No manual review of generated JSON.** Rule checks, the evidence check and an Opus 5.5 grader
+  drop weak items and write a read-only scorecard. The grader is calibrated once
+  against the owner's grades (≥ 85% agreement on ≥ 30 items).
+- **Draft, then live.** A run whose gate passes publishes to the draft channel; the owner reads it
+  in the app and runs `promote`. Frozen text and the additive publish check apply to live only.
+- Constitution amended to v1.2.0 for this. In v1.2.1 (2026-11-13), draft and live became two
+  channels of one packs bucket in a single AWS environment, instead of two environments.
+
+### Questions without levels, a week apart (2026-11-17)
+
+- **No difficulty levels.** A section has up to three questions (never more than its key ideas)
+  in a fixed order, aimed at the passage's main ideas. Difficulty depends on the reader and
+  couldn't be measured reliably; the level check failed half of a 10-section Mark run.
+- **One week between questions.** The first is asked on the first read; the next unlocks a week
+  after the previous answer, matching how rarely people return to the same passage.
+- **No hidden alternates.** "Not a helpful question?" moves to the next question in the list.
+- **Premium** still covers a section's follow-up questions (the second and third).
+- Constitution amended to v1.3.0. The pack schema dropped `level` and `isAlternate`; specs 004–007,
+  the brief and the design docs were updated. Spec 004's folder name is kept.
+
+### Book-feel redesign (2026-11-10)
+
+Specs 002–007 were updated to the "book feel" design in
+[`docs/design/README.md`](../docs/design/README.md) and `docs/design/screens/*.png`.
+`docs/design/DESIGN.md` now covers only what that design left unchanged (paywall, fallback and
+offline rules, question scope, cost limits, data the UI reads). Spec folder names are kept so
+existing branches still match; the titles changed.
+
+- **No Home, no Study / Read switch, no Skip.** The app opens on a feed of page cards. The chapter
+  panel is the table of contents. Plain reading is Settings › Show questions. Scrolling past an
+  unanswered card marks it Read, and analytics count it as "passed".
+- **Levels unlock 24 hours after an answer** (*now: the next question a week after an answer,
+  2026-11-17*), with one local notification per chapter. All on the
+  device; no backend change.
+- **Settings:** translation and text size live only in You & settings. Scripture font, "Open in"
+  and "Open questions automatically" are gone. Accent color, Justify text, Show questions and
+  Harder-question alerts (*now "New-question alerts"*) are new.
+- **No backend, API or schema changes.** Spec 001 and the compare-service requirements in spec 003
+  are unchanged.
 
 ## Doc discrepancies to fix
 
 These were found while drafting. The specs follow the resolution shown here, so update the source
 docs to match:
 
-1. **"Try a different question".** It is still in the brief's MVP table but was replaced by levels
-   and "Not a helpful question?". The specs drop it.
+1. **"Try a different question".** It is still in the brief's MVP table but was replaced by the
+   question sequence and "Not a helpful question?". The specs drop it.
 2. **Translations in MVP.** The brief's MVP summary says "one translation", but the MVP table and
    DESIGN.md include the BSB / KJV switch. The specs include both.
 3. **Verse notes.** Pipeline step 6 generates them, but DESIGN.md defers them to V2. The pack
@@ -73,3 +151,13 @@ docs to match:
 5. **Files referenced but not yet created:** `api/openapi.yaml`, `content/schema/section.schema.json`,
    the per-area `CLAUDE.md` files, `ios/README.md`, `.github/workflows/`. Specs 001 and 003 produce
    the first two during `/speckit-plan`.
+6. ~~Constitution behind the book-feel design.~~ Resolved in v1.1.0 (2026-11-10): Read mode is
+   gone (plain reading is "questions off"), follow-ups unlock 24 hours after the previous level is
+   answered (a week after the previous question since v1.3.0), and the UI source of truth is `docs/design/README.md` plus `DESIGN.md`.
+7. **Design handoff paths.** `docs/design/README.md` cites `source/PostBook.dc.html`,
+   `source/YouBook.dc.html` and `source/UnlockNotification.dc.html`, which aren't in the repo, and
+   `docs/design/CLAUDE_CODE_PROMPT.md` refers to `docs/design/book-feel/`. The files were placed in
+   `docs/design/` directly. Add the `source/` files, or drop the references.
+8. **Not drawn yet (settled iteratively during the UI features):** the `…` menu, dark mode for the book-feel layout (proposed values only), where
+   the context and views-differ notes sit in the reply (specs put them in the expanded reply), and
+   the text-size steps (specs keep the earlier 5 steps).

@@ -1,0 +1,2 @@
+# The control candidate changes nothing: an eval with it measures how much two runs of the same
+# prompts differ, which is the noise a real change has to beat.

@@ -8,6 +8,6 @@
     "[python]": { "editor.defaultFormatter": "charliermarsh.ruff", "editor.formatOnSave": true },
     "[terraform]": { "editor.defaultFormatter": "hashicorp.terraform", "editor.formatOnSave": true },
     "yaml.schemas": { "https://spec.openapis.org/oas/3.1/schema/2022-10-07": "api/openapi.yaml" },
-    "json.schemas": [{ "fileMatch": ["content/packs/**/*.json"], "url": "./content/schema/section.schema.json" }]
+    "json.schemas": [{ "fileMatch": ["content/schema/fixtures/valid/*.json"], "url": "./content/schema/study-pack.schema.json" }]
   }
 }

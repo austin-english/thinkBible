@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Chapter Reader and Read Mode
+# Specification Quality Checklist: Book-Feel Feed and Chapter Panel
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-11-03
@@ -33,5 +33,5 @@
 
 - Platform and contract names required by the constitution (iOS, App Store, iCloud, App Attest,
   the pack schema, `api/openapi.yaml`) are treated as constraints, not implementation choices.
-- Platform terms (Dynamic Type, VoiceOver, 44pt) come from constitution principle X and DESIGN.md, and are acceptable for an iOS-only product.
+- Platform terms (Dynamic Type, VoiceOver, 44pt) come from constitution principle X and docs/design/README.md, and are acceptable for an iOS-only product.
 - Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`.

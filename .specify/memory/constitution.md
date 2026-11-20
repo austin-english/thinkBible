@@ -4,10 +4,10 @@
 
 ### I. Scripture Is Never Paywalled
 
-- Bible text, Read mode and navigation of every published book MUST remain free, with no
-  sign-in, no trial and no count limit.
-- Only the study experience (live comparison beyond the free allowance, later-read levels,
-  premium series) MAY be paid.
+- Bible text, plain reading (questions off) and navigation of every published book MUST remain
+  free, with no sign-in, no trial and no count limit.
+- Only the study experience (live comparison beyond the free allowance, a section's follow-up
+  questions, premium series) MAY be paid.
 - Reflections a user already saved MUST stay viewable after their free allowance runs out
   or their subscription lapses.
 
@@ -16,13 +16,15 @@ Trust depends on the Bible itself being freely readable.
 
 ### II. Closed-World Content Sourcing (NON-NEGOTIABLE)
 
-- All Scripture and commentary text MUST come from the frozen, checksummed snapshots in
-  `content/sources/`. No app, Lambda, pipeline job or agent fetches Bible or commentary
-  text from the web at runtime.
+- All Scripture and commentary text MUST come from the frozen source snapshot. The snapshot
+  is stored write-once in a private S3 bucket and cached locally in `content/sources/`. Every
+  file is verified against the checksums in `content/sources/manifest.json`, which is
+  committed to git. No app, Lambda, pipeline job or agent fetches Bible or commentary text
+  from the web at runtime.
 - Model calls MUST receive only the excerpts for the section being processed and MUST NOT
   be given browsing, search or other retrieval tools.
-- Adding or updating a source is a deliberate, reviewed change: a new snapshot, its
-  checksums and retrieval date, committed together. Agents MUST NOT add or refresh sources
+- Adding or updating a source is a deliberate, reviewed change: a new snapshot uploaded
+  under a new snapshot ID, with its checksums and retrieval date committed in the manifest. Agents MUST NOT add or refresh sources
   on their own initiative.
 - Every content pack MUST record the source names, snapshot dates and checksums it was
   built from.
@@ -33,13 +35,16 @@ idea can be traced to a known text.
 ### III. Batch Generates, Live Only Compares
 
 - Every question, key idea, context note and "views differ" note MUST be generated in the
-  batch pipeline, pass review, and ship in a content pack.
+  batch pipeline, pass the automatic quality gate (rule checks, the evidence check and a
+  calibrated model grader), and ship in a content pack.
 - The live model MUST only compare a user's answer with that section's stored key ideas
   and return the fields defined in `api/openapi.yaml` (covered idea IDs, a highlight phrase
   quoted from the user's answer, a short note, a contradicts-text flag). It MUST NOT
   generate questions, interpretations, verses or facts.
-- Follow-up questions are the section's next-level questions from the reviewed pool, served
-  when the reader re-reads that section. They are never generated or adapted live.
+- A section has up to three reviewed questions in a fixed order, with no difficulty levels, all
+  in the content pack. The first is asked on the first read. Each follow-up is the next question
+  in that order, unlocked on the device one week after the previous one is answered; reopening
+  or re-reading a section never advances it. Questions are never generated or adapted live.
 - The live model MUST receive the answer, the question, the stored key ideas and context,
   and never raw commentary text.
 - The live note MUST pass code checks (length limit, only commentator names attached to
@@ -61,7 +66,7 @@ Rationale: users must be able to see who said what; an invented citation would b
 
 ### V. Offline-First Study
 
-- Reading, Read mode and the comparison card MUST work offline from cached content packs.
+- Reading, navigation and the comparison card MUST work offline from cached content packs.
 - When the live comparison is unavailable (offline, error, timeout, daily cap), the app MUST
   immediately show the stored key ideas as "Here's what commentators noticed", save the
   answer, and fill in the personal result later when possible.
@@ -87,13 +92,14 @@ Rationale: reflections on faith are personal. The safest data is data the server
 - `content/schema/section.schema.json` is the single contract for packs. A change MUST
   update the schema first, then `shared/` models, pipeline output and Swift `ContentKit`
   models in the same change, with contract tests on both sides.
-- Question and key idea IDs are permanent and never reused. Retired questions stay in packs,
-  marked retired. Pack updates are additive and versioned; nothing a user has answered is
-  ever deleted.
+- Question and key idea IDs are permanent and never reused, in any channel. Retired
+  questions stay in packs, marked retired. Live pack updates are additive and versioned;
+  nothing a user has answered is ever deleted. The draft channel is a staging area and MAY be
+  republished from scratch.
 - Saved reflections MUST snapshot the question and key ideas exactly as shown, so they stay
   complete whatever later packs change.
-- No pack is published without passing automatic checks, model review and a human approval
-  gate.
+- No pack reaches the live channel without passing the automatic quality gate and the owner's
+  explicit promotion from the draft channel, made after reading that content in the app.
 
 Rationale: users' saved reflections must never break, and three codebases read the same data.
 
@@ -125,8 +131,9 @@ Rationale: a subscriber must cost cents a month to serve, even under misuse.
   button, and 44pt minimum touch targets.
 - Colors MUST come from DesignSystem tokens (light and dark). Prices MUST come from StoreKit.
   No hard-coded colors or prices in app code.
-- `docs/design/DESIGN.md` and its mockups are the UI source of truth. UI specs MUST link the
-  relevant section and mockup.
+- `docs/design/README.md` (the "book feel" design) and `docs/design/DESIGN.md` (paywall,
+  fallback rules, copy), with the screens in `docs/design/screens/`, are the UI source of truth.
+  UI specs MUST link the relevant section and screen.
 
 Rationale: a reading app is used by people of every age and eyesight; tokens keep dark mode
 and future theming correct by construction.
@@ -144,10 +151,13 @@ and future theming correct by construction.
   (Sonnet-class model, batch inference where possible). Prompts are versioned files in
   `pipeline/prompts/`; outputs are keyed by book, section and prompt version, so re-runs are
   idempotent.
-- **Content delivery:** versioned packs in S3 behind CloudFront; one study file per book shared
-  by all translations, plus one verse-text file per translation.
-- **Infrastructure:** Terraform only (modules `api`, `pipeline`, `storage`, `cdn`; envs `dev`,
-  `prod`), least-privilege IAM per function. No console-only resources.
+- **Content delivery:** versioned packs in S3 behind one CloudFront distribution, in two
+  channels: `draft/` (what the owner's TestFlight and debug builds read) and `live/` (what
+  readers get). One study file per book shared by all translations, plus one verse-text file
+  per translation.
+- **Infrastructure:** Terraform only, one AWS environment with one root in `infra/` (modules
+  `api`, `pipeline`, `storage`, `cdn`). Draft and live are channels of the packs bucket, not
+  separate infrastructure. Least-privilege IAM per function. No console-only resources.
 - **Python tooling:** uv workspace, ruff, mypy `--strict`, pytest.
 - **Secrets:** never in the repo. No `.env` files, Terraform state or signing keys committed.
 
@@ -162,16 +172,21 @@ and future theming correct by construction.
 - **Testing:**
   - Contract tests MUST cover the pack schema (pipeline output and app decoding) and the
     compare API (backend and APIClient).
-  - Business rules MUST have unit tests: free count, re-check limits, level selection,
+  - Business rules MUST have unit tests: free count, re-check limits, question unlocks,
     caching, fallbacks.
   - Prompt changes MUST be evaluated against a fixed set of sample sections before a new
     prompt version is used for publishing.
+  - The model grader in the quality gate MUST be calibrated against the owner's own grades
+    (at least 85% agreement on at least 30 items) before its scores gate a promotion to live,
+    and recalibrated whenever its prompt or model changes.
 - **Gates before merge:** `make lint` and `make test` pass. `make ios-test` passes for app
   changes. Schema changes include updated models on all three sides.
 - **Commits:** small, with a scope prefix (`ios:`, `backend:`, `pipeline:`, `infra:`,
   `content:`, `docs:`).
-- **Content review:** the launch book gets a full human read-through. Later books get model
-  review plus human spot checks of flagged items.
+- **Content review:** every book passes the automatic quality gate and is published to the
+  draft channel. The owner reads it in the app and promotes it to live. After launch, reader
+  feedback
+  ("not helpful" flags, problem reports) drives retire-and-replace in later versions.
 
 ## Governance
 
@@ -186,4 +201,4 @@ and future theming correct by construction.
   implementing any feature that touches content, privacy or payments.
 - Runtime guidance for agents lives in the root `CLAUDE.md` and per-area `CLAUDE.md` files.
 
-**Version**: 1.0.1 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-04
+**Version**: 1.3.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-17

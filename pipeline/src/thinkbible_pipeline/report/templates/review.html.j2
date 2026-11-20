@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ book_name }} scorecard</title>
+<style>
+/* The app's palette (docs/design/README.md), set for reading a whole book's content in one page. */
+:root {
+  --desk: #F3EEE3; --page: #FDFBF6; --ink: #1C1C1E; --ink-page: #2A2620; --ink-2: #5E5E63;
+  --ink-3: #8A8A90; --rule: #E2D9C6; --rule-page: #EFE7D6; --rubric: #2B4C7E; --rubric-tint: #E7EDF6;
+  --bad: #9B2C1F; --bad-tint: #F8E4DF; --warn: #8A5A00; --warn-tint: #FBF0D9;
+  --serif: ui-serif, "New York", "Iowan Old Style", Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --desk: #151311; --page: #1F1C18; --ink: #F2F2F4; --ink-page: #E9E3D6; --ink-2: #B3ADA3;
+  --ink-3: #8F887D; --rule: #3A342B; --rule-page: #332E26; --rubric: #8FB0E0; --rubric-tint: #24303F;
+  --bad: #F0A496; --bad-tint: #3A1F1A; --warn: #E8C27A; --warn-tint: #3A2F18; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--desk); color: var(--ink); font: 14px/1.5 var(--sans); }
+.wrap { max-width: 920px; margin: 0 auto; padding: 24px 16px 64px; display: flex; flex-direction: column; gap: 18px; }
+h1 { font: 700 26px/1.2 var(--serif); margin: 0; }
+h1 span { color: var(--rubric); }
+.meta { color: var(--ink-2); font-size: 13px; }
+.meta code { font: 12px var(--mono); }
+.banner { background: var(--warn-tint); color: var(--warn); border-radius: 10px; padding: 10px 14px; font-weight: 600; }
+.banner.ok { background: var(--rubric-tint); color: var(--rubric); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.tile { background: var(--page); border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px; }
+.tile b { display: block; font: 700 24px/1.1 var(--sans); font-variant-numeric: tabular-nums; }
+.tile span { color: var(--ink-2); font-size: 12.5px; }
+.tile.bad b { color: var(--bad); }
+.panel { background: var(--page); border: 1px solid var(--rule); border-radius: 12px; padding: 12px 16px; }
+.panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .6px; margin: 0 0 6px; color: var(--ink-2); }
+.panel ul { margin: 0; padding-left: 18px; }
+.controls { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.controls button { font: 600 12px var(--sans); border: 1px solid var(--rule); background: var(--page); color: var(--ink); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.controls button[aria-pressed="true"] { background: var(--ink); color: var(--desk); }
+.section { background: var(--page); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; }
+.section.problem { border-color: var(--bad); }
+.s-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--rule-page); }
+.s-head h3 { margin: 0; font: 600 17px/1.3 var(--serif); }
+.s-head .id { font: 12px var(--mono); color: var(--ink-3); }
+.pill { font-size: 11px; font-weight: 700; border-radius: 6px; padding: 2px 7px; white-space: nowrap; }
+.pill.bad { background: var(--bad-tint); color: var(--bad); }
+.pill.warn { background: var(--warn-tint); color: var(--warn); }
+.pill.info { background: var(--rubric-tint); color: var(--rubric); }
+.s-body { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+@media (max-width: 760px) { .s-body { grid-template-columns: minmax(0, 1fr); } }
+.passage { padding: 14px 16px; border-right: 1px solid var(--rule-page); font: 15px/1.6 var(--serif); color: var(--ink-page); }
+@media (max-width: 760px) { .passage { border-right: 0; border-bottom: 1px solid var(--rule-page); } }
+.passage sup { color: var(--rubric); font: 600 10px var(--sans); margin-right: 2px; }
+.content { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.label { font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--ink-3); }
+.idea { border-left: 2px solid var(--rubric); padding-left: 10px; }
+.idea .t { font-weight: 600; }
+.idea .b { color: var(--ink-page); }
+.idea .src { color: var(--ink-3); font-size: 12.5px; }
+details summary { cursor: pointer; color: var(--ink-2); font-size: 12.5px; }
+blockquote { margin: 4px 0 0; padding-left: 10px; border-left: 2px solid var(--rule); color: var(--ink-2); font-size: 13px; }
+.q { font: italic 15px/1.45 var(--serif); color: var(--ink-page); }
+.qmeta { font-size: 12px; color: var(--ink-3); }
+.qlist { display: flex; flex-direction: column; gap: 10px; margin: 0; padding-left: 20px; }
+.note { color: var(--ink-page); }
+.dropped li { margin-bottom: 4px; }
+.mono { font: 12px var(--mono); }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div>
+    <h1>{{ book_name }} <span>scorecard</span></h1>
+    <div class="meta">
+      Run <code>{{ card.run_id or "—" }}</code> · {{ card.generated_at }} · ${{ "%.2f"|format(card.cost_usd) }}
+      {% if card.models %} · {{ card.models|join(", ") }}{% endif %}
+      {% if card.prompt_versions %} · prompts {% for k, v in card.prompt_versions|dictsort %}<code>{{ k }} {{ v }}</code>{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
+    </div>
+  </div>
+  {% if card.promotable %}<div class="banner ok">Promotable: graded, calibrated, and above every threshold.</div>
+  {% else %}<div class="banner">Not promotable yet: {{ card.blockers|join("; ") }}.</div>{% endif %}
+  <div class="tiles">
+    <div class="tile"><b>{{ card.sections }}</b><span>sections</span></div>
+    <div class="tile {{ 'bad' if card.failed_sections }}"><b>{{ card.failed_sections|length }}</b><span>failed</span></div>
+    <div class="tile"><b>{{ card.no_prompt|length }}</b><span>with no question</span></div>
+    <div class="tile"><b>{{ card.kept_ideas }}</b><span>key ideas kept</span></div>
+    <div class="tile"><b>{{ card.kept_questions }}</b><span>questions kept</span></div>
+    {% set t = card.thresholds %}
+    <div class="tile {{ 'bad' if card.idea_pass_rate is not none and card.idea_pass_rate < t.min_idea_pass_rate }}"><b>{{ "—" if card.idea_pass_rate is none else ((card.idea_pass_rate * 100)|round|int|string + "%") }}</b><span>idea pass rate (needs {{ (t.min_idea_pass_rate * 100)|round|int }}%)</span></div>
+    <div class="tile {{ 'bad' if card.strong_first_rate is not none and card.strong_first_rate < t.min_strong_first_rate }}"><b>{{ "—" if card.strong_first_rate is none else ((card.strong_first_rate * 100)|round|int|string + "%") }}</b><span>first questions graded 4-5 (needs {{ (t.min_strong_first_rate * 100)|round|int }}%)</span></div>
+    <div class="tile {{ 'bad' if card.full_set_rate is not none and card.full_set_rate < t.min_full_set_rate }}"><b>{{ "—" if card.full_set_rate is none else ((card.full_set_rate * 100)|round|int|string + "%") }}</b><span>sections with a full set of questions (needs {{ (t.min_full_set_rate * 100)|round|int }}%)</span></div>
+    <div class="tile"><b>{{ "—" if card.question_pass_rate is none else ((card.question_pass_rate * 100)|round|int|string + "%") }}</b><span>candidate questions passing (information)</span></div>
+    {% if card.calibration %}<div class="tile {{ 'bad' if not card.calibration.current }}"><b>{{ "—" if card.calibration.agreement is none else ((card.calibration.agreement * 100)|round|int|string + "%") }}</b><span>grader agreement with you{% if card.calibration.items %} ({{ card.calibration.items }} items){% endif %}</span></div>{% endif %}
+    <div class="tile"><b>{{ variants }}</b><span>KJV wording variants</span></div>
+    <div class="tile"><b>{{ notes }}</b><span>manuscript notes</span></div>
+    {% for st, n in card.dropped_by_stage|dictsort %}<div class="tile"><b>{{ n }}</b><span>dropped by {{ st }}</span></div>{% endfor %}
+    {% if card.not_generated %}<div class="tile"><b>{{ card.not_generated|length }}</b><span>not generated yet</span></div>{% endif %}
+  </div>
+  {% if card.failed_sections %}
+  <div class="panel"><h2>Failed sections</h2><ul>{% for f in card.failed_sections %}<li><a href="#{{ f.section_id }}" class="mono">{{ f.section_id }}</a> · {{ f.reason }}</li>{% endfor %}</ul></div>
+  {% endif %}
+  {% if card.weak_live %}
+  <div class="panel"><h2>Live items graded {{ 2 }} or less</h2><p class="qmeta">Live wording is frozen: <code>retire --item ID --replace</code> fixes an item.</p><ul>{% for f in card.weak_live %}<li class="mono">{{ f.section_id }}</li> {{ f.reason }}{% endfor %}</ul></div>
+  {% endif %}
+  {% if card.no_prompt %}
+  <div class="panel"><h2>Sections with no question</h2><ul>{% for f in card.no_prompt %}<li><a href="#{{ f.section_id }}" class="mono">{{ f.section_id }}</a> · {{ f.reason or "no reason given" }}</li>{% endfor %}</ul></div>
+  {% endif %}
+  <div class="panel" id="introduction"><h2>About {{ book_name }} <span class="qmeta">(the first post of the book)</span></h2>
+    {% if intro and intro.introduction %}
+      <div class="note">{{ intro.introduction.text }}</div>
+      <div class="qmeta">{% for c in intro.introduction.sources %}{{ names.get(c, c) }}{% if not loop.last %} · {% endif %}{% endfor %}{% if intro.grade %} · graded {{ intro.grade.score }}: {{ intro.grade.notes }}{% endif %}</div>
+      <details><summary>In their words</summary>{% for q in intro.introduction.quotes %}<blockquote><b>{{ names.get(q.commentator, q.commentator) }}:</b> “{{ q.text }}”</blockquote>{% endfor %}</details>
+    {% elif intro and intro.problem %}
+      <div class="qmeta"><b>Not usable:</b> {{ intro.problem }}{% if intro.grade %} (graded {{ intro.grade.score }}: {{ intro.grade.notes }}){% endif %}</div>
+    {% elif card.introduction_problem %}
+      <div class="qmeta">{{ card.introduction_problem }}</div>
+    {% else %}
+      <div class="qmeta">No introduction: the commentators give no preface to this book, or the first section isn't generated yet.</div>
+    {% endif %}
+  </div>
+
+  <div class="controls" role="group" aria-label="View">
+    <span>Passage</span>
+    <button type="button" data-tr="bsb" aria-pressed="true">BSB</button>
+    <button type="button" data-tr="kjv" aria-pressed="false">KJV</button>
+    <label><input type="checkbox" id="problems-only"> Only sections with problems</label>
+  </div>
+
+  {% for s in sections %}
+  <article class="section {{ 'problem' if s.failed }}" id="{{ s.entry.id }}" data-problem="{{ 'yes' if s.problem else 'no' }}">
+    <header class="s-head">
+      <div><h3>{{ s.entry.title }}</h3><div class="id">{{ s.entry.id }} · {{ s.ref }}</div></div>
+      <div>
+        {% if s.failed %}<span class="pill bad">failed: {{ s.failed }}</span>{% endif %}
+        {% if not s.generated %}<span class="pill warn">not generated</span>{% endif %}
+        {% if s.no_prompt %}<span class="pill info">no question</span>{% endif %}
+        {% if s.central_note %}<span class="pill info">question 1 on another idea</span>{% endif %}
+        {% if s.entry.title_source == "split" %}<span class="pill warn">provisional title</span>{% endif %}
+        {% if s.generated %}<span class="pill info">${{ "%.3f"|format(s.cost) }}</span>{% endif %}
+      </div>
+    </header>
+    <div class="s-body">
+      <div class="passage">
+        {% for t in ["bsb", "kjv"] %}<p data-tr="{{ t }}" {{ 'class=hidden' if t == 'kjv' }}>{% for n, words in s.passage[t] %}{% if n == "[title]" %}<em>{{ words }}</em> {% else %}<sup>{{ n }}</sup>{{ words }} {% endif %}{% endfor %}</p>{% endfor %}
+      </div>
+      <div class="content">
+        {% if s.generated %}
+        <div><div class="label">Key ideas (in the passage; questions aim at these)</div>
+          {% for i in s.ideas if not i.background %}
+          <div class="idea">
+            <div class="t">{{ i.title }} <span class="pill info">{{ i.scope }}</span>{% if i.central %} <span class="pill info">central meaning</span>{% endif %}{% if i.agreed %} <span class="pill info">agreed</span>{% endif %}</div>
+            <div class="b">{{ i.body }}</div>
+            <div class="src">{{ i.names|join(" · ") }} · <span class="mono">{{ i.id }}</span>{% if i.grade %} · graded {{ i.grade.score }}: {{ i.grade.notes }}{% endif %}</div>
+            <details><summary>In their words</summary>{% for who, quote in i.quotes %}<blockquote><b>{{ who }}:</b> “{{ quote }}”</blockquote>{% endfor %}</details>
+          </div>
+          {% else %}<div class="qmeta">No key ideas kept.</div>{% endfor %}
+          {% for i in s.ideas if i.background %}{% if loop.first %}<div class="label">More from the commentators (background, never counted as missed)</div>{% endif %}
+          <div class="idea">
+            <div class="t">{{ i.title }} <span class="pill info">{{ i.scope }}</span></div>
+            <div class="b">{{ i.body }}</div>
+            <div class="src">{{ i.names|join(" · ") }} · <span class="mono">{{ i.id }}</span>{% if i.grade %} · graded {{ i.grade.score }}: {{ i.grade.notes }}{% endif %}</div>
+            <details><summary>In their words</summary>{% for who, quote in i.quotes %}<blockquote><b>{{ who }}:</b> “{{ quote }}”</blockquote>{% endfor %}</details>
+          </div>
+          {% endfor %}
+        </div>
+        {% if s.questions %}
+        <div><div class="label">Questions, in the order a reader meets them (one a week)</div>
+          {% if s.central_note %}<div class="qmeta">{{ s.central_note }}</div>{% endif %}
+          <ol class="qlist">
+            {% for q in s.questions %}
+            <li>
+              <div class="q">{{ q.text }}</div>
+              <div class="qmeta">{% if q.grade %}<b>graded {{ q.grade.score }}{% if q.grade.focus %} · {{ q.grade.focus }}{% endif %}</b>: {{ q.grade.notes }}<br>{% endif %}{{ q.type }} · {{ q.scope }} · aims at: {{ q.targets|join("; ") }} · <span class="mono">{{ q.id }}</span></div>
+            </li>
+            {% endfor %}
+          </ol>
+        </div>
+        {% elif s.no_prompt %}<div class="note"><span class="label">No question</span><br>{{ s.no_prompt_reason }}</div>{% endif %}
+        <div><div class="label">Context</div><div class="note">{{ s.context }}</div>{% if s.context_grade %}<div class="qmeta">graded {{ s.context_grade.score }}: {{ s.context_grade.notes }}</div>{% endif %}</div>
+        {% if s.views_differ %}<div><div class="label">Views differ</div><div class="note">{{ s.views_differ }}</div>{% if s.views_grade %}<div class="qmeta">graded {{ s.views_grade.score }}: {{ s.views_grade.notes }}</div>{% endif %}</div>{% endif %}
+        {% if s.alignment %}<div><div class="label">Alignment (for KJV readers)</div><ul class="dropped">
+          {% for a in s.alignment %}<li>{% if a.kind == "note" %}<b>Manuscript note</b> · {{ a.verses }}<br><em>{{ a.text }}</em>{% elif a.kind == "variant" %}<b>KJV variant</b> for <span class="mono">{{ a.id }}</span> ({{ a.words|join(", ") }})<br>BSB: <em>{{ a.text }}</em><br>KJV: <em>{{ a.kjv }}</em>{% else %}<b>Variant refused</b> for <span class="mono">{{ a.id }}</span>: {{ a.reason }}<br><em>{{ a.kjv }}</em>{% endif %}</li>{% endfor %}
+        </ul></div>{% endif %}
+        <details><summary>Pipeline details: summary, commentary given, dropped items ({{ s.dropped|length }})</summary>
+          <p class="qmeta">Summary for the next section: “{{ s.summary or "" }}”</p>
+          <p class="qmeta">Commentary given: {% for who, tokens, refs, trimmed in s.excerpts %}{{ who }} {{ "{:,}".format(tokens) }} tokens{% if refs %} (follows {{ refs|join(", ") }}){% endif %}{% if trimmed %}, trimmed{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}</p>
+          {% if s.dropped %}<ul class="dropped">{% for d in s.dropped %}<li><span class="mono">{{ d.id }}</span> · {{ d.reason }}<br><em>{{ d.text }}</em></li>{% endfor %}</ul>{% endif %}
+        </details>
+        {% else %}
+        <div class="qmeta">Not generated yet: run <code>--stage generate</code>.</div>
+        {% endif %}
+      </div>
+    </div>
+  </article>
+  {% endfor %}
+</main>
+<script>
+document.querySelectorAll("button[data-tr]").forEach(function (b) {
+  b.addEventListener("click", function () {
+    document.querySelectorAll("button[data-tr]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+    document.querySelectorAll("p[data-tr]").forEach(function (p) { p.classList.toggle("hidden", p.dataset.tr !== b.dataset.tr); });
+  });
+});
+document.getElementById("problems-only").addEventListener("change", function (e) {
+  document.querySelectorAll(".section").forEach(function (s) { s.classList.toggle("hidden", e.target.checked && s.dataset.problem !== "yes"); });
+});
+</script>
+</body>
+</html>

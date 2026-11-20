@@ -1,0 +1,96 @@
+"""Request objects shared by the CLI and a future cloud trigger (contracts/cli.md).
+
+The CLI parses flags into these; API Gateway or Step Functions will send the same JSON
+(camelCase: ``capUsd``, ``autoApprove``).
+"""
+
+from __future__ import annotations
+
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic.alias_generators import to_camel
+
+from thinkbible_core.ids import BookInfo, UnknownBookError, resolve_book
+
+# `all` runs sections through report and stops at "ready for review" (contracts/cli.md).
+STAGE_ORDER: tuple[str, ...] = (
+    "sections",
+    "intro",
+    "summaries",
+    "generate",
+    "align",
+    "check",
+    "review",
+    "report",
+)
+MODEL_STAGES = frozenset({"intro", "summaries", "generate", "align", "review"})
+
+
+class _Request(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=to_camel, populate_by_name=True, extra="forbid", frozen=True
+    )
+
+    book: str
+
+    @field_validator("book")
+    @classmethod
+    def _known_book(cls, v: str) -> str:
+        try:
+            resolve_book(v)
+        except UnknownBookError as e:
+            raise ValueError(str(e)) from e
+        return v
+
+    @property
+    def book_info(self) -> BookInfo:
+        return resolve_book(self.book)
+
+
+class RunRequest(_Request):
+    stages: Annotated[list[str], Field(min_length=1)]
+    sections: list[str] | None = None
+    fresh: bool = False
+    refresh: bool = False
+    # A run that includes `report` and passes publishes to the draft channel unless this is False
+    # (`--no-publish`: test a few sections and read the report without publishing).
+    publish: bool = True
+    cap_usd: Annotated[float, Field(gt=0)] | None = None  # None = 2x the estimate
+    auto_approve: bool = False
+    # The stages marked `batch` in settings.toml go through the Message Batches API (T087).
+    batch: bool = False
+
+    @field_validator("stages", mode="before")
+    @classmethod
+    def _split(cls, v: object) -> object:
+        return [s.strip() for s in v.split(",") if s.strip()] if isinstance(v, str) else v
+
+    @field_validator("sections", mode="before")
+    @classmethod
+    def _split_sections(cls, v: object) -> object:
+        return [s.strip() for s in v.split(",") if s.strip()] if isinstance(v, str) else v
+
+    @field_validator("stages")
+    @classmethod
+    def _expand(cls, v: list[str]) -> list[str]:
+        out: list[str] = []
+        for s in v:
+            names = STAGE_ORDER if s == "all" else (s,)
+            for name in names:
+                if name not in STAGE_ORDER:
+                    raise ValueError(f"unknown stage {name!r}; expected one of {STAGE_ORDER}")
+                if name not in out:
+                    out.append(name)
+        # Always run in pipeline order, whatever order they were given in.
+        return sorted(out, key=STAGE_ORDER.index)
+
+
+class PublishRequest(_Request):
+    """Publish the book's drafts to the draft channel (R14). A passing run does this itself."""
+
+    dry_run: bool = False
+
+
+class PromoteRequest(_Request):
+    """Copy the book's current draft version to the live channel (R14, FR-021)."""

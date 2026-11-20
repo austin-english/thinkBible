@@ -1,0 +1,33 @@
+{
+  "formatVersion": 1,
+  "book": { "id": "MRK", "name": "Mark" },
+  "translation": { "id": "bsb", "name": "Berean Standard Bible", "abbreviation": "BSB" },
+  "packVersion": "1.1.0",
+  "chapters": [
+    {
+      "number": 1,
+      "verses": [
+        { "number": 1, "text": "This is the beginning of the gospel of Jesus Christ, the Son of God.", "paragraphStart": true },
+        {
+          "number": 2,
+          "text": "As it is written in Isaiah the prophet: “Behold, I will send My messenger ahead of You, who will prepare Your way.”",
+          "lines": [
+            { "text": "As it is written in Isaiah the prophet:", "indent": 0 },
+            { "text": "“Behold, I will send My messenger ahead of You,", "indent": 1 },
+            { "text": "who will prepare Your way.”", "indent": 2 }
+          ]
+        },
+        { "number": 3, "text": "“A voice of one calling in the wilderness, ‘Prepare the way for the Lord, make straight paths for Him.’”" },
+        { "number": 4, "text": "John the Baptist appeared in the wilderness, preaching a baptism of repentance for the forgiveness of sins.", "paragraphStart": true },
+        { "number": 5, "text": "People went out to him from all the Judean countryside and all the people of Jerusalem. Confessing their sins, they were baptized by him in the Jordan River." },
+        { "number": 6, "text": "John wore clothing of camel’s hair, with a leather belt around his waist, and he ate locusts and wild honey." },
+        { "number": 7, "text": "And he began to preach, “After me will come One more powerful than I, the straps of whose sandals I am not worthy to stoop down and untie." },
+        { "number": 8, "text": "I baptize you with water, but He will baptize you with the Holy Spirit.”" },
+        { "number": 9, "text": "In those days Jesus came from Nazareth in Galilee and was baptized by John in the Jordan.", "paragraphStart": true },
+        { "number": 10, "text": "As soon as Jesus came up out of the water, He saw the heavens breaking open and the Spirit descending on Him like a dove." },
+        { "number": 11, "text": "And a voice came from heaven: “You are My beloved Son; in You I am well pleased.”" }
+      ]
+    }
+  ],
+  "omittedVerses": [{ "chapter": 7, "verse": 16 }]
+}

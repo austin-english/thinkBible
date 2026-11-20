@@ -4,15 +4,20 @@
 
 **Created**: 2026-11-03
 
+**Updated**: 2026-11-10 for the "book feel" design: there is no Skip button, so "skipped" is
+now "passed" (the question was on screen and the card scrolled past without an answer), and "Not a
+helpful question?" lives in the card's `…` menu.
+
 **Status**: Draft
 
 **Input**: User description: "Feedback and question analytics (brief spec 8): anonymous per-question
-counts (shown, answered, skipped, 'not helpful', and how often each targeted idea was caught) feed
+counts (shown, answered, passed, 'not helpful', and how often each targeted idea was caught) feed
 a review queue for the content owner. The worst performers come first, and a maintenance run can
 retire or replace weak questions and swap levels whose difficulty is inverted. No answer text and
-no personal data."
+no personal data." (Revised 2026-11-17: questions have no levels, so level swaps and the
+"inverted difficulty" signal are gone.)
 
-**References**: brief "Question freshness → Feedback loop", "Level checks", "Validation", data
+**References**: brief "Question freshness → Feedback loop", "Validation", data
 model rows QuestionStats and PipelineState; constitution principles III, VI, VII. Depends on 003
 (compare), 004 ("Not a helpful question?") and 001 (refresh runs).
 
@@ -23,25 +28,26 @@ extra.
 
 ### User Story 1 - Anonymous question signals are collected (Priority: P1)
 
-As readers use Study mode, the system counts, per question: times shown, answered, skipped, marked
-"not helpful", and, for answered questions, how often each targeted key idea was caught. Nothing
+As readers use the feed with questions on, the system counts, per question: times shown, answered,
+passed, marked "not helpful", and, for answered questions, how often each targeted key idea was caught. Nothing
 identifies the reader, and no answer text is involved.
 
 **Why this priority**: Without signals there is nothing to review. The TestFlight validation
 ("fewer than about 1 in 10 questions marked not helpful") depends on them.
 
-**Independent Test**: In a test build, show, answer, skip and mark not helpful a known set of
+**Independent Test**: In a test build, show, answer, pass and mark not helpful a known set of
 questions. Confirm the aggregate counts match, and that the stored records contain no device ID,
 answer text or timestamp finer than a day.
 
 **Acceptance Scenarios**:
 
-1. **Given** a question card opens in the asking state, **When** it is the first time that
-   question is shown on this device, **Then** "shown" is counted once for that question.
-2. **Given** a reader submits an answer that is checked live, **When** the result is returned,
+1. **Given** a question footer is on screen, **When** it is the first time that question is shown
+   on this device, **Then** "shown" is counted once for that question.
+2. **Given** a reader posts an answer that is checked live, **When** the result is returned,
    **Then** "answered" and each covered target idea's "caught" count go up.
-3. **Given** a reader taps Skip or "Not a helpful question?", **When** the action completes,
-   **Then** "skipped" or "not helpful" is counted for that question.
+3. **Given** a reader scrolls past an unanswered card after its last page was on screen, or
+   chooses "Not a helpful question?" in the `…` menu, **When** the action completes, **Then**
+   "passed" (once per question per device) or "not helpful" is counted for that question.
 4. **Given** the device is offline, **When** events happen, **Then** they are queued on the device
    and sent later, at most once each.
 5. **Given** any signal, **When** it is stored, **Then** it holds only the question ID, pack
@@ -52,31 +58,29 @@ answer text or timestamp finer than a day.
 ### User Story 2 - Review queue, worst first (Priority: P1)
 
 The content owner opens a review report for a book and sees questions ranked worst first, by
-not-helpful rate, skip rate and catch-rate anomalies, each with its counts, section, level and
-text. They can choose to retire it, request a replacement, or swap levels.
+not-helpful rate, pass rate and catch-rate anomalies, each with its counts, section, place in
+the section's order and text. They can choose to retire it or request a replacement.
 
 **Why this priority**: Turns signals into better content. This is the brief's "feedback loop".
 
-**Independent Test**: Seed stats where one question has a 30% not-helpful rate and another has a
-Level 2 caught more often than its section's Level 1. Confirm both appear at the top with the right
+**Independent Test**: Seed stats where one question has a 30% not-helpful rate and another
+is passed without an answer 60% of the time. Confirm both appear at the top with the right
 reasons.
 
 **Acceptance Scenarios**:
 
 1. **Given** stats for a book, **When** the owner generates the review report, **Then** questions
-   are ranked by a combined weakness score, with the reason shown (high not-helpful, high skip,
-   inverted level difficulty, low sample size flagged as such).
+   are ranked by a combined weakness score, with the reason shown (high not-helpful, high pass rate,
+   a target idea almost never caught, low sample size flagged as such).
 2. **Given** a question with too few shows (below a minimum sample), **When** ranked, **Then** it
    is listed separately as "not enough data", not ranked as weak.
-3. **Given** a section where Level 2 is caught more often than Level 1, **When** the report is
-   generated, **Then** that section is flagged "levels inverted" with both rates.
 
 ---
 
 ### User Story 3 - Maintenance run fixes weak questions (Priority: P2)
 
-From the review queue, the owner marks questions to retire and sections that need a replacement or
-level swap. A targeted refresh run produces new questions for only those sections, reusing the
+From the review queue, the owner marks questions to retire and sections that need a
+replacement. A targeted refresh run produces new questions for only those sections, reusing the
 stored key ideas. It goes through the normal checks and human review, and publishes an additive
 pack version.
 
@@ -93,8 +97,6 @@ question, and changes no key ideas.
    is present with status retired and is never served as a new question.
 2. **Given** a section marked for replacement, **When** the refresh runs, **Then** only that
    section's questions are generated, against its existing key ideas, with new IDs.
-3. **Given** a level swap, **When** it is approved, **Then** the two questions' levels change in the
-   next pack version, their IDs are unchanged, and saved reflections are unaffected.
 
 ### Edge Cases
 
@@ -104,8 +106,11 @@ question, and changes no key ideas.
   they are rate-limited per device per day.
 - Pack version changes mid-collection: stats are kept per question ID across versions, and can
   be filtered by version.
-- A question that is shown but never answered or skipped (the reader scrolled past): it counts as
-  shown only. The skip rate uses explicit skips.
+- A question shown but scrolled past before the card's last page was on screen: it counts as shown
+  only. The pass rate uses cards whose last page was seen.
+- A question passed and later answered: it counts as both passed and answered. The review report
+  shows how many passes turned into answers.
+- Readers with Show questions off: no question is shown, so nothing is counted.
 - Analytics collection fails: the reader experience is never affected. Events are best-effort.
 
 ## Requirements *(mandatory)*
@@ -113,21 +118,21 @@ question, and changes no key ideas.
 ### Functional Requirements
 
 - **FR-001**: The system MUST collect per-question counts of: shown (first time per device), answered
-  (live-checked), skipped, not helpful, and per-target-idea caught counts.
+  (live-checked), passed, not helpful, and per-target-idea caught counts.
 - **FR-002**: Signals MUST be anonymous: no device identifier, account, IP address, answer text or
   sub-day timestamp is stored with them.
 - **FR-003**: "Answered" and "caught" counts MUST be recorded by the compare service from the
   result, never from answer text.
-- **FR-004**: Shown, skipped and not-helpful events MUST be sent from the app, queued while offline,
+- **FR-004**: Shown, passed and not-helpful events MUST be sent from the app, queued while offline,
   sent at most once, and rate-limited per attested device.
   [NEEDS CLARIFICATION: How do app-side events reach the server? (a) a small anonymous events
   endpoint added to `api/openapi.yaml`, which amends the "compare is the only live API" rule in
-  CLAUDE.md; (b) piggyback queued events on the next compare call, which loses data from Read-mode
-  or free-limit users; (c) use Apple's App Analytics / TelemetryDeck-style third-party analytics.]
+  CLAUDE.md; (b) piggyback queued events on the next compare call, which loses data from readers who
+  never post or are past the free limit; (c) use Apple's App Analytics / TelemetryDeck-style third-party analytics.]
 - **FR-005**: The owner MUST be able to produce a review report per book that ranks questions by
-  weakness (not-helpful rate, skip rate, inverted level difficulty) with a minimum sample size, and
+  weakness (not-helpful rate, pass rate, rarely caught target ideas) with a minimum sample size, and
   lists low-data questions separately.
-- **FR-006**: The owner MUST be able to mark questions for retirement, replacement or a level swap,
+- **FR-006**: The owner MUST be able to mark questions for retirement or replacement,
   and run a targeted refresh limited to those sections that reuses stored key ideas.
 - **FR-007**: Refresh output MUST go through the same checks, model review, human approval and
   additive publishing as spec 001, and never change or reuse IDs or key ideas.
@@ -135,10 +140,10 @@ question, and changes no key ideas.
 
 ### Key Entities
 
-- **Question stats**: question ID, pack version, day, and counts of shown, answered, skipped and not
+- **Question stats**: question ID, pack version, day, and counts of shown, answered, passed and not
   helpful, plus caught counts per target idea ID.
-- **Review item**: question ID, section, level, weakness reasons, counts, owner decision (retire,
-  replace, swap, keep).
+- **Review item**: question ID, section, place in the section's order, weakness reasons, counts,
+  owner decision (retire, replace, keep).
 - **Refresh run**: book, sections, prompt version, resulting pack version.
 
 ## Success Criteria *(mandatory)*

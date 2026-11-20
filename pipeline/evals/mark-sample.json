@@ -1,0 +1,9 @@
+{
+  "book": "mark",
+  "note": "The fixed eval sample (T083, FR-029): 21 sections across Mark, one of each kind of passage. Only one is from Mark 1, whose questions the grader's examples come from.",
+  "sections": [
+    "mrk-1-16", "mrk-2-1", "mrk-2-13", "mrk-3-1", "mrk-3-13", "mrk-4-1", "mrk-4-35",
+    "mrk-5-21", "mrk-6-45", "mrk-7-14", "mrk-8-27", "mrk-9-1", "mrk-10-17", "mrk-10-46",
+    "mrk-11-27", "mrk-12-1", "mrk-12-28", "mrk-13-1", "mrk-14-32", "mrk-15-33", "mrk-16-9"
+  ]
+}

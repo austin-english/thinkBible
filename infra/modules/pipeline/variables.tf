@@ -1,0 +1,74 @@
+variable "sources_bucket_name" {
+  description = "The sources snapshot bucket (read-only to the pipeline)."
+  type        = string
+}
+
+variable "sources_bucket_arn" {
+  description = "ARN of the sources snapshot bucket."
+  type        = string
+}
+
+variable "packs_bucket_name" {
+  description = "The packs bucket: the pipeline writes draft/ and reads live/ (R14)."
+  type        = string
+}
+
+variable "packs_bucket_arn" {
+  description = "ARN of the packs bucket."
+  type        = string
+}
+
+variable "distribution_id" {
+  description = "The CloudFront distribution in front of the packs bucket."
+  type        = string
+}
+
+variable "distribution_arn" {
+  description = "Its ARN, for the invalidation permission."
+  type        = string
+}
+
+variable "lambda_zip_path" {
+  description = "Path to pipeline/out/lambda.zip (make lambda-bundle)."
+  type        = string
+}
+
+variable "max_concurrency" {
+  description = "Sections run in parallel per stage. Keep equal to concurrency in pipeline/config/settings.toml."
+  type        = number
+  default     = 10
+}
+
+variable "anthropic_api_key_parameter" {
+  description = "Name of the SSM SecureString holding the Claude API key (settings.toml api_key_parameter). The Lambdas may read only this parameter."
+  type        = string
+}
+
+variable "bedrock_models" {
+  description = "Bedrock model or inference-profile IDs the pipeline may invoke, exactly as in pipeline/config/settings.toml."
+  type        = list(string)
+}
+
+variable "extra_bedrock_actions" {
+  description = "Extra IAM actions, e.g. bedrock-mantle:CreateInference if settings.toml switches to the Mantle endpoint (research R19)."
+  type        = list(string)
+  default     = []
+}
+
+variable "log_retention_days" {
+  description = "CloudWatch Logs retention for the Lambdas and the state machine."
+  type        = number
+  default     = 30
+}
+
+variable "tags" {
+  description = "Tags for every resource."
+  type        = map(string)
+  default     = {}
+}
+
+variable "batch_poll_seconds" {
+  description = "Seconds the state machine waits between checks on a Message Batches batch (T087)."
+  type        = number
+  default     = 300
+}

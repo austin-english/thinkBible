@@ -1,0 +1,15 @@
+# The one AWS environment (us-west-2, account 522779858032). The pipeline values come from
+# `terraform output` in infra/ (2026-11-13: a single environment; draft and live content are two
+# channels of one packs bucket, not two copies of the infrastructure).
+region = "us-west-2"
+sources_bucket = "thinkbible-sources-522779858032"
+
+# Pipeline (infra/modules/pipeline). Re-copy after the 2026-11-13 rename: the names lost "-dev".
+drafts_bucket = "thinkbible-drafts-522779858032"
+ledger_table = "thinkbible-pipeline-runs"
+state_machine_arn = "arn:aws:states:us-west-2:522779858032:stateMachine:thinkbible-pipeline"
+
+# Published packs, prefixes draft/ and live/, and the CDN (US3, created 2026-11-18)
+packs_bucket = "thinkbible-packs-522779858032"
+distribution_id = "E1X7XF1S1Y9E2H"
+cdn_base_url = "https://d2ne647g2cqb22.cloudfront.net"

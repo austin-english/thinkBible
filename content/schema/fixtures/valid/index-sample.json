@@ -1,0 +1,28 @@
+{
+  "formatVersion": 1,
+  "generatedAt": "2026-11-05T12:00:00Z",
+  "books": [
+    {
+      "book": { "id": "MRK", "name": "Mark" },
+      "latest": "1.1.0",
+      "study": {
+        "path": "v1/books/mrk/1.1.0/study.json",
+        "sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+        "bytes": 245760
+      },
+      "verses": {
+        "bsb": {
+          "path": "v1/books/mrk/1.1.0/verses/bsb.json",
+          "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "bytes": 98304
+        },
+        "kjv": {
+          "path": "v1/books/mrk/1.1.0/verses/kjv.json",
+          "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+          "bytes": 102400
+        }
+      },
+      "minAppFormatVersion": 1
+    }
+  ]
+}

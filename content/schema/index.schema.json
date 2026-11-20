@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://thinkbible.app/schema/v1/index.schema.json",
+  "title": "PackIndex",
+  "description": "The per-environment list of published books and their latest pack versions. Published at /v1/index.json with a short cache lifetime; the app polls it to discover updates.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["formatVersion", "generatedAt", "books"],
+  "properties": {
+    "formatVersion": { "const": 1 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "books": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["book", "latest", "study", "verses"],
+        "properties": {
+          "book": { "$ref": "study-pack.schema.json#/$defs/book" },
+          "latest": { "$ref": "section.schema.json#/$defs/packVersion" },
+          "study": { "$ref": "#/$defs/file" },
+          "verses": {
+            "type": "object",
+            "description": "Verse-text file per translation id.",
+            "propertyNames": { "$ref": "section.schema.json#/$defs/translationId" },
+            "additionalProperties": { "$ref": "#/$defs/file" }
+          },
+          "minAppFormatVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Oldest pack format the app must support to use this version."
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "bytes"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Path relative to the CDN root, e.g. v1/books/mrk/1.0.0/study.json."
+        },
+        "sha256": { "$ref": "study-pack.schema.json#/$defs/sha256" },
+        "bytes": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}
