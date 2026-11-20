@@ -1,18 +1,25 @@
 # Quickstart: validate the content pipeline end to end
 
 These steps prove spec 001 works. Commands, data shapes and URLs are defined in
-[contracts/](contracts/) and [data-model.md](data-model.md).
+[contracts/](contracts/) and [data-model.md](data-model.md). Revised 2026-11-20 (T085) for the
+Claude API, batch runs and one AWS environment; the last run's results are in
+[spike-notes.md](spike-notes.md) §9.
+
+`tp` below is `uv run --package thinkbible-pipeline thinkbible-pipeline`.
+
+**Mark and Philippians are real content on the draft channel.** Steps that change content (§7,
+§8) use other books, so they never touch them.
 
 ## Prerequisites
 
 - `uv`, Python 3.12, Terraform ≥ 1.8, and the AWS CLI with a profile for the ThinkBible account
   (`export AWS_PROFILE=admin-thinkbible`).
-- Bedrock model access granted in the AWS account and region for Claude Sonnet 5.5 and Claude
-  Haiku 5.5, plus Claude Opus 5.5 for the refusal fallback: the token-per-minute quotas must be
-  above 0 (docs/aws-setup.md → Troubleshooting).
-- `pipeline/config/pricing.toml` holds current Bedrock prices (R15), and
-  `pipeline/config/aws.toml` holds the bucket names, ledger table, state machine ARN and
-  distribution ID from `terraform output`.
+- The Claude API key in the SSM SecureString `anthropic-api-key` (docs/aws-setup.md). Runs read
+  it at run time; it is never in the repo, Terraform state or logs.
+  (The `bedrock` profile, `THINKBIBLE_PROFILE=bedrock`, needs Bedrock quotas above 0 instead.)
+- `pipeline/config/pricing.toml` holds current prices (R15), and `pipeline/config/aws.toml`
+  holds the bucket names, ledger table, state machine ARN, distribution ID and CDN URL from
+  `terraform output`.
 
 ## 0. Bootstrap and offline tests (no AWS, no cost)
 
@@ -21,98 +28,120 @@ make bootstrap
 make lint && make test
 ```
 
-**Expected**: everything passes. That includes:
+**Expected**: everything passes (373 tests on 2026-11-20). No test calls a model (`FakeRunner`)
+or AWS (moto). That includes:
 - the schema contract tests;
-- the unit tests for sections, cross-references, checks, the publish check, the merge and the cost
-  cap;
-- the fake-model integration test, which runs a fixture book through `run` → the gate →
-  publish to the draft channel → `promote` against moto S3.
+- the unit tests for sections, cross-references, checks, the publish check, the cost cap and
+  running out of API credit;
+- the fixture book end to end (`test_generate_fixture_book.py`): `run` → the gate → publish to
+  the draft channel → `promote`, and a second run with nothing to do;
+- batch runs (`test_batch.py`): a batch run writes exactly what a standard run writes, at half
+  the price of the batch stages, and the cloud batch loop (`test_handlers.py`).
 
-## 1. Infrastructure (once, and after code or prompt changes)
+## 1. Infrastructure (once, and after any code, config or prompt change)
 
 ```bash
-make lambda-bundle
-cd infra && terraform init && terraform apply
+make deploy        # the Lambda bundle, then terraform apply in infra/ (owner's OK)
 ```
 
-**Expected**: private sources, drafts and packs buckets, a CloudFront distribution in front of
-the packs bucket, the run ledger table, five pipeline Lambdas and the
-`thinkbible-pipeline` state machine. Copy the outputs into `pipeline/config/aws.toml`. There is
-one environment: draft and live are the `draft/` and `live/` channels of the one packs bucket
-(contracts/cdn-layout.md). The packs bucket and CloudFront arrive with US3.
+**Expected**: private, HTTPS-only sources, drafts and packs buckets; a CloudFront distribution
+in front of the packs bucket; the run ledger table; seven pipeline Lambdas; and the
+`thinkbible-pipeline` state machine. Copy the outputs into `pipeline/config/aws.toml` the first
+time. There is one environment: draft and live are the `draft/` and `live/` channels of the one
+packs bucket (contracts/cdn-layout.md).
 
-## 2. Freeze the sources (once, about 25 minutes)
+## 2. The frozen sources
+
+**Import (once, about 25 minutes; already done):**
 
 ```bash
-uv run --package thinkbible-pipeline thinkbible-pipeline import --all
+tp import --all
 make sources-publish    # sources check → verify → sources push → verify --remote
 ```
-
-**Expected**:
-- The local cache `content/sources/{bsb,kjv,matthew-henry,jamieson-fausset-brown,adam-clarke}/*.json`
-  exists, and is gitignored. Each commentary also has its CrossWire module zip in `_module/`.
-- `sources check` passes for all five sources with 66 books each. The KJV has 31,102 verses; the
-  BSB has 31,086 and lists its 16 omitted verses. Each commentary reports its coverage.
-- `manifest.json` lists every file with its S3 key and sha256, and `verify` reports all files OK.
-- `bsb/MRK.json` has no 7:16 and does have the "BYZ and TR include 16" footnote. `kjv/MRK.json`
-  has 7:16.
-- `sources push` uploads every file. Running it again uploads nothing.
-- `verify --remote` reports every file in the sources bucket matching the manifest.
-- An interrupted import picks up where it stopped when run again.
 
 Commit **only the manifest** as
 `content: import source snapshot (BSB/KJV HelloAO V…, commentaries CrossWire)`.
 
-**Fresh clone test**: delete the cache, then pull it back.
+**Check the snapshot (free, any time):**
 
 ```bash
-rm -rf content/sources/*/
-thinkbible-pipeline sources pull
-thinkbible-pipeline verify
-```
-
-**Expected**: the identical files are restored and `verify` passes.
-
-**Tamper test (FR-002)**: change one character in `content/sources/adam-clarke/MRK.json` and run
-`thinkbible-pipeline run --book mark --stage sections`. **Expected**: exit code 2, with nothing
-written. Restore the file with `git checkout`.
-
-## 3. Calibrate the grader (once)
-
-```bash
-thinkbible-pipeline run --book mark --stage summaries,generate --local --sections mrk-1-1,mrk-1-9,mrk-1-12 --yes
-thinkbible-pipeline calibrate --label --book mark     # grade at least 30 items pass/fail
-thinkbible-pipeline calibrate                         # run the grader on them
-```
-
-**Expected**: `pipeline/evals/calibration.json` holds your 30+ grades, and `calibrate` reports the
-grader's agreement. At least 85% unlocks promotion (SC-009). Commit `calibration.json`.
-
-## 4. Generate Mark (the content spike)
-
-```bash
-make pipeline BOOK=mark STAGE=all        # adds --wait
-make status BOOK=mark                    # opens the scorecard
+tp sources check
+tp verify
+tp verify --remote
 ```
 
 **Expected**:
-1. Before starting the execution, it prints an estimate (about $8–14 for about 100 sections,
-   including the Opus grader) and the cap, and asks for confirmation. Then it prints the
-   execution ARN and a console link.
-2. The run ends with the book published to the draft channel (no failed sections).
-3. The scorecard shows the measures against their thresholds (SC-004: 90% of ideas pass, 90% of
-   sections lead with a question graded 4 or 5, 95% have a full set of questions), every dropped
-   item with its reason, the calibration agreement, and the cost.
+- `sources check` passes for all five sources with 66 books each. The KJV has 31,102 verses and
+  116 psalm titles; the BSB has 31,086 and lists its 16 omitted verses (including MRK 7:16).
+  Each commentary reports its coverage.
+- `verify` and `verify --remote` report all 333 files matching `manifest.json`, in the local
+  cache and in the sources bucket.
 
-**Prompt tuning** (no deploy): `thinkbible-pipeline run --book mark --stage generate,check,review
---local --sections mrk-1-1,mrk-1-9 --fresh` runs two sections in-process with the repo's prompts.
+**Fresh clone test**: move the cache aside (don't delete it until the pull has verified), then
+pull it back.
 
-**Spot checks** (in the scorecard):
-- `mrk-1-1`: KJV wording variant on the sandals question, and key ideas citing more than one
-  commentator. This works because cross-references to Matthew 3 were followed.
-- The Mark 7 section that contains 7:16 has a manuscript note. So does Mark 16 (ending after
-  16:8).
-- Every key idea has evidence quotes and a grade, and every question ends with "?".
+```bash
+mkdir -p /tmp/sources-aside && mv content/sources/*/ /tmp/sources-aside/
+tp sources pull
+tp verify
+diff -rq /tmp/sources-aside content/sources | grep -v manifest   # prints nothing
+rm -rf /tmp/sources-aside
+```
+
+**Expected**: 333 files downloaded (about a minute), `verify` passes and the files are
+identical.
+
+**Tamper test (FR-002)**: keep a copy of `content/sources/adam-clarke/MRK.json`, change one
+character in it, and run `tp run --book mark --stage sections --local`. **Expected**: exit code
+2, "does not match manifest … Nothing was generated". Restore the copy (or `tp sources pull`)
+and run `tp verify`. The cache is gitignored, so `git checkout` can't restore it.
+
+## 3. Calibrate the grader (once per grader, and per new kind of book)
+
+```bash
+tp calibrate --label --book mark     # grade at least 30 items pass/fail
+tp calibrate                         # run the grader on the held-out items (costs money)
+```
+
+**Expected**: `pipeline/evals/calibration.json` holds your grades, and `calibrate` reports the
+grader's agreement. At least 85% unlocks promotion (SC-009). Commit `calibration.json`. Done for
+Mark: 89% on 36 held-out items with Opus 5.5 and `review/v14`. Re-run after any grader change,
+and run a short rating round on the first book of a new kind (a letter, poetry, law, prophecy)
+before promoting it (research.md R11, "Genres").
+
+## 4. Generate a book
+
+```bash
+make pipeline BOOK=philippians STAGE=all   # a cloud run: estimate, confirm, start, wait
+make status BOOK=philippians               # runs, spend, and the scorecard (review.html)
+```
+
+**Expected**:
+1. Before starting, it prints an estimate and the cap (twice the estimate) and asks for
+   confirmation. Cloud runs use Message Batches for `generate` and `review` by default (half
+   price; `--no-batch` for the standard API), and it says so. Then it prints the execution ARN and
+   a console link.
+2. The run ends with the book published to the draft channel (no failed sections). A batch run
+   takes about 40 minutes for a short book: each batch round is about 10 minutes.
+3. The scorecard shows the measures against their thresholds (SC-004: 90% of key ideas pass,
+   90% of sections lead with a question graded 4 or 5, 95% have a full set of questions), every
+   dropped item with its reason, the calibration agreement, and the cost.
+
+Measured: Mark, 100 sections on the standard API, about $19 and 30 minutes; Philippians, 14
+sections in batches, $1.67 and 38 minutes.
+
+**Prompt tuning** (no deploy, standard API):
+`tp run --book mark --stage generate,check,review --local --sections mrk-1-1,mrk-1-9 --fresh`
+writes into the real drafts, so use it on sections you're willing to regenerate. To compare a
+prompt change without touching drafts, use `eval` (pipeline/evals/candidates/README.md).
+
+**Spot checks** (Mark, in the scorecard or the drafts):
+- `mrk-7-14` has a manuscript note on 7:16 (in the KJV, not the BSB), and `mrk-16-9` one on the
+  ending after 16:8.
+- KJV wording variants where an item quotes BSB-only wording: 13 sections, for example
+  `mrk-1-40` ("If thou wilt").
+- Every key idea has evidence quotes and a grade, many cite more than one commentator (316 of
+  533), and every question ends with "?".
 
 ## 5. Idempotency (SC-005)
 
@@ -120,44 +149,60 @@ make status BOOK=mark                    # opens the scorecard
 make pipeline BOOK=mark STAGE=all
 ```
 
-**Expected**: the estimate shows 0 sections to process and $0.00, and no model calls are made.
+**Expected**: it starts without an estimate or a Proceed? prompt, since no stage would call a
+model. Every content stage reports all sections skipped, and the run ends with `spent $0.000`.
+The `report` stage still runs. If the drafts changed since the last publish (for example a later
+`align` run), it publishes them as a new version on the draft channel.
 
 ## 6. Read on the draft channel, then promote
 
 ```bash
-curl -s https://<distribution>/draft/v1/index.json | jq .
+curl -s https://<cdn>/draft/v1/index.json | jq .
+# after reading the book in the app (spec 002):
 make promote BOOK=mark
-curl -s https://<distribution>/live/v1/index.json | jq .
+curl -s https://<cdn>/live/v1/index.json | jq .
 ```
 
 **Expected**:
-- The draft channel's `index.json` lists `MRK` at its version, with the sha256 and size of `study.json`,
-  `verses/bsb.json` and `verses/kjv.json`; the three files validate against the schemas, and the
-  total compressed size is under 1 MB (SC-007).
-- After reading the book in the app on the draft channel, `promote` copies the same files to live:
-  the live channel's `index.json` shows the same version and sha256s.
+- The draft channel's `index.json` lists each book at its version, with the sha256 and size of
+  `study.json`, `verses/bsb.json` and `verses/kjv.json`. The downloaded files match those
+  sha256s, validate against `content/schema/`, and total under 1 MB compressed (SC-007).
+- Before anything is promoted, the live index returns 403 (the bucket is private, so a missing
+  object reads as forbidden). The app treats that as "no books yet".
+- `promote` copies the same files to live: the live channel's `index.json` shows the same
+  version and sha256s. Promotion freezes the book's text (FR-024): only promote after reading
+  it.
 - Nothing was added under `content/` in git except `calibration.json`.
 
 ## 7. Gate and promotion refusals (FR-021, FR-024)
 
-1. **Failed section**: make one section fail (a recorded fake output with no usable
-   question in the integration test). **Expected**: nothing is published to the draft channel, exit code 3, and
-   the scorecard names the section.
-2. **Below threshold**: set `gate.min_strong_first_rate` above the book's rate and `promote`.
-   **Expected**: exit code 5, "first questions graded 4 or 5: 0.95 < 0.99".
-3. **Stale calibration**: add a new grader prompt version, then `promote`. **Expected**: exit
-   code 5, "grader calibration is for review v1; run `calibrate`".
-4. **Frozen live text**: after a promotion, change a promoted question's text and
-   promote again. **Expected**: exit code 5, "published text changed: mrk-1-1-q1".
-5. **Retire and replace**: retire that question and add a replacement with `replaces`, then run,
-   publish to the draft channel and promote. **Expected**: the next version is promoted. The old ID is still
-   present with `status: retired`, and the live channel's `index.json` points to the new version.
+**On real infrastructure (free, writes nothing):** `make promote BOOK=2jn`. 2 John was a batch
+test whose grader failed 2 of its 3 sections, and it was never published. **Expected**: exit code
+5, listing the scorecard's blockers and "2 John isn't on the draft channel; publish it".
+
+**The rest are tested offline** (they would freeze real content if run on live):
+
+| Refusal | Expected | Test |
+|---|---|---|
+| A section failed | nothing published, exit code 3, the scorecard names it | `test_publish_moto.py::test_a_book_with_a_failed_section_publishes_nothing` |
+| Below a threshold | exit code 5, the measure and its bar | `test_gate.py::test_a_weak_first_question_blocks_promotion`, `test_publish_moto.py::test_promote_refuses_an_unpromotable_book` |
+| Drafts changed since publishing | exit code 5, "run `publish` first" | `test_publish_moto.py::test_promote_refuses_drafts_changed_since_publishing` |
+| Stale calibration | not promotable until `calibrate` runs for the current grader | `test_calibration.py::test_only_a_result_for_the_current_grader_prompt_and_model_counts` |
+| Changed live text | exit code 5, "published text changed" | `test_publish_check.py::test_each_rule_refuses`, `test_refresh_versions.py::test_changed_live_wording_fails_check_and_cannot_publish` |
+| Retire and replace | promoted as a minor version; the old ID stays, `status: retired` | `test_refresh_versions.py::test_retire_and_replace_goes_live_as_a_minor_version` |
 
 ## 8. Spend cap (FR-028)
 
+Use a book not yet generated, and only the cheap stages, so the test costs a fraction of a cent
+and what it writes is reusable:
+
 ```bash
-thinkbible-pipeline run --book mark --stage review --fresh --cap 0.10 --yes
+tp run --book romans --stage sections,summaries --local --cap 0.001 --yes
+tp status --book romans
 ```
 
-**Expected**: the run stops with exit code 4 after spend passes $0.10, finished sections are kept,
-and `status` shows what is left.
+**Expected**: the estimate (about $0.12 for 58 sections; the default of $0.002 a section, since
+Romans has no history) and `cap $0.001`. The run stops with exit code 4 once spend passes the cap
+("summaries: 13 done … stopped: cap reached (45 not started)"); sections already in flight
+finish (SC-008), finished summaries are kept, and `status` shows what is left. Running it again
+without `--cap` finishes the rest.

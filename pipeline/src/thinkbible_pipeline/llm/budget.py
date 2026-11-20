@@ -80,6 +80,11 @@ class EstimateSummary:
         return any(s.calls_model and s.to_process > s.free for s in self.stages)
 
 
+def usd(amount: float) -> str:
+    """Dollars to the cent, or to a tenth of a cent below one cent (a $0.001 cap isn't "$0.00")."""
+    return f"${amount:.2f}" if amount == 0 or amount >= 0.01 else f"${amount:.3f}"
+
+
 def confirm(
     summary: EstimateSummary,
     *,
@@ -97,7 +102,7 @@ def confirm(
         if s.calls_model and s.to_process > s.free:
             line += f", about ${s.estimate_usd:.2f}"
         echo(line)
-    cap = f"${summary.cap_usd:.2f}" if summary.cap_usd is not None else "none"
+    cap = usd(summary.cap_usd) if summary.cap_usd is not None else "none"
     echo(f"estimate ${summary.estimate_usd:.2f}, cap {cap}")
     if yes:
         return True

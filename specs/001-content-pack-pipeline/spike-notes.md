@@ -2,7 +2,7 @@
 
 The brief's "step zero": run the pipeline on Mark, read the output, and decide whether the key
 ideas are sound and the questions are worth answering. These notes record the results of T057
-(first impression), the SC-004 judgement of T064, and later the quickstart run of T085.
+(first impression), the SC-004 judgement of T064, and the quickstart run of T085 (§9).
 
 Written 2026-11-20. The numbers come from the run records and scorecards in the drafts bucket
 (`make status BOOK=mark`, `make status BOOK=php`) and from `pipeline/evals/calibration.json`.
@@ -11,7 +11,7 @@ Written 2026-11-20. The numbers come from the run records and scorecards in the 
 
 | Book | Sections | Prompts | Channel | Scorecard |
 |---|---|---|---|---|
-| Mark | 100 | questions v18, extract v18, guide v5, review v14 | draft, 1.2.0 | promotable |
+| Mark | 100 | questions v18, extract v18, guide v5, review v14 | draft, 1.2.1 | promotable |
 | Philippians | 14 | the same | draft | promotable |
 | 2 John | 3 | the same | none (local batch test) | 1 passed; 2 failed neutrality, correctly |
 
@@ -65,7 +65,7 @@ SC-004 asks for four things. Three are measured, and Mark passes all three:
 The grader they rest on agrees with the owner on 89% of the held-out ratings (SC-009, bar 85%).
 
 The fourth, **"the owner's in-app read agrees"**, can't be done yet. The app is spec 002, so it
-stays open until the owner reads Mark 1.2.0 on the draft channel.
+stays open until the owner reads Mark 1.2.1 on the draft channel.
 
 **Owner's judgement so far** (from the rating rounds and reads during the spike; owner to confirm
 or edit):
@@ -147,4 +147,30 @@ next touched (owner's decision).
 
 ## 9. Quickstart run (T085)
 
-*Not yet run.* Results of quickstart.md §0–§8 end to end go here.
+Run 2026-11-20 against the real AWS account. The quickstart was rewritten first: it predated the
+Claude API, batch runs and the seven Lambdas, and as written its §7 and §8 would have changed
+or frozen Mark's content. Those steps now use 2 John and Romans.
+
+| Step | Result |
+|---|---|
+| §0 tests and lint | 374 passed (with the fix below); ruff, mypy and `terraform fmt` clean |
+| §1 infrastructure | applied and deployed (2026-11-20, after the last code change) |
+| §2 sources check / verify / verify --remote | 5 sources × 66 books; 333 files match locally and in S3 |
+| §2 fresh clone | cache moved aside, 333 files pulled in about a minute, verified, byte-identical |
+| §2 tamper | one changed character: exit 2, nothing generated; restored and verified |
+| §3 calibration | 89% on 36 held-out items (Opus 5.5, `review/v14`); not re-run |
+| §4 generate | Mark and Philippians (§2 of these notes); spot checks pass in the drafts: manuscript notes at 7:16 and 16:9–20, KJV variants in 13 sections, all 296 questions end with "?" |
+| §5 idempotency | run `e4d0c9`: every content stage skipped for 100 sections, no prompt (nothing would call a model), `spent $0.000`; published Mark 1.2.1 |
+| §6 draft channel | index lists Mark 1.2.0 and Philippians 1.0.0; Mark's three files match their sha256s and sizes and validate against the schemas; 178 KB compressed (SC-007, under 1 MB); live index 403 (nothing promoted) |
+| §7 promote refusal | `promote --book 2jn`: exit 5, "2 sections not graded", "2 sections failed", "isn't on the draft channel"; nothing written. The other refusals are covered by the tests listed in quickstart §7 |
+| §8 spend cap | Romans `sections,summaries` with `--cap 0.001`: 58 sections written, 13 summaries ($0.001), "stopped: cap reached (45 not started)" |
+
+**Found and fixed:**
+- Mark 1.2.0 on the draft channel predated the `align` run, so it had no manuscript notes or KJV
+  variants, though the drafts did. §5's run published them as **Mark 1.2.1** (a patch: no items
+  added or retired). 1.2.1 is the version the app is built against; Mark isn't regenerated
+  while spec 002 is built.
+- A cap under one cent printed as "cap $0.00". Amounts under a cent now show a tenth of a cent
+  (`llm/budget.py: usd`).
+- The quickstart said a re-run "shows an estimate of $0.00". A run with nothing to send to a model
+  starts without an estimate or prompt; the quickstart now says so.

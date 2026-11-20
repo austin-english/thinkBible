@@ -930,8 +930,11 @@ text edit is refused.
   - `docs/aws-setup.md` (sources, drafts and packs buckets, ledger table, state machine and
     CloudFront domain once created);
   - `specs/README.md` (001 status).
-- [ ] T085 Run quickstart.md §0–§8 end to end and fix anything that fails. Record the results at
+- [X] T085 Run quickstart.md §0–§8 end to end and fix anything that fails. Record the results at
   the bottom of `specs/001-content-pack-pipeline/spike-notes.md`.
+  Done 2026-11-20: the quickstart rewritten for the Claude API, batch runs and one environment,
+  with §7 and §8 moved off Mark (2 John, Romans); every step passed. Fixed on the way: Mark 1.2.1
+  published with its alignment, and caps under a cent print correctly (`spike-notes.md` §9).
 - [x] T086 Security pass:
   - the hook in `.pre-commit-config.yaml` rejects staged source text;
   - `grep` confirms no secrets or account credentials in the repo;

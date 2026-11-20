@@ -448,10 +448,11 @@ def status(
 
     if envcfg.ledger_table and run_ids:
         from thinkbible_pipeline.cloud.ledger import DynamoLedger
+        from thinkbible_pipeline.llm.budget import usd
 
         ledger = DynamoLedger(envcfg.ledger_table).get(run_ids[0])
         if ledger is not None:
-            cap = f"${ledger.cap_usd:.2f}" if ledger.cap_usd is not None else "none"
+            cap = usd(ledger.cap_usd) if ledger.cap_usd is not None else "none"
             typer.echo(f"  latest run: {ledger.status}, ${ledger.spent_usd:.3f} of cap {cap}")
 
     report = store.read_text("review.html")

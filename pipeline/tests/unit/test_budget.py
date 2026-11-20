@@ -10,6 +10,7 @@ from thinkbible_pipeline.llm.budget import (
     cost_per_section,
     estimate,
     price,
+    usd,
 )
 from thinkbible_pipeline.llm.runner import Usage
 
@@ -132,3 +133,9 @@ def test_confirm_prints_and_asks() -> None:
     assert lines[0] == "generate: 8 sections to process, 2 skipped (already done), about $0.48"
     assert lines[1] == "check: 10 sections to process, 0 skipped (already done)"
     assert lines[2] == "estimate $0.48, cap $0.96"
+
+
+def test_a_cap_under_a_cent_is_not_shown_as_zero() -> None:
+    assert [usd(x) for x in (0, 0.001, 0.0099, 0.01, 0.96, 12.345)] == [
+        "$0.00", "$0.001", "$0.010", "$0.01", "$0.96", "$12.35"
+    ]  # fmt: skip

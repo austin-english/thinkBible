@@ -5,7 +5,7 @@ Spec Kit feature specs, in build order. The constitution lives at
 
 | # | Feature | Status | Open clarifications |
 |---|---|---|---|
-| 001 | [Content pack format and batch pipeline](001-content-pack-pipeline/spec.md) | Built (US1–US6) and batch runs (T087); Mark 1.2.0 and Philippians on the draft channel. Left: quickstart run (T085); promoting Mark waits for spec 002's reader (T075) | none (review surface: the scorecard, `review.html`) |
+| 001 | [Content pack format and batch pipeline](001-content-pack-pipeline/spec.md) | Built (US1–US6) and batch runs (T087); Mark 1.2.1 and Philippians on the draft channel. Left: promoting Mark waits for spec 002's reader (T075) | none (review surface: the scorecard, `review.html`) |
 | 002 | [Book-feel feed and chapter panel](002-reader-read-mode/spec.md) | Draft | none |
 | 003 | [Question footer, reply thread and live compare API](003-reflection-live-compare/spec.md) | Draft | Crisis resources; voice input in MVP? |
 | 004 | [Question sequence and weekly unlocks](004-question-levels-rereads/spec.md) | Draft | none |
