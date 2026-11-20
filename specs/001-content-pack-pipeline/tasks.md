@@ -934,6 +934,14 @@ text edit is refused.
   - the S3 buckets are private, with public access blocked (`aws s3api get-public-access-block`);
   - the pipeline Lambda role can invoke only the three Claude 5.5 models and touch only its own
     buckets and table.
+  Results (2026-11-19): the hook rejects a staged `content/sources/` file; no keys, `.env`,
+  Terraform state or source text in the tree or the git history; `make test` (CI) runs both guard
+  tests; every bucket blocks public access and is now HTTPS-only (`DenyInsecureTransport`, storage
+  module; the packs bucket's CloudFront statement moved into it). The Lambda role: its own log
+  groups, read-only sources, the drafts bucket, the packs bucket's `draft/` (write) and `live/`
+  (read), its ledger table, the one SSM parameter, and the Bedrock profile's models. The Claude API
+  key itself can call any model: limit it with a workspace spend limit in the Anthropic console.
+  Left: confirm the live buckets with `get-public-access-block` after `make deploy`.
 - [ ] T087 Claude Message Batches API for cloud runs (added 2026-11-18; before the Old Testament or
   whole-Bible runs, about $500 saved over the Bible at 50% off; not needed for Mark):
   - a batch runner mode: each model step (summaries, extract, questions, review, intro, and the

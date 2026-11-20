@@ -22,6 +22,14 @@ module "sources" {
 module "packs" {
   source = "./modules/storage"
   name   = "thinkbible-packs-${local.account_id}"
+  # CloudFront's read access, merged with the HTTPS-only rule into the bucket's one policy.
+  policy_json = module.cdn.packs_policy_json
+}
+
+# The packs bucket policy moved from the cdn module to the storage module (2026-11-19, T086).
+moved {
+  from = module.cdn.aws_s3_bucket_policy.packs
+  to   = module.packs.aws_s3_bucket_policy.this
 }
 
 module "cdn" {

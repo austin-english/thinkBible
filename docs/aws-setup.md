@@ -3,8 +3,9 @@
 How the ThinkBible AWS account is set up, how to sign in, and what's left to do. For daily
 commands, see the **AWS** section of the [README](../README.md).
 
-Real values (account IDs, portal URL, email) are kept out of this repo. They are in your password
-manager and in `~/.aws/config`.
+Sign-in details (portal URL, email, passwords) are kept out of this repo, in your password manager
+and `~/.aws/config`. The ThinkBible account ID does appear in `pipeline/config/aws.toml` and
+`infra/backend.tf`, as part of bucket names: it identifies the account but grants no access.
 
 ## The accounts
 

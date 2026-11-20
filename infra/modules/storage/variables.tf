@@ -8,3 +8,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "policy_json" {
+  description = "Extra bucket policy statements (JSON), merged with the module's HTTPS-only rule. The packs bucket passes the CDN's read access here."
+  type        = string
+  default     = null
+}

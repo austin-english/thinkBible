@@ -12,3 +12,8 @@ output "domain_name" {
   description = "The CDN's domain, e.g. d1234.cloudfront.net."
   value       = aws_cloudfront_distribution.packs.domain_name
 }
+
+output "packs_policy_json" {
+  description = "The packs bucket's policy statement for this distribution; applied by the storage module."
+  value       = data.aws_iam_policy_document.packs.json
+}

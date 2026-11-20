@@ -1,4 +1,4 @@
-# A private, versioned, encrypted S3 bucket. Used for the sources snapshot, the pipeline's drafts
+# A private, versioned, encrypted, HTTPS-only S3 bucket. Used for the sources snapshot, the pipeline's drafts
 # and the published packs (specs/001 research R2, R8, R14).
 
 resource "aws_s3_bucket" "this" {
@@ -37,4 +37,33 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
     }
     bucket_key_enabled = true
   }
+}
+
+# Every request must use TLS (AWS Security Hub S3.5). Other statements (the CDN's read access on
+# the packs bucket) come in through var.policy_json: a bucket has only one policy.
+data "aws_iam_policy_document" "this" {
+  source_policy_documents = var.policy_json == null ? [] : [var.policy_json]
+
+  statement {
+    sid       = "DenyInsecureTransport"
+    effect    = "Deny"
+    actions   = ["s3:*"]
+    resources = [aws_s3_bucket.this.arn, "${aws_s3_bucket.this.arn}/*"]
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "this" {
+  bucket = aws_s3_bucket.this.id
+  policy = data.aws_iam_policy_document.this.json
+  # Public access is blocked first, so the policy can never be applied to an open bucket.
+  depends_on = [aws_s3_bucket_public_access_block.this]
 }
