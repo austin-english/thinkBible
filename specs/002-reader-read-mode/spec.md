@@ -30,6 +30,25 @@ panel, Send, Accessibility); screens
 constitution principles I, V, X. Depends on spec 001 (pack format and a published Mark pack, or a
 fixture pack).
 
+## Clarifications
+
+### Session 2026-11-20
+
+- Q: Which content channel does each kind of build read? → A: Debug and TestFlight builds read
+  the draft channel; App Store builds read only the live channel. A book's draft is not
+  regenerated while TestFlight testers are reading it.
+- Q: Should spec 002 build all six stories now, or only what the TestFlight prototype test needs?
+  → A: Build US1–US5 (feed, chapter panel, resume, offline, Share). US6 (the `…` menu) and
+  "Notify me" for unpublished books are deferred until after the prototype test.
+- Q: What does a reader see after the last section of a book? → A: The feed continues into the
+  next published book in Bible order (after Mark, Philippians today), like moving between
+  chapters. With no later published book, an end page opens the book list.
+- Q: When does a newly downloaded pack version take effect? → A: On the next app launch. It
+  downloads in the background, and the open feed never changes while the app is running.
+- Q: Which books are built into the app for offline reading? → A: Every book published on the
+  build's channel at build time (study content and both translations). Books published later,
+  and newer versions, download as usual.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Read a book as a feed of pages (Priority: P1)
@@ -67,6 +86,11 @@ across that card's pages, with no verse split between pages.
 4. **Given** the reader reaches the last section of a chapter, **When** they keep scrolling,
    **Then** an "End of Mark 1 · Keep scrolling for Mark 2" page appears and the feed continues into
    Mark 2 without any navigation. The header pill updates to the chapter on screen.
+4a. **Given** the reader reaches the last section of Mark 16, **When** they keep scrolling,
+   **Then** an "End of Mark · Keep scrolling for Philippians" page appears and the feed continues
+   into the next published book in Bible order, starting with its "About Philippians" post
+   (FR-002a). The header pill updates to "Philippians 1". If no later book is published, the page
+   reads "End of Mark" with a "Choose a book" button that opens the chapter panel's book list.
 5. **Given** the reader changes text size or translation in settings (spec 006), **When** they
    return to the feed, **Then** pages are re-split for the new text and the same section is on
    screen.
@@ -106,9 +130,8 @@ view.
    chapters view for that book appears. A chapter without section data shows one button, "Start
    Mark 2 at verse 1 ›".
 6. **Given** the reader picks an unpublished book (Genesis), **When** the chapters view shows,
-   **Then** it shows the chapter grid and "Genesis is coming soon · Notify me". Tapping it changes
-   to "✓ We'll let you know when Genesis is ready" and stores the book locally. When a later
-   catalog update publishes that book, the app shows an in-app banner.
+   **Then** it shows the chapter grid and "Genesis is coming soon". ("Notify me" is deferred: see
+   FR-015.)
 7. **Given** the panel's bottom rows, **When** shown, **Then** they are "Saved passages" with a
    count (spec 005) and "You & settings" (spec 006).
 
@@ -137,20 +160,20 @@ same card. On a fresh install, confirm it opens on Mark 1:1–8.
 ### User Story 4 - Read offline (Priority: P1)
 
 A reader on a plane opens the app. Everything they downloaded before reads normally. On first
-launch with no network, the launch book is still readable.
+launch with no network, every book published when the app was built is still readable.
 
 **Why this priority**: Offline-first is a constitutional principle, and reading must never fail.
 
 **Independent Test**: Install the app, turn on airplane mode before first launch, and read Mark 1
-to 16 in both translations.
+to 16 in both translations, then continue into Philippians.
 
 **Acceptance Scenarios**:
 
-1. **Given** first launch with no network, **When** the reader opens Mark, **Then** the full text
-   in both translations is readable.
+1. **Given** first launch with no network, **When** the reader opens Mark or any other book
+   published when the app was built, **Then** the full text in both translations is readable.
 2. **Given** a newer pack version is published, **When** the app is online, **Then** it downloads
-   the update in the background and switches to it without losing the reading position or any
-   saved data.
+   the update in the background, and the feed on screen doesn't change. On the next launch the
+   app uses the new version, opening at the same reading position, with no saved data lost.
 3. **Given** text is shown but the study content for a book is still loading, **When** the reader
    scrolls, **Then** page cards are shown right away, and each question footer shows a small inline
    spinner, never a full-screen loader.
@@ -175,7 +198,7 @@ the reference, the translation code and a `thinkbible.app` link.
 
 ---
 
-### User Story 6 - The card's `…` menu (Priority: P3)
+### User Story 6 - The card's `…` menu (Priority: P3; deferred until after the prototype test)
 
 The `…` button in a card's header row opens a menu with Copy passage and Report a problem, plus
 "Not a helpful question?" when spec 004 allows it.
@@ -186,14 +209,19 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
 
 1. **Given** a card, **When** `…` is tapped, **Then** a menu shows Copy passage and Report a
    problem. Copy passage copies the text with its reference and translation code.
-2. **Given** spec 004 says the current question has an unused alternate, **When** the menu opens,
-   **Then** "Not a helpful question?" is also shown.
+2. **Given** the section has a next question (spec 004), **When** the menu opens, **Then** "Not a
+   helpful question?" is also shown, and it moves to that next question.
 
 ### Edge Cases
 
 - A pack download fails or is interrupted: keep using the cached version. Never show a half-written
   pack.
 - A downloaded pack fails schema validation: discard it, keep the previous version, and report it.
+- The channel's catalog is missing or forbidden (the live channel returns 403 until a book is
+  promoted) or unreachable: keep the cached catalog and the bundled books, and treat other
+  books as not published. Never show an error in the reading path.
+- A draft pack update drops a question the reader answered (a book regenerated on the draft
+  channel): the answer is kept, never deleted.
 - A saved position's section ID no longer exists in a newer pack: open the nearest section by verse
   range. Packs are additive, so this should not happen.
 - A single verse taller than one page at a very large text size: it gets a page to itself and the
@@ -218,6 +246,8 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
   settings (spec 006).
 - **FR-002**: The feed MUST be one vertical scroll through the whole book: for each chapter, a
   title row and one page card per section, then an end-of-chapter page, then the next chapter.
+  After the book's last chapter, an end-of-book page leads into the next published book in Bible
+  order (unpublished books are skipped), or, when there is none, offers the book list.
 - **FR-002a** (2026-11-18): When the pack has a book `introduction`, the feed MUST open the book
   with it as the first post, before the first section of chapter 1: a page card headed "About
   <Book>" with the commentators it draws on, the text in the Scripture serif, and "In their
@@ -228,8 +258,8 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
 
 **Page card**
 
-- **FR-004**: Each card MUST show a header row (book avatar, reference, title on one line, `…`
-  button), the pages, an action row (Send, Save) and a footer slot for the question (spec 003).
+- **FR-004**: Each card MUST show a header row (book avatar, reference, title on one line; the
+  `…` button arrives with US6), the pages, an action row (Send, Save) and a footer slot for the question (spec 003).
 - **FR-005**: Pages MUST be set as book pages: first-page italic heading with a rubric rule, a
   decorative drop cap on the first word, justified and hyphenated serif text with old-style figures,
   rubric superscript verse numbers, and a verse-range folio on every page.
@@ -242,7 +272,7 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
   instead of a question.
 - **FR-009**: Send MUST open the system share sheet with the passage text, reference, translation
   code and a `thinkbible.app` link, never the reader's answer.
-- **FR-010**: The `…` menu MUST offer Copy passage and Report a problem, and host "Not a helpful
+- **FR-010** (deferred with US6): The `…` menu MUST offer Copy passage and Report a problem, and host "Not a helpful
   question?" when spec 004 allows it.
 
 **Chapter panel**
@@ -260,9 +290,9 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
   opened at the current book, with "Ready" tags on published books (from the content catalog, not
   a hard-coded list) and a check on the current book. Picking a book returns to the Chapters view
   for it.
-- **FR-015**: For an unpublished book, the panel MUST show "<Book> is coming soon · Notify me".
-  Notify me MUST be stored on the device only and trigger an in-app banner when a catalog update
-  publishes that book. No push or server call.
+- **FR-015**: For an unpublished book, the panel MUST show "<Book> is coming soon". *Deferred
+  until after the prototype test:* a "Notify me" button, stored on the device only, that triggers
+  an in-app banner when a catalog update publishes that book (no push or server call).
 
 **Position, packs and offline**
 
@@ -270,11 +300,16 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
   Mark 1:1–8. It MUST open any section from an external entry with that card at the top.
 - **FR-017**: The app MUST support BSB (default) and KJV with one shared set of sections, and show
   the pack's manuscript notes where translations differ in verse presence.
-- **FR-018**: The launch book's pack MUST be readable on first launch without network. Other books
-  and updates are downloaded per book and cached for offline use.
+- **FR-018**: Every book published on the build's channel when the app is built MUST be bundled
+  (study content and both translations) and readable on first launch without network. Books
+  published later, and newer versions, are downloaded per book and cached for offline use.
 - **FR-019**: The app MUST check for newer pack versions when online, download them in the
-  background, validate them against the schema, and switch atomically. A failed or invalid
-  download never replaces a good cached pack.
+  background, validate them against the schema, and switch to the new version atomically at the
+  next launch, never while the app is running. A failed or invalid download never replaces a
+  good cached pack.
+- **FR-019a**: The content channel MUST be fixed by the build: Debug and TestFlight builds read
+  the `draft/` channel, and App Store builds read only `live/`. There is no in-app channel
+  switch. The bundled packs (FR-018) come from the same channel as the build.
 
 **Design and accessibility**
 
@@ -289,11 +324,12 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
 
 - **Book / Chapter / Section** (from the pack): section ID, reference, title, verse range,
   "no prompt" flag, context note, manuscript notes.
-- **Catalog** (from the CDN, cached): books and whether each is published.
+- **Catalog** (the channel's `index.json` from the CDN, cached): books and whether each is
+  published, with each book's latest pack version and file checksums.
 - **Verse text** (per translation): book, chapter, verse number, text; for Psalms, the chapter's
   optional `title` (the psalm's own title, shown before verse 1 in the reader's translation).
 - **Reading position** (on device, synced in spec 005): book, chapter, section ID, last-opened time.
-- **Book notify request** (on device): book ID, requested time.
+- **Book notify request** (on device; deferred with "Notify me"): book ID, requested time.
 - **Pack cache** (on device): book, pack version, translation files, validation status.
 
 ## Success Criteria *(mandatory)*
@@ -304,7 +340,8 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
   on a recent iPhone, with no taps.
 - **SC-002**: Scrolling a full chapter (Mark 1) and paging its cards stays smooth on an iPhone two
   generations old.
-- **SC-003**: 100% of Mark is readable in both translations in airplane mode on first launch.
+- **SC-003**: 100% of every bundled book (Mark and Philippians today) is readable in both
+  translations in airplane mode on first launch.
 - **SC-004**: In pagination tests across every Mark section at every text size, 0 verses are split
   across pages and 0 verses are dropped or repeated.
 - **SC-005**: Zero paywall or sign-in prompts appear anywhere in the reading path (feed, panel,
@@ -314,15 +351,15 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
 
 ## Assumptions
 
-- The launch book's pack (study content and both translations) is bundled with the app so first
-  launch works offline. Later books download on demand.
+- The bundled packs are small (Mark is 178 KB compressed; the whole Bible would add about
+  15–20 MB), so bundling every published book costs little.
 - The old Study / Read switch is gone. Plain reading is the "Show questions" setting (spec 006).
   Hiding questions removes the footers; it never touches the text.
 - Pages are drawn with a TextKit 2 view, since SwiftUI `Text` can't justify around a floating drop
   cap (`docs/design/CLAUDE_CODE_PROMPT.md`).
 - The `…` menu is not drawn yet. Its contents follow `docs/design/README.md`.
 - Verse notes (tap a dotted word) are not in the MVP (V2).
-- "Notify me" for unpublished books is local only in v1. Push needs backend work and is out of
-  scope.
+- "Notify me" for unpublished books is deferred until after the prototype test; when built it
+  is local only. Push needs backend work and is out of scope.
 - The brief's MVP summary says "one translation", but the MVP table and the design include BSB and
   KJV. This spec includes both, with the switch in settings.
