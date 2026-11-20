@@ -140,7 +140,8 @@ Store settings in `@AppStorage` (they're device preferences). Reflections and se
 ## States with no mockup (build to these rules)
 
 - **First launch:**
-  - Open the feed at Mark 1:1–8, with its question footer showing.
+  - Open the feed at the "About Mark" post, with Mark 1:1–8 and its question footer right below it
+    (spec 002, 2026-11-20).
   - One dismissible line above the first composer: "Answer in your own words. There are no wrong answers. Then see what the commentators noticed."
   - No onboarding carousel.
 - **Loading a content pack:** Packs are cached after the first download.

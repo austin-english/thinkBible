@@ -48,6 +48,8 @@ fixture pack).
 - Q: Which books are built into the app for offline reading? → A: Every book published on the
   build's channel at build time (study content and both translations). Books published later,
   and newer versions, download as usual.
+- Q: Where does a first launch open? → A: At the "About Mark" post (the book's introduction), so
+  every new reader meets the book first; Mark 1:1–8 follows directly below it.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -140,16 +142,16 @@ view.
 ### User Story 3 - Open where I left off (Priority: P1)
 
 The reader closes the app in Mark 1:21–28 and opens it the next day. The feed opens on that card.
-On a first launch, it opens on Mark 1:1–8.
+On a first launch, it opens on the "About Mark" post, with Mark 1:1–8 right after it.
 
 **Why this priority**: There's no Home or Continue card any more, so resuming has to be automatic.
 
 **Independent Test**: Scroll to Mark 2, kill the app, relaunch, and confirm the feed opens on the
-same card. On a fresh install, confirm it opens on Mark 1:1–8.
+same card. On a fresh install, confirm it opens on the "About Mark" post.
 
 **Acceptance Scenarios**:
 
-1. **Given** nothing has been read, **When** the app opens, **Then** the feed opens at Mark 1:1–8.
+1. **Given** nothing has been read, **When** the app opens, **Then** the feed opens at the "About Mark" post, followed by Mark 1:1–8.
 2. **Given** the reader last had Mark 1:21–28 on screen, **When** the app opens, **Then** the feed
    opens with that card at the top.
 3. **Given** an external entry (a notification from spec 004, a saved passage, a panel row), **When**
@@ -297,7 +299,7 @@ The `…` button in a card's header row opens a menu with Copy passage and Repor
 **Position, packs and offline**
 
 - **FR-016**: The app MUST remember the section on screen and reopen the feed there, defaulting to
-  Mark 1:1–8. It MUST open any section from an external entry with that card at the top.
+  the launch book's first post: "About Mark" (or Mark 1:1–8 if the pack has no introduction). It MUST open any section from an external entry with that card at the top.
 - **FR-017**: The app MUST support BSB (default) and KJV with one shared set of sections, and show
   the pack's manuscript notes where translations differ in verse presence.
 - **FR-018**: Every book published on the build's channel when the app is built MUST be bundled
